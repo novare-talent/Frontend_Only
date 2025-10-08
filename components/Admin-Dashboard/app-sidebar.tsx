@@ -1,0 +1,101 @@
+"use client";
+
+import * as React from "react";
+import {
+  IconChartBar,
+  IconDashboard
+} from "@tabler/icons-react";
+
+import { NavMain } from "@/components/Admin-Dashboard/nav-main";
+import { NavUser } from "@/components/Admin-Dashboard/nav-user";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
+import Image from "next/image";
+import { createClient } from "@/utils/supabase/client"; // 👈 same helper you already have
+import Link from "next/link";
+
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [user, setUser] = React.useState<{
+    name: string;
+    email: string;
+    avatar: string;
+  } | null>(null);
+
+  React.useEffect(() => {
+    const fetchUser = async () => {
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session?.user) {
+        setUser({
+          name: session.user.user_metadata?.full_name || "Admin",
+          email: session.user.email || "admin@gmail.com",
+          avatar: session.user.user_metadata?.avatar_url || "/avatars/shadcn.jpg",
+        });
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  const navMain = [
+    {
+      title: "Dashboard",
+      url: "/admin",
+      icon: IconDashboard,
+    },
+    // {
+    //   title: "Users",
+    //   url: "/admin/users",
+    //   icon: IconChartBar,
+    // },
+  ];
+
+  return (
+    <Sidebar collapsible="offcanvas" {...props}>
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              className="data-[slot=sidebar-menu-button]:!p-1.5"
+            >
+              <Link href="/">
+                <Image
+                  src="/LogoDark.png"
+                  alt="Logo"
+                  width={160}
+                  height={40}
+                  className="block dark:hidden"
+                />
+                {/* Dark Mode Logo */}
+                <Image
+                  src="/Logo.png"
+                  alt="Logo Dark"
+                  width={160}
+                  height={40}
+                  className="hidden dark:block"
+                />
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+      <SidebarContent>
+        <NavMain items={navMain} />
+      </SidebarContent>
+      <SidebarFooter>
+        {user && <NavUser user={user} />}
+      </SidebarFooter>
+    </Sidebar>
+  );
+}

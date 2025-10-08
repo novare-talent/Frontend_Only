@@ -1,0 +1,65 @@
+[
+  {
+    "id": 1,
+    "header": "Frontend Developer Intern",
+    "type": "Internship",
+    "status": "Pending",
+    "stipend": "15000",
+    "limit": "5",
+    "reviewer": "Priya Sharma"
+  },
+  {
+    "id": 2,
+    "header": "Blockchain Researcher",
+    "type": "Full-time",
+    "status": "Pending",
+    "stipend": "70000",
+    "limit": "1",
+    "reviewer": "Kanishk Kumar"
+  },
+  {
+    "id": 3,
+    "header": "UI/UX Designer",
+    "type": "Contract",
+    "status": "Pending",
+    "stipend": "40000",
+    "limit": "5",
+    "reviewer": "Amit Verma"
+  },
+  {
+    "id": 4,
+    "header": "AI Trading Assistant Developer",
+    "type": "Full-time",
+    "status": "Pending",
+    "stipend": "120000",
+    "limit": "3",
+    "reviewer": "Kanishk Kumar"
+  },
+  {
+    "id": 5,
+    "header": "Data Analyst Intern",
+    "type": "Internship",
+    "status": "Approved",
+    "stipend": "20000",
+    "limit": "2",
+    "reviewer": "Neha Kapoor"
+  },
+  {
+    "id": 6,
+    "header": "Marketing Associate",
+    "type": "Part-time",
+    "status": "Pending",
+    "stipend": "25000",
+    "limit": "1",
+    "reviewer": "Kanishk Kumar"
+  },
+  {
+    "id": 7,
+    "header": "Cloud Solutions Engineer",
+    "type": "Full-time",
+    "status": "Pending",
+    "stipend": "95000",
+    "limit": "8",
+    "reviewer": "Ravi Iyer"
+  }
+]
