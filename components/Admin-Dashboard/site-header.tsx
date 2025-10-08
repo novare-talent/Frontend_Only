@@ -7,9 +7,9 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ModeToggle } from "../toggle-button";
 
 const pageTitles: { [key: string]: string } = {
-  '/': 'Dashboard',
-  '/Training': 'Training Courses',
-  '/Account': 'My Account',
+  '/admin/': 'Dashboard',
+  '/admin/Training': 'Training Courses',
+  '/admin/Account': 'My Account',
 };
 
 export function SiteHeader() {
@@ -23,7 +23,6 @@ export function SiteHeader() {
     setTitle(pageTitles[pathname] || 'Dashboard');
   }, [pathname]); // Re-run when the path changes
 
-  // Also fixed a small typo in the className: h-(...) should be h-[...]
   return (
     <header className="flex h-[--header-height] shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-[--header-height] py-2">
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">

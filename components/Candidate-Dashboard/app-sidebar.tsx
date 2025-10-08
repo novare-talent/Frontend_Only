@@ -54,12 +54,30 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       } = await supabase.auth.getSession();
 
       if (session?.user) {
-        setUser({
-          name: session.user.user_metadata?.full_name || "User",
-          email: session.user.email,
-          avatar:
-            session.user.user_metadata?.avatar_url || "/avatars/default.jpg",
-        });
+        // Fetch user profile from profiles table
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, email, profile_image')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile && !error) {
+          // Combine first_name and last_name to form full name
+          const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || "User";
+          
+          setUser({
+            name: fullName,
+            email: profile.email || session.user.email,
+            avatar: profile.profile_image || "/avatars/default.jpg",
+          });
+        } else {
+          // Fallback to metadata if profile not found
+          setUser({
+            name: session.user.user_metadata?.full_name || "User",
+            email: session.user.email,
+            avatar: session.user.user_metadata?.avatar_url || "/avatars/default.jpg",
+          });
+        }
       }
     }
 
