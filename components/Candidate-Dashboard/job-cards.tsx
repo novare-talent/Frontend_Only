@@ -67,7 +67,7 @@ const IntegrationCard = ({
           </div>
         ) : (
           <Link
-            href={`/Jobs/${link}`}
+            href={`/Dashboard/Jobs/${link}`}
             className="group relative inline-flex items-center gap-1 text-sm font-medium text-primary transition-all duration-300 ease-out px-4 py-2 rounded-md hover:bg-primary hover:text-white hover:shadow-md"
           >
             <span className="transition-all duration-300 ease-out">

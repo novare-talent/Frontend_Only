@@ -35,7 +35,7 @@ export function LoginForm({
     if (error) {
       alert(error.message);
     } else {
-      router.push("/"); // change path as needed
+      router.push("/Dashboard/"); // change path as needed
     }
   };
 

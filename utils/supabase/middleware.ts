@@ -35,6 +35,7 @@ export async function updateSession(request: NextRequest) {
   // Redirect if not signed in
   if (
     !user &&
+    !request.nextUrl.pathname.startsWith('/') &&
     !request.nextUrl.pathname.startsWith('/sign-in') &&
     !request.nextUrl.pathname.startsWith('/sign-up') &&
     !request.nextUrl.pathname.startsWith('/error')

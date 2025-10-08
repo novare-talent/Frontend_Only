@@ -26,17 +26,17 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "/",
+      url: "/Dashboard/",
       icon: IconDashboard,
     },
     {
       title: "All Jobs",
-      url: "/Jobs",
+      url: "/Dashboard/Jobs",
       icon: IconFileDescription,
     },
     {
       title: "Training",
-      url: "/Training",
+      url: "/Dashboard/Training",
       icon: IconListDetails,
     },
   ],

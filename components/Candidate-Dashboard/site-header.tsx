@@ -7,10 +7,10 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ModeToggle } from "../toggle-button";
 
 const pageTitles: { [key: string]: string } = {
-  '/': 'Dashboard',
-  '/Jobs': 'All Jobs',
-  '/Training': 'Training Courses',
-  '/Account': 'My Account',
+  '/Dashboard/': 'Dashboard',
+  '/Dashboard/Jobs': 'All Jobs',
+  '/Dashboard/Training': 'Training Courses',
+  '/Dashboard/Account': 'My Account',
 };
 
 export function SiteHeader() {
