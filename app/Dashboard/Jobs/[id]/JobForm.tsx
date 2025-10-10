@@ -16,6 +16,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { FileText } from "lucide-react";
+import { toast } from "sonner";
 
 type MaybeResumeSource = string[] | string | null | undefined;
 
@@ -129,7 +130,9 @@ export default function JobForm({
     if (submitting) return;
 
     if (alreadySubmitted) {
-      alert("You have already submitted this application.");
+      toast("Alert", {
+        description: "You have already submitted this application.",
+      })
       return;
     }
 
@@ -171,8 +174,9 @@ export default function JobForm({
       ]);
 
       if (error) {
-        console.error(error);
-        alert("Failed to submit application.");
+        toast.error("Error", {
+          description: "Failed to submit application.",
+        })
         setSubmitting(false);
         return;
       }

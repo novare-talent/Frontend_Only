@@ -1,12 +1,43 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "./style.css"; // ✅ your existing stylesheet (copy it into src or styles folder)
 
+import type { User } from "@supabase/supabase-js";
+
 export default function NovareTalent() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        setUser(user);
+      } catch (error) {
+        console.error("Error checking user:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkUser();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase]);
   useEffect(() => {
     const btn = document.getElementById("mobile-menu-button");
     const menu = document.getElementById("mobile-menu");
@@ -91,8 +122,8 @@ export default function NovareTalent() {
                 <a href="#contact" class="hidden md:block bg-primary text-white font-semibold px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors">
                     Register Startup
                 </a>
-                <a href="/sign-in" class="hidden md:block bg-primary text-white font-semibold px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors">
-                    Sign In
+                <a href="${user ? "/Dashboard" : "/sign-in"}" class="hidden md:block bg-primary text-white font-semibold px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors">
+                    ${user ? "Dashboard" : "Sign In"}
                 </a>
                 </div>
                 <button id="mobile-menu-button" class="md:hidden text-white" aria-label="Open mobile menu">
@@ -107,9 +138,9 @@ export default function NovareTalent() {
                     <a href="#contact" class="bg-primary text-white font-semibold px-5 py-2 rounded-lg hover:bg-primary-dark transition-colors block text-center mt-2">
                         Register Startup
                     </a>
-                    <a href="/sign-in" class="bg-primary text-white font-semibold px-5 py-2 rounded-lg hover:bg-primary-dark transition-colors block text-center mt-2">
-                        Sign In
-                    </a>
+                    <a href="${user ? "/Dashboard" : "/sign-in"}" class="bg-primary text-white font-semibold px-5 py-2 rounded-lg hover:bg-primary-dark transition-colors block text-center mt-2">
+    ${user ? "Dashboard" : "Sign In"}
+</a>
                 </nav>
             </div>
         </div>

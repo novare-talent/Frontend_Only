@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export function LoginForm({
   className,
@@ -33,7 +34,9 @@ export function LoginForm({
     setLoading(false);
 
     if (error) {
-      alert(error.message);
+      toast.error("Error", {
+        description: error.message,
+      })
     } else {
       router.push("/Dashboard/"); // change path as needed
     }
