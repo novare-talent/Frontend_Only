@@ -21,6 +21,7 @@ import {
   Eye,
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+import { toast } from "sonner"
 
 export function SignUpForm({
   className,
@@ -35,13 +36,50 @@ export function SignUpForm({
     linkedinLink: "",
     password: "",
   });
+  const [errors, setErrors] = useState({
+    githubLink: "",
+    linkedinLink: "",
+  });
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const profileImageInputRef = useRef<HTMLInputElement>(null);
   const [showPassword, setShowPassword] = useState(false);
   const supabase = createClient();
 
+  const validateUrls = () => {
+    const newErrors = {
+      githubLink: "",
+      linkedinLink: "",
+    };
+
+    // Validate GitHub URL
+    if (formData.githubLink && !formData.githubLink.startsWith("https://github.com/")) {
+      newErrors.githubLink = "GitHub URL must start with https://github.com/";
+    }
+
+    // Validate LinkedIn URL
+    if (formData.linkedinLink && !formData.linkedinLink.startsWith("https://linkedin.com/in/") && 
+        !formData.linkedinLink.startsWith("https://www.linkedin.com/in/")) {
+      newErrors.linkedinLink = "LinkedIn URL must start with https://linkedin.com/in/ or https://www.linkedin.com/in/";
+    }
+
+    setErrors(newErrors);
+    
+    // Return true if no errors
+    return !newErrors.githubLink && !newErrors.linkedinLink;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate URLs before submission
+    if (!validateUrls()) {
+      toast.error("Invalid URL", {
+        description: "Please fix the URL errors before submitting.",
+        duration: 5000,
+        position: "top-right",
+      })
+      return;
+    }
 
     try {
       // Step 1: Create user in Supabase Auth
@@ -51,15 +89,21 @@ export function SignUpForm({
       });
 
       if (signUpError) {
-        console.error("Auth signUp error:", signUpError);
-        alert("Auth sign-up failed: " + signUpError.message);
+        toast.error("Auth sign-up failed:", {
+          description: signUpError.message,
+          duration: 5000,
+          position: "top-right",
+        })
         return;
       }
 
       const user = data?.user;
       if (!user) {
-        console.error("No user returned from signUp response:", data);
-        alert("Sign-up failed: No user returned");
+        toast.error("Sign-up failed", {
+          description: "No user returned",
+          duration: 5000,
+          position: "top-right",
+        })
         return;
       }
 
@@ -80,8 +124,11 @@ export function SignUpForm({
           );
 
         if (uploadError) {
-          console.error("Image upload error:", uploadError);
-          alert("Profile image upload failed: " + uploadError.message);
+          toast.error("Profile image upload failed:", {
+            description: uploadError.message,
+            duration: 5000,
+            position: "top-right",
+          })
         } else if (uploadData) {
           const { data: publicUrlData } = supabase.storage
             .from("profile-images")
@@ -109,25 +156,41 @@ export function SignUpForm({
       ]);
 
       if (profileError) {
-        console.error("Profile insert error:", profileError);
-        alert(
-          "User created in Auth but profile insert failed: " +
-            profileError.message
-        );
+        toast.error("User created in Auth but profile insert failed", {
+          description: profileError.message,
+          duration: 5000,
+          position: "top-right",
+        })
         return;
       }
-
-      alert(
-        "✅ Account created successfully! Please check your email to confirm."
-      );
+      toast("Account created successfully!", {
+        description: "Please check your email to confirm.",
+        duration: 10000,
+        position: "top-right",
+        style: {
+          color: "#065f46",           // dark green text
+          fontSize: "1.2rem",        // larger text
+          padding: "1.25rem",          // spacious layout
+          border: "1px solid #10b981",// emerald border
+          borderRadius: "0.75rem", 
+        },
+      })
     } catch (err) {
-      console.error("Unexpected error in handleSubmit:", err);
       alert("Unexpected error: " + (err as Error).message);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
+    const { id, value } = e.target;
+    setFormData({ ...formData, [id]: value });
+    
+    // Clear error when user starts typing
+    if (errors.githubLink && id === "githubLink") {
+      setErrors({ ...errors, githubLink: "" });
+    }
+    if (errors.linkedinLink && id === "linkedinLink") {
+      setErrors({ ...errors, linkedinLink: "" });
+    }
   };
 
   const handleProfileImageChange = (
@@ -276,7 +339,11 @@ export function SignUpForm({
                 required
                 onChange={handleChange}
                 placeholder="https://github.com/username"
+                className={errors.githubLink ? "border-red-500" : ""}
               />
+              {errors.githubLink && (
+                <p className="text-sm text-red-500">{errors.githubLink}</p>
+              )}
             </div>
 
             <div className="grid gap-2 mt-3">
@@ -287,7 +354,11 @@ export function SignUpForm({
                 required
                 onChange={handleChange}
                 placeholder="https://linkedin.com/in/username"
+                className={errors.linkedinLink ? "border-red-500" : ""}
               />
+              {errors.linkedinLink && (
+                <p className="text-sm text-red-500">{errors.linkedinLink}</p>
+              )}
             </div>
 
             <Button type="submit" className="w-full mt-4">
