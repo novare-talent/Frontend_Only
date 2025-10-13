@@ -21,7 +21,7 @@ import {
   Eye,
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
-import { toast } from "sonner"
+import { toast } from "sonner";
 
 export function SignUpForm({
   className,
@@ -63,26 +63,37 @@ export function SignUpForm({
     }
 
     setErrors(newErrors);
-    
-    // Return true if no errors
     return !newErrors.githubLink && !newErrors.linkedinLink;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate URLs before submission
+    // ✅ Step 1: Validate email domain
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@(iitkgp\.ac\.in|iitb\.ac\.in|iitm\.ac\.in|iitk\.ac\.in|iitd\.ac\.in|iitg\.ac\.in|iitr\.ac\.in|iitbhu\.ac\.in|iitrpr\.ac\.in|iitbbs\.ac\.in|iitgn\.ac\.in|iith\.ac\.in|iiti\.ac\.in|iitj\.ac\.in|iitp\.ac\.in|iitmandi\.ac\.in|iitpkd\.ac\.in|iittp\.ac\.in|iitism\.ac\.in|iitbhilai\.ac\.in|iitgoa\.ac\.in|iitdh\.ac\.in)$/;
+
+    if (!emailRegex.test(formData.email)) {
+      toast.error("Invalid Email Domain", {
+        description:
+          "Only IIT institutional emails are allowed (e.g., @iitd.ac.in, @iitb.ac.in, @iitkgp.ac.in, etc.).",
+        duration: 5000,
+        position: "top-right",
+      });
+      return;
+    }
+
+    // ✅ Step 2: Validate URLs
     if (!validateUrls()) {
       toast.error("Invalid URL", {
         description: "Please fix the URL errors before submitting.",
         duration: 5000,
         position: "top-right",
-      })
+      });
       return;
     }
 
     try {
-      // Step 1: Create user in Supabase Auth
+      // Step 3: Create user in Supabase Auth
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -93,7 +104,7 @@ export function SignUpForm({
           description: signUpError.message,
           duration: 5000,
           position: "top-right",
-        })
+        });
         return;
       }
 
@@ -103,11 +114,11 @@ export function SignUpForm({
           description: "No user returned",
           duration: 5000,
           position: "top-right",
-        })
+        });
         return;
       }
 
-      // Step 2: Upload profile image (optional)
+      // Step 4: Upload profile image (optional)
       let profileImageUrl: string | null = null;
       if (profileImage) {
         console.log("Uploading profile image for user:", user.id);
@@ -128,7 +139,7 @@ export function SignUpForm({
             description: uploadError.message,
             duration: 5000,
             position: "top-right",
-          })
+          });
         } else if (uploadData) {
           const { data: publicUrlData } = supabase.storage
             .from("profile-images")
@@ -139,19 +150,19 @@ export function SignUpForm({
         }
       }
 
-      // Step 3: Insert into profiles table
+      // Step 5: Insert into profiles table
       console.log("Inserting profile row for user:", user.id);
 
       const { error: profileError } = await supabase.from("profiles").upsert([
         {
           id: user.id,
-          email: formData.email, // new column
+          email: formData.email,
           first_name: formData.firstName,
           last_name: formData.lastName,
           phone: formData.phone,
           github_link: formData.githubLink,
           linkedin_link: formData.linkedinLink,
-          profile_image: profileImageUrl
+          profile_image: profileImageUrl,
         },
       ]);
 
@@ -160,21 +171,22 @@ export function SignUpForm({
           description: profileError.message,
           duration: 5000,
           position: "top-right",
-        })
+        });
         return;
       }
+
       toast("Account created successfully!", {
         description: "Please check your email to confirm.",
         duration: 10000,
         position: "top-right",
         style: {
-          color: "#065f46",           // dark green text
-          fontSize: "1.2rem",        // larger text
-          padding: "1.25rem",          // spacious layout
-          border: "1px solid #10b981",// emerald border
-          borderRadius: "0.75rem", 
+          color: "#065f46",
+          fontSize: "1.2rem",
+          padding: "1.25rem",
+          border: "1px solid #10b981",
+          borderRadius: "0.75rem",
         },
-      })
+      });
     } catch (err) {
       alert("Unexpected error: " + (err as Error).message);
     }
@@ -184,7 +196,6 @@ export function SignUpForm({
     const { id, value } = e.target;
     setFormData({ ...formData, [id]: value });
     
-    // Clear error when user starts typing
     if (errors.githubLink && id === "githubLink") {
       setErrors({ ...errors, githubLink: "" });
     }
@@ -193,9 +204,7 @@ export function SignUpForm({
     }
   };
 
-  const handleProfileImageChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleProfileImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       setProfileImage(event.target.files[0]);
     }
@@ -285,7 +294,7 @@ export function SignUpForm({
                   type="email"
                   required
                   className="pl-10"
-                  placeholder="yourname@example.com"
+                  placeholder="yourname@iitd.ac.in"
                   onChange={handleChange}
                 />
               </div>
@@ -322,11 +331,7 @@ export function SignUpForm({
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
