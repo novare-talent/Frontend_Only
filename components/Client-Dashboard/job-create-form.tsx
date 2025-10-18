@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
-
+import { createClient } from "@/utils/supabase/client";
 export type JobMeta = {
   title: string
   level: string
@@ -50,7 +50,7 @@ export function JobCreateForm({
 
   return (
     <Card className={cn("rounded-2xl border bg-card/60 backdrop-blur-sm", className)}>
-      <CardHeader className="">
+      <CardHeader className="pb-2">
         <CardTitle className="text-xl md:text-2xl text-primary">Create Job Form</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-5">

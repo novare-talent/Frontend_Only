@@ -22,6 +22,7 @@ type BuilderProps = {
   value: Question[]
   onChange: (v: Question[]) => void
   className?: string
+  onGenerateAI?: () => void // Add this prop
 }
 
 const PALETTE: { type: QuestionType; title: string; hint: string }[] = [
@@ -34,7 +35,7 @@ function uid() {
   return Math.random().toString(36).slice(2, 9)
 }
 
-export function QuestionBuilder({ value, onChange, className }: BuilderProps) {
+export function QuestionBuilder({ value, onChange, className, onGenerateAI }: BuilderProps) {
   const [activeId, setActiveId] = useState<string | null>(null)
   const dragSrcId = useRef<string | null>(null)
 
@@ -106,7 +107,11 @@ export function QuestionBuilder({ value, onChange, className }: BuilderProps) {
               </button>
             ))}
 
-            <Button variant="secondary" className="ml-auto">
+            <Button 
+              variant="secondary" 
+              className="ml-auto"
+              onClick={onGenerateAI}
+            >
               Generate from AI
             </Button>
           </div>
