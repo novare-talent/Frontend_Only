@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -17,31 +16,44 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { JobCard, type JobCardProps } from "./Job-Card";
 import { cn } from "@/lib/utils";
 
+// Define the schema with explicit required fields
 const schema = z.object({
   title: z.string().min(3, "Title is required"),
   rate: z.string().min(1, "Rate is required"),
   level: z.enum(["Entry level", "Intermediate", "Expert"]),
   description: z.string().min(20, "Please add a longer description"),
-  tags: z.string().optional(), // comma-separated
-  verified: z.boolean().default(true),
   location: z.string().min(2, "Location is required"),
-  proposals: z.string().default("Less than 5"),
-  jdFile: z.any().optional(), // File handled separately
+  tags: z.string().optional(),
+  verified: z.boolean(),
+  proposals: z.string(),
+  jdFile: z.any().optional(),
 });
 
-type FormValues = z.infer<typeof schema>;
+// Explicitly define FormValues to match the schema exactly
+type FormValues = {
+  title: string;
+  rate: string;
+  level: "Entry level" | "Intermediate" | "Expert";
+  description: string;
+  location: string;
+  tags?: string;
+  verified: boolean;
+  proposals: string;
+  jdFile?: any;
+};
 
 export function JobForm({ className }: { className?: string }) {
   const [jdFileName, setJdFileName] = React.useState<string | null>(null);
   const [preview, setPreview] = React.useState<JobCardProps | null>(null);
 
+  // Use type assertion as a last resort to fix the resolver issue
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as any,
     defaultValues: {
       title: "Front-End Development",
       rate: "Hourly: $5–$10",
@@ -187,25 +199,28 @@ export function JobForm({ className }: { className?: string }) {
               )}
             </div>
 
-            {/* Verified + Location + Proposals */}
-            <div className="grid gap-5 sm:grid-cols-3">
-              {/* <div className="flex items-center justify-between rounded-lg border bg-muted/50 px-3 py-2">
-                <Label htmlFor="verified" className="mr-3">
-                  Payment Verified
-                </Label>
-                <Switch
-                  id="verified"
-                  checked={form.watch("verified")}
-                  onCheckedChange={(c) => form.setValue("verified", c)}
-                />
-              </div> */}
-
-              <div className="space-y-2 sm:col-span-1">
+            {/* Location + Proposals */}
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="space-y-2">
                 <Label htmlFor="location">Location</Label>
                 <Input
                   id="location"
                   {...form.register("location")}
                   placeholder="United States"
+                />
+                {form.formState.errors.location && (
+                  <p className="text-sm text-destructive">
+                    {form.formState.errors.location.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="proposals">Expected Proposals</Label>
+                <Input
+                  id="proposals"
+                  {...form.register("proposals")}
+                  placeholder="Less than 5"
                 />
               </div>
             </div>
