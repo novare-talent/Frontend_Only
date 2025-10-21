@@ -30,13 +30,6 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname
 
-  // 🚫 If the path starts with "/dashboard" (invalid route), redirect to "/"
-  if (path.toLowerCase().startsWith('/dashboard')) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/sign-in'
-    return NextResponse.redirect(url)
-  }
-
   // PUBLIC routes that don't require login
   const publicPaths = ['/', '/sign-in', '/sign-up', '/error']
   const isPublic = publicPaths.some((p) => path.startsWith(p))
@@ -46,6 +39,40 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/sign-in'
     return NextResponse.redirect(url)
+  }
+
+  // 🧭 Dashboard Routes (for regular users)
+  if (path.startsWith('/Dashboard')) {
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/sign-in'
+      return NextResponse.redirect(url)
+    }
+
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    // Allow users with 'user' role to access dashboard
+    if (error || !profile || profile.role !== 'user') {
+      // If not a regular user, redirect based on their actual role
+      if (profile?.role === 'admin') {
+        const url = request.nextUrl.clone()
+        url.pathname = '/admin'
+        return NextResponse.redirect(url)
+      } else if (profile?.role === 'client') {
+        const url = request.nextUrl.clone()
+        url.pathname = '/client'
+        return NextResponse.redirect(url)
+      } else {
+        // Unknown role or error - redirect to home
+        const url = request.nextUrl.clone()
+        url.pathname = '/'
+        return NextResponse.redirect(url)
+      }
+    }
   }
 
   // 🧭 Client Routes

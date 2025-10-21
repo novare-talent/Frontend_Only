@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Card,
   CardHeader,
@@ -68,6 +69,7 @@ export default function JobForm({
   const [profileId, setProfileId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
+  const [multiSelectValues, setMultiSelectValues] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     let mounted = true;
@@ -121,6 +123,25 @@ export default function JobForm({
 
   const hasResumes = useMemo(() => resumes.length > 0, [resumes]);
 
+  const handleMultiSelectChange = (questionIndex: number, option: string, checked: boolean) => {
+    const questionKey = `question-${questionIndex}`;
+    setMultiSelectValues(prev => {
+      const currentValues = prev[questionKey] || [];
+      
+      if (checked) {
+        return {
+          ...prev,
+          [questionKey]: [...currentValues, option]
+        };
+      } else {
+        return {
+          ...prev,
+          [questionKey]: currentValues.filter(val => val !== option)
+        };
+      }
+    });
+  };
+
   if (!formData) {
     return <div className="p-6 text-center text-muted-foreground">No form found</div>;
   }
@@ -144,16 +165,22 @@ export default function JobForm({
 
       (formData.questions ?? []).forEach((q: any, idx: number) => {
         const name = `question-${idx}`;
-        const el = (formEl.elements as any)[name];
         let value = "";
 
-        if (el && typeof el.value === "string") {
-          value = el.value ?? "";
-        } else if (el && "length" in el) {
-          for (let i = 0; i < el.length; i++) {
-            if (el[i].checked) {
-              value = el[i].value;
-              break;
+        if (q.type === "MULTI") {
+          // Get values from multiSelectValues state and convert to JSON string
+          value = JSON.stringify(multiSelectValues[name] || []);
+        } else {
+          const el = (formEl.elements as any)[name];
+          
+          if (el && typeof el.value === "string") {
+            value = el.value ?? "";
+          } else if (el && "length" in el) {
+            for (let i = 0; i < el.length; i++) {
+              if (el[i].checked) {
+                value = el[i].value;
+                break;
+              }
             }
           }
         }
@@ -285,6 +312,7 @@ export default function JobForm({
       <div className="flex flex-col gap-6">
         {formData.questions?.map((q: any, idx: number) => {
           const name = `question-${idx}`;
+          
           if (q.type === "TEXT") {
             return (
               <div key={idx} className="flex flex-col gap-2">
@@ -293,6 +321,7 @@ export default function JobForm({
               </div>
             );
           }
+          
           if (q.type === "RADIO") {
             return (
               <div key={idx} className="flex flex-col gap-3">
@@ -308,6 +337,34 @@ export default function JobForm({
               </div>
             );
           }
+          
+          if (q.type === "MULTI") {
+            return (
+              <div key={idx} className="flex flex-col gap-3">
+                <Label>{q.title}</Label>
+                <div className="space-y-2">
+                  {q.options.map((option: string, i: number) => {
+                    const optionId = `${name}-${i}`;
+                    const isChecked = (multiSelectValues[name] || []).includes(option);
+                    
+                    return (
+                      <div key={i} className="flex items-center gap-2 border p-3 rounded-lg">
+                        <Checkbox
+                          id={optionId}
+                          checked={isChecked}
+                          onCheckedChange={(checked) => 
+                            handleMultiSelectChange(idx, option, checked as boolean)
+                          }
+                        />
+                        <Label htmlFor={optionId}>{option}</Label>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          }
+          
           return null;
         })}
       </div>
