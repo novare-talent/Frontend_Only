@@ -1,9 +1,9 @@
 "use client";
 
 import React, { ReactNode } from "react";
-import { AppSidebar } from "@/components/Admin-Dashboard/app-sidebar";
+import { AppSidebar } from "@/components/Client-Dashboard/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { SiteHeader } from "@/components/Admin-Dashboard/site-header";
+import { SiteHeader } from "@/components/Client-Dashboard/site-header";
 
 
 const Layout = ({ children }: { children: ReactNode }) => {

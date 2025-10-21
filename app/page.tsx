@@ -14,6 +14,7 @@ export default function NovareTalent() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -23,6 +24,19 @@ export default function NovareTalent() {
           data: { user },
         } = await supabase.auth.getUser();
         setUser(user);
+
+        // Fetch user role from profiles table
+        if (user) {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('roles')
+            .eq('id', user.id)
+            .single();
+
+          if (!error && profile) {
+            setUserRole(profile.roles);
+          }
+        }
       } catch (error) {
         console.error("Error checking user:", error);
       } finally {
@@ -36,14 +50,46 @@ export default function NovareTalent() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
+      
+      // Fetch user role when auth state changes
+      if (session?.user) {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (!error && profile) {
+          setUserRole(profile.role);
+        }
+      } else {
+        setUserRole(null);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, [supabase]);
 
+  const getDashboardPath = () => {
+    if (!user) return "/sign-in";
+    
+    switch (userRole) {
+      case 'admin':
+        return '/admin';
+      case 'client':
+        return '/client';
+      case 'user':
+        return '/Dashboard';
+      default:
+        return '/Dashboard';
+    }
+  };
+
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
+
+  const dashboardPath = getDashboardPath();
 
   return (
     <>
@@ -112,7 +158,7 @@ export default function NovareTalent() {
                 Register Startup
               </a>
               <a 
-                href={user ? "/Dashboard" : "/sign-in"} 
+                href={dashboardPath} 
                 className="hidden md:block bg-primary text-white font-semibold px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors"
               >
                 {user ? "Dashboard" : "Sign In"}
@@ -155,7 +201,7 @@ export default function NovareTalent() {
                 Register Startup
               </a>
               <a 
-                href={user ? "/Dashboard" : "/sign-in"} 
+                href={dashboardPath} 
                 className="bg-primary text-white font-semibold px-5 py-2 rounded-lg hover:bg-primary-dark transition-colors block text-center mt-2"
               >
                 {user ? "Dashboard" : "Sign In"}

@@ -93,7 +93,7 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link href="/admin/Account" className="flex items-center gap-2">
+                <Link href="/client/Account" className="flex items-center gap-2">
                   <IconUserCircle />
                   <span>Account</span>
                 </Link>

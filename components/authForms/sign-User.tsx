@@ -43,6 +43,7 @@ export function SignUpForm({
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const profileImageInputRef = useRef<HTMLInputElement>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const supabase = createClient();
 
   const validateUrls = () => {
@@ -68,127 +69,255 @@ export function SignUpForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+
+    console.group('🔍 SIGNUP DEBUG - START');
+    console.log('📝 Form data:', formData);
+    console.log('🔑 Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log('📁 Profile image:', profileImage ? `Exists (${profileImage.name}, ${profileImage.size} bytes)` : 'None');
 
     // ✅ Step 1: Validate email domain
     const emailRegex = /^[a-zA-Z0-9._%+-]+@(iitkgp\.ac\.in|iitb\.ac\.in|iitm\.ac\.in|iitk\.ac\.in|iitd\.ac\.in|iitg\.ac\.in|iitr\.ac\.in|iitbhu\.ac\.in|iitrpr\.ac\.in|iitbbs\.ac\.in|iitgn\.ac\.in|iith\.ac\.in|iiti\.ac\.in|iitj\.ac\.in|iitp\.ac\.in|iitmandi\.ac\.in|iitpkd\.ac\.in|iittp\.ac\.in|iitism\.ac\.in|iitbhilai\.ac\.in|iitgoa\.ac\.in|iitdh\.ac\.in)$/;
 
     if (!emailRegex.test(formData.email)) {
+      console.error('❌ Email domain validation failed');
       toast.error("Invalid Email Domain", {
-        description:
-          "Only IIT institutional emails are allowed (e.g., @iitd.ac.in, @iitb.ac.in, @iitkgp.ac.in, etc.).",
+        description: "Only IIT institutional emails are allowed.",
         duration: 5000,
         position: "top-right",
       });
+      setIsLoading(false);
+      console.groupEnd();
       return;
     }
 
     // ✅ Step 2: Validate URLs
     if (!validateUrls()) {
+      console.error('❌ URL validation failed:', errors);
       toast.error("Invalid URL", {
         description: "Please fix the URL errors before submitting.",
         duration: 5000,
         position: "top-right",
       });
+      setIsLoading(false);
+      console.groupEnd();
+      return;
+    }
+
+    // ✅ Step 3: Validate password
+    if (formData.password.length < 6) {
+      console.error('❌ Password too short:', formData.password.length);
+      toast.error("Password too short", {
+        description: "Password must be at least 6 characters.",
+        duration: 5000,
+        position: "top-right",
+      });
+      setIsLoading(false);
+      console.groupEnd();
       return;
     }
 
     try {
-      // Step 3: Create user in Supabase Auth
+      console.log('🚀 Attempting Supabase auth signup...');
+      
+      // Step 4: Create user in Supabase Auth
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
+        options: {
+          data: {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+          }
+        }
+      });
+
+      console.log('📨 Auth signup response:', { 
+        data: data ? 'Received' : 'No data', 
+        error: signUpError 
       });
 
       if (signUpError) {
-        toast.error("Auth sign-up failed:", {
-          description: signUpError.message,
-          duration: 5000,
+        console.error('❌ Auth signup failed with details:', {
+          name: signUpError.name,
+          message: signUpError.message,
+          status: signUpError.status,
+          stack: signUpError.stack
+        });
+
+        // Enhanced error mapping
+        let errorDescription = signUpError.message;
+        let errorTitle = "Sign-up Failed";
+
+        if (signUpError.status === 422) {
+          errorTitle = "Invalid Data";
+          errorDescription = "The provided data is invalid. Please check your email and password.";
+        } else if (signUpError.status === 429) {
+          errorTitle = "Too Many Requests";
+          errorDescription = "Too many sign-up attempts. Please try again later.";
+        } else if (signUpError.status === 500) {
+          errorTitle = "Server Error";
+          errorDescription = "Authentication service is temporarily unavailable. This could be due to: \n• Supabase project configuration \n• Database connection issues \n• Email service problems";
+        } else if (signUpError.message?.includes("already registered") || signUpError.message?.includes("user_exists")) {
+          errorTitle = "Email Already Registered";
+          errorDescription = "This email is already registered. Please sign in instead.";
+        } else if (signUpError.message?.includes("password")) {
+          errorTitle = "Weak Password";
+          errorDescription = "Password does not meet security requirements. Must be at least 6 characters.";
+        } else if (signUpError.message?.includes("email")) {
+          errorTitle = "Invalid Email";
+          errorDescription = "Please provide a valid email address.";
+        }
+
+        toast.error(errorTitle, {
+          description: errorDescription,
+          duration: 7000,
           position: "top-right",
         });
+
+        setIsLoading(false);
+        console.groupEnd();
         return;
       }
 
       const user = data?.user;
+      console.log('👤 User object received:', user ? {
+        id: user.id,
+        email: user.email,
+        confirmed: user.confirmed_at ? 'Yes' : 'No'
+      } : 'No user object');
+
       if (!user) {
-        toast.error("Sign-up failed", {
-          description: "No user returned",
+        console.error('❌ No user object returned from auth');
+        toast.error("Sign-up Failed", {
+          description: "No user account was created. Please try again.",
           duration: 5000,
           position: "top-right",
         });
+        setIsLoading(false);
+        console.groupEnd();
         return;
       }
 
-      // Step 4: Upload profile image (optional)
+      console.log('✅ Auth successful, proceeding to profile creation...');
+
+      // Step 5: Upload profile image (optional)
       let profileImageUrl: string | null = null;
       if (profileImage) {
-        console.log("Uploading profile image for user:", user.id);
-
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("profile-images")
-          .upload(
-            `${user.id}/${(profileImage as File).name}`,
-            profileImage as File,
-            {
-              cacheControl: "3600",
-              upsert: true,
-            }
-          );
-
-        if (uploadError) {
-          toast.error("Profile image upload failed:", {
-            description: uploadError.message,
-            duration: 5000,
-            position: "top-right",
-          });
-        } else if (uploadData) {
-          const { data: publicUrlData } = supabase.storage
+        console.log('🖼️ Starting profile image upload...');
+        
+        try {
+          const { data: uploadData, error: uploadError } = await supabase.storage
             .from("profile-images")
-            .getPublicUrl(uploadData.path);
+            .upload(
+              `${user.id}/${profileImage.name}`,
+              profileImage,
+              {
+                cacheControl: "3600",
+                upsert: false,
+              }
+            );
 
-          profileImageUrl = publicUrlData.publicUrl;
-          console.log("Profile image uploaded. Public URL:", profileImageUrl);
+          if (uploadError) {
+            console.error('❌ Profile image upload failed:', uploadError);
+            toast.error("Profile Image Upload Failed", {
+              description: "Your account was created but we couldn't upload your profile image. You can update it later.",
+              duration: 5000,
+              position: "top-right",
+            });
+          } else if (uploadData) {
+            console.log('✅ Profile image uploaded successfully');
+            const { data: publicUrlData } = supabase.storage
+              .from("profile-images")
+              .getPublicUrl(uploadData.path);
+
+            profileImageUrl = publicUrlData.publicUrl;
+            console.log('🔗 Profile image URL:', profileImageUrl);
+          }
+        } catch (uploadErr) {
+          console.error('❌ Unexpected error during image upload:', uploadErr);
+          // Don't fail the entire signup for image upload errors
         }
       }
 
-      // Step 5: Insert into profiles table
-      console.log("Inserting profile row for user:", user.id);
+      // Step 6: Insert into profiles table
+      console.log('💾 Inserting profile data...');
+      
+      const profileData = {
+        id: user.id,
+        email: formData.email,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        phone: formData.phone,
+        github_link: formData.githubLink,
+        linkedin_link: formData.linkedinLink,
+        profile_image: profileImageUrl,
+      };
 
-      const { error: profileError } = await supabase.from("profiles").upsert([
-        {
-          id: user.id,
-          email: formData.email,
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          phone: formData.phone,
-          github_link: formData.githubLink,
-          linkedin_link: formData.linkedinLink,
-          profile_image: profileImageUrl,
-        },
-      ]);
+      console.log('📋 Profile data to insert:', profileData);
+
+      const { error: profileError } = await supabase.from("profiles").upsert([profileData]);
 
       if (profileError) {
-        toast.error("User created in Auth but profile insert failed", {
-          description: profileError.message,
-          duration: 5000,
+        console.error('❌ Profile creation failed:', {
+          message: profileError.message,
+          details: profileError.details,
+          hint: profileError.hint,
+          code: profileError.code
+        });
+
+        let profileErrorDescription = profileError.message;
+        
+        if (profileError.code === '42501') {
+          profileErrorDescription = "Database permission denied. Check RLS policies.";
+        } else if (profileError.code === '23505') {
+          profileErrorDescription = "Profile already exists for this user.";
+        } else if (profileError.message?.includes('row-level security')) {
+          profileErrorDescription = "Database security policy prevented profile creation.";
+        }
+
+        toast.error("Profile Creation Failed", {
+          description: `Account created but profile setup failed: ${profileErrorDescription}`,
+          duration: 7000,
           position: "top-right",
         });
+
+        setIsLoading(false);
+        console.groupEnd();
         return;
       }
 
-      toast("Account created successfully!", {
-        description: "Please check your email to confirm.",
+      console.log('✅ Profile created successfully!');
+      console.log('🎉 Signup process completed successfully');
+
+      toast.success("Account Created Successfully!", {
+        description: "Please check your email to confirm your account.",
         duration: 10000,
         position: "top-right",
-        style: {
-          color: "#065f46",
-          fontSize: "1.2rem",
-          padding: "1.25rem",
-          border: "1px solid #10b981",
-          borderRadius: "0.75rem",
-        },
       });
+
+      // Optional: Reset form
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        githubLink: "",
+        linkedinLink: "",
+        password: "",
+      });
+      setProfileImage(null);
+
     } catch (err) {
-      alert("Unexpected error: " + (err as Error).message);
+      console.error('💥 Unexpected error in signup process:', err);
+      toast.error("Unexpected Error", {
+        description: `An unexpected error occurred: ${err instanceof Error ? err.message : 'Unknown error'}`,
+        duration: 7000,
+        position: "top-right",
+      });
+    } finally {
+      setIsLoading(false);
+      console.groupEnd();
     }
   };
 
@@ -270,6 +399,7 @@ export function SignUpForm({
                   type="text"
                   required
                   placeholder="First name"
+                  value={formData.firstName}
                   onChange={handleChange}
                 />
               </div>
@@ -280,6 +410,7 @@ export function SignUpForm({
                   type="text"
                   required
                   placeholder="Last name"
+                  value={formData.lastName}
                   onChange={handleChange}
                 />
               </div>
@@ -295,6 +426,7 @@ export function SignUpForm({
                   required
                   className="pl-10"
                   placeholder="yourname@iitd.ac.in"
+                  value={formData.email}
                   onChange={handleChange}
                 />
               </div>
@@ -310,6 +442,7 @@ export function SignUpForm({
                   required
                   className="pl-10"
                   placeholder="+91 83455 67890"
+                  value={formData.phone}
                   onChange={handleChange}
                 />
               </div>
@@ -322,8 +455,9 @@ export function SignUpForm({
                   id="password"
                   type={showPassword ? "text" : "password"}
                   required
+                  value={formData.password}
                   onChange={handleChange}
-                  placeholder="Create a strong password"
+                  placeholder="Create a strong password (min. 6 characters)"
                   className="pr-10"
                 />
                 <button
@@ -342,6 +476,7 @@ export function SignUpForm({
                 id="githubLink"
                 type="url"
                 required
+                value={formData.githubLink}
                 onChange={handleChange}
                 placeholder="https://github.com/username"
                 className={errors.githubLink ? "border-red-500" : ""}
@@ -357,6 +492,7 @@ export function SignUpForm({
                 id="linkedinLink"
                 type="url"
                 required
+                value={formData.linkedinLink}
                 onChange={handleChange}
                 placeholder="https://linkedin.com/in/username"
                 className={errors.linkedinLink ? "border-red-500" : ""}
@@ -366,8 +502,12 @@ export function SignUpForm({
               )}
             </div>
 
-            <Button type="submit" className="w-full mt-4">
-              Sign Up
+            <Button 
+              type="submit" 
+              className="w-full mt-4"
+              disabled={isLoading}
+            >
+              {isLoading ? "Creating Account..." : "Sign Up"}
             </Button>
           </form>
           <div className="text-center text-md mt-5">

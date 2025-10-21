@@ -26,22 +26,52 @@ export function LoginForm({
     event.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error, data } = await supabase.auth.signInWithPassword({
       email: userInput.email,
       password: userInput.password,
     });
 
+    if (error) {
+      toast.error("Error", { description: error.message });
+      setLoading(false);
+      return;
+    }
+
+    // ✅ Get the user’s role after login
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      toast.error("Error", { description: "Unable to retrieve user." });
+      setLoading(false);
+      return;
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
     setLoading(false);
 
-    if (error) {
-      toast.error("Error", {
-        description: error.message,
-      })
-    } else {
-      router.push("/Dashboard/"); // change path as needed
+    if (profileError || !profile) {
+      toast.error("Error", { description: "User profile not found." });
+      return;
     }
-  };
 
+    // 🧭 Redirect based on role
+    if (profile.role === "client") {
+      router.push("/client");
+    } else if (profile.role === "admin") {
+      router.push("/admin");
+    } else {
+      router.push("/Dashboard");
+    }
+
+    toast.success("Login successful!");
+  };
 
   return (
     <div>
@@ -86,6 +116,7 @@ export function LoginForm({
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
           </Button>
+
           <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
             <span className="bg-background text-muted-foreground relative z-10 px-2">
               Or continue with
