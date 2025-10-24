@@ -8,15 +8,15 @@ const links = [
         items: [
             {
                 title: 'Process',
-                href: '#',
+                href: '#process',
             },
             {
                 title: 'Team',
-                href: '#',
+                href: '#team',
             },
             {
                 title: 'Testimonials',
-                href: '#',
+                href: '#testimonials',
             },
         ],
     },
@@ -38,11 +38,11 @@ const links = [
         items: [
             {
                 title: 'About',
-                href: '#',
+                href: '#About',
             },
             {
                 title: 'Contact',
-                href: '#',
+                href: '#contact',
             },
         ],
     },
@@ -51,11 +51,11 @@ const links = [
         items: [
             {
                 title: 'Terms of Service',
-                href: '#',
+                href: '/Terms&Conditions.pdf',
             },
             {
                 title: 'Refund Policy',
-                href: '#',
+                href: '/Refund&CreditPolicy.pdf',
             },
         ],
     },
