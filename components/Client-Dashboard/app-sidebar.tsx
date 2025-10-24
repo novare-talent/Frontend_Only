@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import {
-  IconDashboard
+  IconDashboard, IconCreditCard
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/Client-Dashboard/nav-main";
@@ -51,6 +51,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Dashboard",
       url: "/client",
       icon: IconDashboard,
+    },
+    {
+      title: "Billing",
+      url: "/client/billing",
+      icon: IconCreditCard,
     },
   ];
 

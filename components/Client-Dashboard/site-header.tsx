@@ -9,6 +9,7 @@ import { ModeToggle } from "../toggle-button";
 const pageTitles: { [key: string]: string } = {
   '/client/': 'Dashboard',
   '/client/create-job': 'Create Job',
+  '/client/billing': 'Billing',
   '/client/Account': 'My Account',
 };
 
