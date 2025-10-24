@@ -52,14 +52,5 @@
     "stipend": "25000",
     "limit": "1",
     "reviewer": "Kanishk Kumar"
-  },
-  {
-    "id": 7,
-    "header": "Cloud Solutions Engineer",
-    "type": "Full-time",
-    "status": "Pending",
-    "stipend": "95000",
-    "limit": "8",
-    "reviewer": "Ravi Iyer"
   }
 ]
