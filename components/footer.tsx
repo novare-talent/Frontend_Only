@@ -100,7 +100,7 @@ export default function FooterSection() {
 
                     <div className="order-first flex flex-wrap justify-center gap-6 text-sm md:order-last">
                         <Link
-                            href="#"
+                            href="https://www.linkedin.com/company/novare-talent/"
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label="LinkedIn"
@@ -117,7 +117,7 @@ export default function FooterSection() {
                             </svg>
                         </Link>
                         <Link
-                            href="#"
+                            href="https://www.instagram.com/novare_talent?igsh=MWZnc3dnMG5xbXR2OQ=="
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label="Instagram"
