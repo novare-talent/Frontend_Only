@@ -131,6 +131,10 @@ export function LoginForm({
           Sign up
         </a>
       </div>
+      <div className="px-6 text-center mt-4 text-sm text-muted-foreground">
+        By clicking continue, you agree to our <a href="/public/Terms&Conditions.pdf" className="underline underline-offset-4">Terms of Service</a>{" "}
+        and <a href="/Refund&CreditPolicy.pdf" className="underline underline-offset-4">Refund Policy</a>.
+      </div>
     </div>
   );
 }
