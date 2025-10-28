@@ -88,7 +88,7 @@ export default function NewJobPage() {
       status: 'active',
       employer_id: userId,
       created_at: new Date().toISOString(),
-      form_link: questions.length > 0 ? `/apply/${formId}` : null,
+      form_link: questions.length > 0 ? `/Jobs/${formId}` : null,
       form_id: questions.length > 0 ? formId : null,
     }
 
