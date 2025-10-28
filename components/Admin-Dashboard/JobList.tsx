@@ -6,7 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
-const supabase = createClient();
+
 
 interface Job {
   job_id: string;
@@ -20,7 +20,7 @@ export default function JobList() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [evaluatingJob, setEvaluatingJob] = useState<string | null>(null);
   const router = useRouter();
-
+  const supabase = createClient();
   useEffect(() => {
     fetchJobs();
   }, []);
@@ -38,17 +38,31 @@ export default function JobList() {
     }
   };
 
+
   const handleEvaluate = async (jobId: string) => {
   try {
     setEvaluatingJob(jobId);
     console.log("Evaluating candidates for job:", jobId);
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("User not authenticated");
 
-    const response = await fetch(`http://127.0.0.1:8000/evaluate/${jobId}`, {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+    const response = await fetch(`${API_URL}/evaluate/${jobId}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${session.access_token}`,
       },
     });
+
+    // const response = await fetch(`http://127.0.0.1:8000/evaluate/${jobId}`, {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    // });
 
     if (!response.ok) {
       throw new Error(`API error: ${response.statusText}`);

@@ -50,10 +50,23 @@ export default function CreateJob() {
 
     const jobId = inserted.job_id;
 
-    // 3. Call backend API to generate form (this auto-updates Supabase)
-    const response = await fetch(`http://localhost:8000/generate_form/${jobId}`, {
+    const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("User not authenticated");
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+    const response = await fetch(`${API_URL}/generate_form/${jobId}`, {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${session.access_token}`,
+      },
     });
+
+    // 3. Call backend API to generate form (this auto-updates Supabase)
+    // const response = await fetch(`http://localhost:8000/generate_form/${jobId}`, {
+    //   method: "POST",
+    // });
 
     if (!response.ok) {
       throw new Error(`Failed to generate form: ${response.statusText}`);
