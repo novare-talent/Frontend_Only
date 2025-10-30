@@ -467,7 +467,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
       <Card className="mx-auto max-w-7xl p-4 py-6 shadow-lg w-96">
         <CardHeader className="text-center">
           <CardTitle className="font-ibm-plex-sans text-xl">Welcome Aboard</CardTitle>
-          <CardDescription>Create an Account to build your professional profile.</CardDescription>
+          <CardDescription>Create an account to build your professional profile.</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs
@@ -476,8 +476,8 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
             className="w-full"
           >
             <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="user">User Sign Up</TabsTrigger>
-              <TabsTrigger value="client">Client Sign Up</TabsTrigger>
+              <TabsTrigger value="user">Candidate sign up</TabsTrigger>
+              <TabsTrigger value="client">Recruiters sign up</TabsTrigger>
             </TabsList>
 
             <TabsContent value="user">
@@ -536,7 +536,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                 </div>
 
                 <div className="grid gap-2 mt-3">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">College Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -544,7 +544,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                       type="email"
                       required
                       className="pl-10"
-                      placeholder="yourname@iitd.ac.in"
+                      placeholder="@iitb.ac.in"
                       value={userFormData.email}
                       onChange={handleUserChange}
                     />
@@ -560,7 +560,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                       type="tel"
                       required
                       className="pl-10"
-                      placeholder="+91 83455 67890"
+                      placeholder="+91 XXXXX YYYYY"
                       value={userFormData.phone}
                       onChange={handleUserChange}
                     />
@@ -594,7 +594,6 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                   <Input
                     id="githubLink"
                     type="url"
-                    required
                     value={userFormData.githubLink}
                     onChange={handleUserChange}
                     placeholder="https://github.com/username"
@@ -618,7 +617,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                 </div>
 
                 <Button type="submit" className="w-full mt-4" disabled={isLoading}>
-                  {isLoading ? "Creating Account..." : "Sign Up"}
+                  {isLoading ? "Creating Account..." : "Sign Up as Candidate"}
                 </Button>
               </form>
             </TabsContent>
