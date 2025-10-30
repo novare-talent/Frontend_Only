@@ -536,7 +536,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                 </div>
 
                 <div className="grid gap-2 mt-3">
-                  <Label htmlFor="email">College Email</Label>
+                  <Label htmlFor="email">Student Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -759,7 +759,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
             </a>
           </div>
           <div className="px-6 text-center mt-4 text-sm text-muted-foreground">
-            By clicking continue, you agree to our <a href="/Terms&Conditions.pdf" className="underline underline-offset-4">Terms of Service</a>{" "}
+            By signing up, you agree to our <a href="/Terms&Conditions.pdf" className="underline underline-offset-4">Terms of Service</a>{" "}
             and <a href="/Refund&CreditPolicy.pdf" className="underline underline-offset-4">Refund Policy</a>.
           </div>
         </CardContent>
