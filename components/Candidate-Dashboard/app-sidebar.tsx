@@ -118,7 +118,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain items={data.navMain} pathname={pathname} /> {/* Pass pathname */}
+        <NavMain items={data.navMain}/>
       </SidebarContent>
 
       <SidebarFooter suppressHydrationWarning>
