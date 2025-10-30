@@ -13,12 +13,14 @@ import Link from "next/link";
 
 export function NavMain({
   items,
+  pathname,
 }: {
   items: {
     title: string;
     url: string;
     icon?: Icon;
   }[];
+  pathname: string; // Add pathname prop
 }) {
   return (
     <SidebarGroup>
@@ -37,16 +39,19 @@ export function NavMain({
           </SidebarMenuItem>
         </SidebarMenu>
         <SidebarMenu>
-          {items.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <a href={item.url} about={item.title}>
-                <SidebarMenuButton tooltip={item.title}>
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
+          {items.map((item) => {
+            const isActive = pathname === item.url; // Check if current route
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton tooltip={item.title} asChild isActive={isActive}>
+                  <Link href={item.url}>
+                    {item.icon && <item.icon />}
+                    <span>{item.title}</span>
+                  </Link>
                 </SidebarMenuButton>
-              </a>
-            </SidebarMenuItem>
-          ))}
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

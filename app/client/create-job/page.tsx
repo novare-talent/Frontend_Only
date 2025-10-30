@@ -54,7 +54,7 @@ export default function NewJobPage() {
     if (meta.jdFile) {
       console.log("Uploading JD file...")
       const fileName = `${Date.now()}-${meta.jdFile.name}`
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { data: _uploadData, error: uploadError } = await supabase.storage
         .from('jd')
         .upload(`jobs/${fileName}`, meta.jdFile)
       
@@ -88,7 +88,7 @@ export default function NewJobPage() {
       status: 'active',
       employer_id: userId,
       created_at: new Date().toISOString(),
-      form_link: questions.length > 0 ? `/apply/${formId}` : null,
+      form_link: questions.length > 0 ? `/Jobs/${formId}` : null,
       form_id: questions.length > 0 ? formId : null,
     }
 

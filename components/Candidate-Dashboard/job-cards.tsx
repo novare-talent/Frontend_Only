@@ -88,7 +88,7 @@ const IntegrationCard = ({
 
 export default function JobsGrid() {
   const [jobs, setJobs] = useState<JobWithFormStatus[]>([]);
-  const [visible, setVisible] = useState(9);
+  const [visible, setVisible] = useState(6);
 
   useEffect(() => {
     fetchJobsWithFormStatus();
@@ -196,7 +196,7 @@ export default function JobsGrid() {
       {visible < jobs.length && (
         <div className="flex justify-center">
           <Button onClick={() => setVisible((prev) => prev + 9)}>
-            View More
+            View More ...
           </Button>
         </div>
       )}

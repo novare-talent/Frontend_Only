@@ -17,8 +17,9 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Image from "next/image";
-import { createClient } from "@/utils/supabase/client"; // 👈 same helper you already have
+import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
+import { usePathname } from "next/navigation"; // Add this import
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [user, setUser] = React.useState<{
@@ -26,6 +27,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     email: string;
     avatar: string;
   } | null>(null);
+
+  const pathname = usePathname(); // Add this
 
   React.useEffect(() => {
     const fetchUser = async () => {
@@ -90,7 +93,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navMain} />
+        <NavMain items={navMain} pathname={pathname} /> {/* Pass pathname */}
       </SidebarContent>
       <SidebarFooter>
         {user && <NavUser user={user} />}
