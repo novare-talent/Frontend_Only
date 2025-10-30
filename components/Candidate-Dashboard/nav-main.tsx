@@ -36,7 +36,7 @@ export function NavMain({
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+       
+      </SidebarGroup>
   );
 }
