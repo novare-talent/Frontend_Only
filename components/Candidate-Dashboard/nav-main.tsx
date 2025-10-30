@@ -1,27 +1,27 @@
 // nav-main.tsx
 "use client";
-
+// NavMain component for Candidate Dashboard navigation
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { type LucideIcon } from "lucide-react";
+import { IconCirclePlusFilled } from "@tabler/icons-react";
+
 import {
   SidebarGroup,
-  SidebarGroupLabel,
+  SidebarGroupContent,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { IconCirclePlusFilled } from "@tabler/icons-react";
 
 export function NavMain({
   items,
-  pathname,
 }: {
   items: {
     title: string;
     url: string;
     icon?: LucideIcon | any;
   }[];
-  pathname: string;
 }) {
   return (
     <SidebarGroup>
@@ -36,21 +36,7 @@ export function NavMain({
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-      <SidebarMenu>
-        {items.map((item) => {
-          const isActive = pathname === item.url;
-          return (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild isActive={isActive}>
-                <Link href={item.url}>
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          );
-        })}
-      </SidebarMenu>
-    </SidebarGroup>
+       
+      </SidebarGroup>
   );
 }

@@ -409,7 +409,6 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
         return
       }
 
-      console.log("✅ Client profile created successfully!")
       console.log("🎉 Client signup process completed successfully")
 
       toast.success("Client Account Created Successfully!", {
