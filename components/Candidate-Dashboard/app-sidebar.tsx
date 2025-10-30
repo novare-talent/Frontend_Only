@@ -21,12 +21,13 @@ import {
 import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "/Dashboard/",
+      url: "/Dashboard",
       icon: IconDashboard,
     },
     {
@@ -44,6 +45,7 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [user, setUser] = React.useState<any>(null);
+  const pathname = usePathname(); // Add this
 
   React.useEffect(() => {
     const supabase = createClient();
@@ -116,7 +118,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={data.navMain} pathname={pathname} /> {/* Pass pathname */}
       </SidebarContent>
 
       <SidebarFooter suppressHydrationWarning>

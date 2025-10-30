@@ -31,7 +31,15 @@ export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname
 
   // PUBLIC routes that don't require login
-  const publicPaths = ['/', '/sign-in', '/sign-up', '/error']
+  const publicPaths = [
+    '/', 
+    '/sign-in', 
+    '/sign-up', 
+    '/error',
+    '/forgot-password',
+    '/auth/update-password', // Add this - critical for password reset
+    '/auth/callback', // Also add callback if you use it
+  ]
   const isPublic = publicPaths.some((p) => path.startsWith(p))
 
   // 🔒 If not signed in and not on a public path → redirect to sign-in
