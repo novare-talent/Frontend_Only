@@ -14,7 +14,14 @@ export default async function ForgotPasswordPage({
   const params = await searchParams
 
   return (
-    <section className="flex min-h-screen bg-zinc-50 px-4 py-16 md:py-32 dark:bg-transparent">
+    <section className="flex min-h-svh w-full items-center justify-center">
+          <Image
+            src="/BackgroundAuth.jpg"
+            alt="Background"
+            fill
+            className="object-cover -z-10"
+            priority
+          />
       <form
         action={resetPassword}
         className="bg-muted m-auto h-fit w-full max-w-sm overflow-hidden rounded-[calc(var(--radius)+.125rem)] border shadow-md shadow-zinc-950/5 dark:[--color-muted:var(--color-zinc-900)]">
@@ -80,7 +87,7 @@ export default async function ForgotPasswordPage({
           <p className="text-accent-foreground text-center text-sm">
             Remembered your password?
             <Button asChild variant="link" className="px-2">
-              <Link href="/login">Log in</Link>
+              <Link href="/sign-in">Log in</Link>
             </Button>
           </p>
         </div>

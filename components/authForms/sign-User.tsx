@@ -475,7 +475,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
             onValueChange={(value) => setSignupType(value as "user" | "client")}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsList className="grid w-full grid-cols-2 mb-0">
               <TabsTrigger value="user">User Sign Up</TabsTrigger>
               <TabsTrigger value="client">Client Sign Up</TabsTrigger>
             </TabsList>
@@ -483,7 +483,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
             <TabsContent value="user">
               <form onSubmit={handleUserSubmit}>
                 {/* Profile Picture Upload */}
-                <div className="mb-6 flex flex-col items-center gap-2">
+                {/* <div className="mb-6 flex flex-col items-center gap-2">
                   <Label htmlFor="profile-picture">Profile Picture (Optional)</Label>
                   <div className="relative group cursor-pointer" onClick={() => profileImageInputRef.current?.click()}>
                     <Avatar className="h-24 w-24">
@@ -507,7 +507,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                     accept="image/*"
                     onChange={handleProfileImageChange}
                   />
-                </div>
+                </div> */}
 
                 {/* Fields */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
