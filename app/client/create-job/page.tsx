@@ -24,7 +24,9 @@ export default function NewJobPage() {
 
   const [questions, setQuestions] = useState<Question[]>([])
   const [isCreating, setIsCreating] = useState(false)
+  const [isGeneratingForm, setIsGeneratingForm] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
+  const [uploadedJdUrl, setUploadedJdUrl] = useState<string | null>(null)
 
   // Get the current user ID
   useEffect(() => {
@@ -37,22 +39,153 @@ export default function NewJobPage() {
   }, [])
 
   async function handleCreate() {
-  if (!userId) {
-    alert("You must be logged in to create a job")
-    return
+    if (!userId) {
+      alert("You must be logged in to create a job")
+      return
+    }
+
+    setIsCreating(true)
+    const supabase = createClient()
+    
+    try {
+      console.log("Starting job creation process...")
+      console.log("User ID:", userId)
+
+      // 1. Use already uploaded JD URL or upload if not done yet
+      let jdUrl = uploadedJdUrl
+      if (!jdUrl && meta.jdFile) {
+        console.log("Uploading JD file...")
+        const fileName = `${Date.now()}-${meta.jdFile.name}`
+        const { data: _uploadData, error: uploadError } = await supabase.storage
+          .from('jd')
+          .upload(`jobs/${fileName}`, meta.jdFile)
+        
+        if (uploadError) {
+          console.error("JD upload error:", uploadError)
+          throw uploadError
+        }
+        
+        jdUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/jd/jobs/${fileName}`
+        console.log("JD uploaded successfully:", jdUrl)
+      }
+
+      // 2. Create job and form in a single operation
+      const jobId = crypto.randomUUID()
+      const formId = crypto.randomUUID()
+      
+      console.log("Creating job and form together...")
+      
+      // Prepare job data
+      const jobData = {
+        job_id: jobId,
+        Job_Name: meta.title,
+        Job_Description: meta.description,
+        JD_pdf: jdUrl,
+        level: meta.level,
+        stipend: meta.stipend,
+        location: meta.location,
+        duration: meta.duration,
+        closingTime: meta.closingTime,
+        tags: meta.tags,
+        status: 'active',
+        employer_id: userId,
+        created_at: new Date().toISOString(),
+        form_link: questions.length > 0 ? `/Jobs/${formId}` : null,
+        form_id: questions.length > 0 ? formId : null,
+      }
+
+      // Prepare form data if questions exist
+      const formData = questions.length > 0 ? {
+        form_id: formId,
+        job_id: jobId,
+        form: {
+          title: `${meta.title} - Application Form`,
+          questions: questions.map(q => ({
+            type: q.type.toUpperCase(),
+            title: q.title,
+            required: q.required || false,
+            options: q.options || undefined
+          }))
+        },
+        created_at: new Date().toISOString(),
+      } : null
+
+      // Insert job first
+      const { data: job, error: jobError } = await supabase
+        .from('jobs')
+        .insert(jobData)
+        .select()
+        .single()
+
+      if (jobError) {
+        console.error("Job insertion error:", jobError)
+        throw jobError
+      }
+      
+      console.log("Job created successfully:", job)
+
+      // Then insert form if questions exist
+      if (formData) {
+        console.log("Creating form...")
+        const { data: form, error: formError } = await supabase
+          .from('forms')
+          .insert(formData)
+          .select()
+          .single()
+
+        if (formError) {
+          console.error("Form insertion error:", formError)
+          
+          // If form creation fails, delete the job to maintain consistency
+          await supabase.from('jobs').delete().eq('job_id', jobId)
+          throw formError
+        }
+
+        console.log("Form created successfully:", form)
+      }
+
+      // Success
+      console.log("Job created successfully:", { jobId, meta, questions })
+      alert("Job created successfully!")
+      
+      // Reset form
+      setMeta({
+        title: "",
+        level: "",
+        stipend: "",
+        location: "",
+        duration: "",
+        closingTime: "",
+        tags: [],
+        description: "",
+        jdFile: null,
+        jdFileName: undefined,
+      })
+      setQuestions([])
+      setUploadedJdUrl(null)
+
+    } catch (error: any) {
+      console.error('Failed to create job:', error)
+      alert(`Failed to create job: ${error.message}`)
+    } finally {
+      setIsCreating(false)
+    }
   }
 
-  setIsCreating(true)
-  const supabase = createClient()
-  
-  try {
-    console.log("Starting job creation process...")
-    console.log("User ID:", userId)
+  async function generateFormWithAI() {
+    // Check if JD file is uploaded
+    if (!meta.jdFile) {
+      alert('Please upload a Job Description PDF first before generating the form.')
+      return
+    }
 
-    // 1. Upload JD file if exists
-    let jdUrl = null
-    if (meta.jdFile) {
-      console.log("Uploading JD file...")
+    setIsGeneratingForm(true)
+    const supabase = createClient()
+    
+    try {
+      console.log("Uploading JD file to Supabase...")
+      
+      // 1. Upload JD file to Supabase first
       const fileName = `${Date.now()}-${meta.jdFile.name}`
       const { data: _uploadData, error: uploadError } = await supabase.storage
         .from('jd')
@@ -63,143 +196,53 @@ export default function NewJobPage() {
         throw uploadError
       }
       
-      jdUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/jd/jobs/${fileName}`
+      const jdUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/jd/jobs/${fileName}`
+      setUploadedJdUrl(jdUrl) // Store for later use in handleCreate
       console.log("JD uploaded successfully:", jdUrl)
-    }
 
-    // 2. Create job and form in a single operation
-    const jobId = crypto.randomUUID()
-    const formId = crypto.randomUUID()
-    
-    console.log("Creating job and form together...")
-    
-    // Prepare job data
-    const jobData = {
-      job_id: jobId,
-      Job_Name: meta.title,
-      Job_Description: meta.description,
-      JD_pdf: jdUrl,
-      level: meta.level,
-      stipend: meta.stipend,
-      location: meta.location,
-      duration: meta.duration,
-      closingTime: meta.closingTime,
-      tags: meta.tags,
-      status: 'active',
-      employer_id: userId,
-      created_at: new Date().toISOString(),
-      form_link: questions.length > 0 ? `/Jobs/${formId}` : null,
-      form_id: questions.length > 0 ? formId : null,
-    }
-
-    // Prepare form data if questions exist
-    const formData = questions.length > 0 ? {
-      form_id: formId,
-      job_id: jobId,
-      form: {
-        title: `${meta.title} - Application Form`,
-        questions: questions.map(q => ({
-          type: q.type.toUpperCase(),
-          title: q.title,
-          required: q.required || false,
-          options: q.options || undefined
-        }))
-      },
-      created_at: new Date().toISOString(),
-    } : null
-
-    // Insert job first
-    const { data: job, error: jobError } = await supabase
-      .from('jobs')
-      .insert(jobData)
-      .select()
-      .single()
-
-    if (jobError) {
-      console.error("Job insertion error:", jobError)
-      throw jobError
-    }
-    
-    console.log("Job created successfully:", job)
-
-    // Then insert form if questions exist
-    if (formData) {
-      console.log("Creating form...")
-      const { data: form, error: formError } = await supabase
-        .from('forms')
-        .insert(formData)
-        .select()
-        .single()
-
-      if (formError) {
-        console.error("Form insertion error:", formError)
-        
-        // If form creation fails, delete the job to maintain consistency
-        await supabase.from('jobs').delete().eq('job_id', jobId)
-        throw formError
+      // 2. Send the URL to the API
+      console.log("Generating form with AI...")
+      
+      const requestBody = {
+        jdUrl: jdUrl,
+        jobTitle: meta.title || undefined,
+        jobDescription: meta.description || undefined,
       }
 
-      console.log("Form created successfully:", form)
-    }
-
-    // Success
-    console.log("Job created successfully:", { jobId, meta, questions })
-    alert("Job created successfully!")
-    
-    // Reset form
-    setMeta({
-      title: "",
-      level: "",
-      stipend: "",
-      location: "",
-      duration: "",
-      closingTime: "",
-      tags: [],
-      description: "",
-      jdFile: null,
-      jdFileName: undefined,
-    })
-    setQuestions([])
-
-  } catch (error: any) {
-    console.error('Failed to create job:', error)
-    alert(`Failed to create job: ${error.message}`)
-  } finally {
-    setIsCreating(false)
-  }
-}
-
-  async function generateFormWithAI() {
-    try {
-      // Call your AI service to generate questions
-      const response = await fetch('/api/ai/generate-form', {
+      // Call the API route
+      const response = await fetch('/api/generate-form', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jobTitle: meta.title,
-          jobDescription: meta.description,
-          level: meta.level,
-          tags: meta.tags
-        })
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
       })
-      
-      if (!response.ok) throw new Error('AI service failed')
-      
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to generate form')
+      }
+
       const { questions: aiQuestions } = await response.json()
-      
-      // Convert AI response to your Question format
+      console.log("AI generated questions:", aiQuestions)
+
+      // Convert AI response to Question format with unique IDs
       const convertedQuestions: Question[] = aiQuestions.map((q: any) => ({
         id: Math.random().toString(36).slice(2, 9),
-        type: q.type.toLowerCase(),
+        type: q.type as Question['type'],
         title: q.title,
-        required: q.required || false,
+        required: q.required !== false,
         options: q.options || undefined
       }))
-      
+
       setQuestions(convertedQuestions)
-    } catch (error) {
+      alert('Form generated successfully! Review and edit the questions as needed.')
+
+    } catch (error: any) {
       console.error('Failed to generate form with AI:', error)
-      alert('Failed to generate form with AI. Please try again.')
+      alert(`Failed to generate form with AI: ${error.message}`)
+    } finally {
+      setIsGeneratingForm(false)
     }
   }
 
@@ -214,6 +257,7 @@ export default function NewJobPage() {
           value={questions} 
           onChange={setQuestions}
           onGenerateAI={generateFormWithAI}
+          isGenerating={isGeneratingForm}
         />
         <JobFormPreview questions={questions} />
       </section>

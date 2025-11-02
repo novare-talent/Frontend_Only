@@ -7,13 +7,13 @@ import type { Question } from "./question-builder"
 
 export function JobFormPreview({ questions }: { questions: Question[] }) {
   return (
-    <Card className="rounded-2xl border bg-card/60 backdrop-blur-sm">
+    <Card className="rounded-2xl border bg-card/60 backdrop-blur-md">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg text-primary">Form Preview</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-4">
         {questions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Questions you add in the builder will preview here.</p>
+          <p className="text-md text-muted-foreground">Questions you add in the builder will preview here.</p>
         ) : (
           <form className="grid gap-4">
             {questions.map((q) => (
@@ -25,7 +25,7 @@ export function JobFormPreview({ questions }: { questions: Question[] }) {
                 {q.type === "radio" && (
                   <div className="grid gap-2">
                     {(q.options || []).map((o, i) => (
-                      <label key={i} className="flex items-center gap-2 text-sm">
+                      <label key={i} className="flex items-center gap-2 text-md">
                         <input type="radio" name={q.id} /> {o}
                       </label>
                     ))}
@@ -34,7 +34,7 @@ export function JobFormPreview({ questions }: { questions: Question[] }) {
                 {q.type === "multi" && (
                   <div className="grid gap-2">
                     {(q.options || []).map((o, i) => (
-                      <label key={i} className="flex items-center gap-2 text-sm">
+                      <label key={i} className="flex items-center gap-2 text-md">
                         <input type="checkbox" /> {o}
                       </label>
                     ))}

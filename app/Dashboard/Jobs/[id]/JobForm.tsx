@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/card";
 import { FileText } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 
 type MaybeResumeSource = string[] | string | null | undefined;
 
@@ -228,7 +229,7 @@ export default function JobForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="max-w-3xl mx-auto p-8 flex flex-col gap-8 rounded-2xl border bg-card shadow-md"
+      className="max-w-4xl mx-auto p-8 flex flex-col gap-8 rounded-2xl border bg-card shadow-md"
     >
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight">{formData.title}</h1>
@@ -282,7 +283,7 @@ export default function JobForm({
                       <div className="flex items-center gap-3 min-w-0">
                         <div
                           className={`h-4 w-4 rounded-full border flex-shrink-0 ${
-                            isSelected ? "bg-accent border-accent" : "bg-transparent"
+                            isSelected ? "bg-primary border-accent" : "bg-transparent"
                           }`}
                           aria-hidden
                         />
@@ -292,7 +293,7 @@ export default function JobForm({
                         </div>
                       </div>
 
-                      <div className="text-xs text-muted-foreground truncate max-w-[40%]">
+                      <div className="text-sm text-muted-foreground truncate max-w-[40%]">
                         <a className="underline" href={url} target="_blank" rel="noreferrer">
                           View
                         </a>
@@ -302,7 +303,7 @@ export default function JobForm({
                 })}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No resumes found in your profile.</p>
+              <p className="text-sm text-muted-foreground">No resumes found in your profile. You can add resumes in your <Link href="/Dashboard/Account" about="View Profile" className="underline-offset-2 underline text-primary">profile</Link></p>
             )}
           </CardContent>
         </Card>

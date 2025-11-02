@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   IconDotsVertical,
   IconLogout,
@@ -38,6 +39,33 @@ export function NavUser({
   const { isMobile } = useSidebar();
   const router = useRouter();
   const supabase = createClient();
+  const [initials, setInitials] = useState("CN");
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        
+        if (authUser) {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('first_name, last_name')
+            .eq('id', authUser.id)
+            .single();
+
+          if (!error && profile) {
+            const firstInitial = profile.first_name?.charAt(0).toUpperCase() || '';
+            const lastInitial = profile.last_name?.charAt(0).toUpperCase() || '';
+            setInitials(firstInitial + lastInitial || 'CN');
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+      }
+    };
+
+    fetchUserProfile();
+  }, [supabase]);
 
   const handleLogout = async () => {
     try {
@@ -59,7 +87,7 @@ export function NavUser({
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
@@ -80,7 +108,7 @@ export function NavUser({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>

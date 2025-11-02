@@ -22,7 +22,8 @@ type BuilderProps = {
   value: Question[]
   onChange: (v: Question[]) => void
   className?: string
-  onGenerateAI?: () => void // Add this prop
+  onGenerateAI?: () => void
+  isGenerating?: boolean
 }
 
 const PALETTE: { type: QuestionType; title: string; hint: string }[] = [
@@ -35,7 +36,7 @@ function uid() {
   return Math.random().toString(36).slice(2, 9)
 }
 
-export function QuestionBuilder({ value, onChange, className, onGenerateAI }: BuilderProps) {
+export function QuestionBuilder({ value, onChange, className, onGenerateAI, isGenerating }: BuilderProps) {
   const [activeId, setActiveId] = useState<string | null>(null)
   const dragSrcId = useRef<string | null>(null)
 
@@ -111,8 +112,16 @@ export function QuestionBuilder({ value, onChange, className, onGenerateAI }: Bu
               variant="secondary" 
               className="ml-auto"
               onClick={onGenerateAI}
+              disabled={isGenerating}
             >
-              Generate from AI
+              {isGenerating ? (
+                <>
+                  <span className="animate-spin mr-2">⚙️</span>
+                  Generating...
+                </>
+              ) : (
+                '✨ Generate from AI'
+              )}
             </Button>
           </div>
 

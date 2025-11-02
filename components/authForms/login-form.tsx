@@ -74,7 +74,7 @@ export function LoginForm({
   };
 
   return (
-    <div className="border-2 bg-white border-primary p-8 rounded-2xl shadow-2xl">
+    <div className="border-2 bg-white border-primary p-8 rounded-2xl shadow-2xl dark:bg-[#222327]">
       <form
         onSubmit={handleSubmit}
         className={cn("flex flex-col gap-6", className)}
