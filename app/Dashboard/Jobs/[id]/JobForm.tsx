@@ -68,6 +68,7 @@ export default function JobForm({
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [notLoggedIn, setNotLoggedIn] = useState(false);
   const [profileId, setProfileId] = useState<string | null>(null);
+  const [profileData, setProfileData] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [multiSelectValues, setMultiSelectValues] = useState<Record<string, string[]>>({});
@@ -87,14 +88,24 @@ export default function JobForm({
           return;
         }
 
-        const { data: profileRow } = await supabaseClient
+        const { data: profileRow, error: profileError } = await supabaseClient
           .from("profiles")
-          .select("id, resume_url")
+          .select("id, resume_url, first_name, last_name, phone, email")
           .eq("id", user.id)
           .single();
 
+        if (profileError) {
+          console.error("Profile fetch error:", profileError);
+        }
+
         if (mounted && profileRow) {
           setProfileId(profileRow.id);
+          const fullName = `${profileRow.first_name || ""} ${profileRow.last_name || ""}`.trim();
+          setProfileData({
+            name: fullName,
+            phone: profileRow.phone || "",
+            email: profileRow.email || user.email || ""
+          });
           setResumes(normalizeResumeUrls(profileRow.resume_url));
 
           // check if already applied
@@ -164,6 +175,14 @@ export default function JobForm({
       const formEl = e.currentTarget;
       const answers: Record<string, any> = {};
 
+      // Add profile data first (like previous format) - only if profileData exists
+      if (profileData) {
+        answers["Full Name"] = profileData.name || "";
+        answers["Phone Number"] = profileData.phone || "";
+        answers["Email Address"] = profileData.email || "";
+      }
+
+      // Process form questions
       (formData.questions ?? []).forEach((q: any, idx: number) => {
         const name = `question-${idx}`;
         let value = "";
@@ -189,10 +208,20 @@ export default function JobForm({
         answers[q.title ?? name] = value;
       });
 
+      // Add selected resume at the end
       answers["selected_resume"] = selectedResume ?? null;
 
-      // Use the jobId prop here
-      const { error } = await supabaseClient.from("responses").insert([
+      // Validate we have profileId before submitting
+      if (!profileId) {
+        toast.error("Error", {
+          description: "Profile not loaded. Please refresh the page.",
+        });
+        setSubmitting(false);
+        return;
+      }
+
+      // Insert response
+      const { error: responseError } = await supabaseClient.from("responses").insert([
         {
           form_id: formId,
           profile_id: profileId,
@@ -201,7 +230,7 @@ export default function JobForm({
         },
       ]);
 
-      if (error) {
+      if (responseError) {
         toast.error("Error", {
           description: "Failed to submit application.",
         })
@@ -209,10 +238,66 @@ export default function JobForm({
         return;
       }
 
+      // Update Applied_Candidates array in jobs table
+      if (jobId && profileId) {
+        try {
+          // First, get the current Applied_Candidates array
+          const { data: jobData, error: fetchError } = await supabaseClient
+            .from("jobs")
+            .select("Applied_Candidates")
+            .eq("job_id", jobId)
+            .single();
+
+          if (fetchError) {
+            console.error("Failed to fetch job data:", fetchError);
+          }
+
+          let currentCandidates: string[] = [];
+          
+          if (jobData?.Applied_Candidates) {
+            // Parse the Applied_Candidates field
+            if (Array.isArray(jobData.Applied_Candidates)) {
+              currentCandidates = jobData.Applied_Candidates;
+            } else if (typeof jobData.Applied_Candidates === 'string') {
+              try {
+                currentCandidates = JSON.parse(jobData.Applied_Candidates);
+              } catch {
+                currentCandidates = [];
+              }
+            }
+          }
+
+          // Add the new profile_id if not already present
+          if (!currentCandidates.includes(profileId)) {
+            currentCandidates.push(profileId);
+
+            // Update the jobs table
+            const { error: updateError } = await supabaseClient
+              .from("jobs")
+              .update({ Applied_Candidates: currentCandidates })
+              .eq("job_id", jobId);
+
+            if (updateError) {
+              console.error("Failed to update Applied_Candidates:", updateError);
+            } else {
+              console.log("Successfully updated Applied_Candidates:", currentCandidates);
+            }
+          }
+        } catch (err) {
+          console.error("Error updating Applied_Candidates:", err);
+        }
+      }
+
+      toast.success("Success", {
+        description: "Application submitted successfully!",
+      });
+
       router.push("/Dashboard/Jobs");
     } catch (err: any) {
       console.error(err);
-      alert(err?.message ?? "Failed to submit.");
+      toast.error("Error", {
+        description: err?.message ?? "Failed to submit.",
+      });
     } finally {
       setSubmitting(false);
     }

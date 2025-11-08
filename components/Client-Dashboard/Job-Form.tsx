@@ -81,7 +81,6 @@ export function JobForm({ className }: { className?: string }) {
       meta: { rate: values.rate, level: values.level },
       description: values.description,
       tags,
-      verified: values.verified,
       location: values.location,
       proposals: values.proposals,
     };

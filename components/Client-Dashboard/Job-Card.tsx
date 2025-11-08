@@ -1,7 +1,7 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { CheckCircle2, MapPin, Wallet, Timer, Edit } from "lucide-react"
+import { CheckCircle2, MapPin, Wallet, Timer, Edit, Trash2, Users } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 
@@ -15,10 +15,11 @@ export type JobCardProps = {
   }
   description: string
   tags?: string[]
-  verified?: boolean
   location?: string
   proposals?: string
   className?: string
+  onDelete?: (jobId: string) => void
+  onEvaluate?: (jobId: string) => void
 }
 
 export function JobCard({
@@ -28,16 +29,29 @@ export function JobCard({
   meta,
   description,
   tags = [],
-  verified = true,
   location = "United States",
   proposals = "Less than 5",
   className,
+  onDelete,
+  onEvaluate,
 }: JobCardProps) {
   const router = useRouter()
 
   const handleEdit = () => {
     if (jobId) {
       router.push(`/client/edit/${jobId}`)
+    }
+  }
+
+  const handleDelete = () => {
+    if (jobId && onDelete) {
+      onDelete(jobId)
+    }
+  }
+
+  const handleEvaluate = () => {
+    if (jobId && onEvaluate) {
+      onEvaluate(jobId)
     }
   }
 
@@ -51,16 +65,27 @@ export function JobCard({
         className,
       )}
     >
-      {/* Edit Button - Top Right Corner */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleEdit}
-        className="absolute right-4 top-4 z-10 size-8 rounded-full p-0"
-      >
-        <Edit className="size-4" />
-        <span className="sr-only">Edit job</span>
-      </Button>
+      {/* Action Buttons - Top Right Corner */}
+      <div className="absolute right-4 top-4 z-10 flex gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleDelete}
+          className="size-8 rounded-full p-0 hover:bg-destructive/10 hover:text-destructive"
+        >
+          <Trash2 className="size-4" />
+          <span className="sr-only">Delete job</span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleEdit}
+          className="size-8 rounded-full p-0"
+        >
+          <Edit className="size-4" />
+          <span className="sr-only">Edit job</span>
+        </Button>
+      </div>
 
       <CardHeader className="gap-3">
         <CardTitle className="text-balance text-xl font-semibold leading-tight">
@@ -101,17 +126,18 @@ export function JobCard({
 
       <CardFooter className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
-          {verified && (
-            <>
-              <CheckCircle2 className="size-4 text-accent-foreground" aria-hidden />
-              <span className="text-foreground">Payment verified</span>
-            </>
-          )}
+          <Button
+            variant="default"
+            size="sm"
+            onClick={handleEvaluate}
+            className="gap-2"
+          >
+            <Users className="size-4" />
+            Evaluate Candidates
+          </Button>
         </div>
 
         <div className="flex flex-wrap items-center gap-4">
-          <span className="inline-flex items-center gap-1">
-          </span>
           <span className="inline-flex items-center gap-1">
             <MapPin className="size-4 text-accent-foreground" aria-hidden />
             <span className="text-foreground">{location}</span>
