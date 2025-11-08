@@ -151,7 +151,7 @@ export function JobCreateForm({
           <input
             id="jd-file"
             type="file"
-            accept=".pdf,.doc,.docx,.txt"
+            accept=".pdf,application/pdf"
             className="sr-only"
             onChange={(e) => {
               const f = e.target.files?.[0] ?? null

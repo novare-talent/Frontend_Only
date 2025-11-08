@@ -476,7 +476,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
             className="w-full"
           >
             <TabsList className="grid w-full grid-cols-2 mb-0">
-              <TabsTrigger value="user">User Sign Up</TabsTrigger>
+              <TabsTrigger value="user">Candidate Sign Up</TabsTrigger>
               <TabsTrigger value="client">Client Sign Up</TabsTrigger>
             </TabsList>
 

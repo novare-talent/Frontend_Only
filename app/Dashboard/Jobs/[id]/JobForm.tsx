@@ -104,7 +104,7 @@ export default function JobForm({
           setProfileData({
             name: fullName,
             phone: profileRow.phone || "",
-            email: profileRow.email || user.email || ""
+            email: profileRow.email || user.email || "",
           });
           setResumes(normalizeResumeUrls(profileRow.resume_url));
 
@@ -137,18 +137,18 @@ export default function JobForm({
 
   const handleMultiSelectChange = (questionIndex: number, option: string, checked: boolean) => {
     const questionKey = `question-${questionIndex}`;
-    setMultiSelectValues(prev => {
+    setMultiSelectValues((prev) => {
       const currentValues = prev[questionKey] || [];
-      
+
       if (checked) {
         return {
           ...prev,
-          [questionKey]: [...currentValues, option]
+          [questionKey]: [...currentValues, option],
         };
       } else {
         return {
           ...prev,
-          [questionKey]: currentValues.filter(val => val !== option)
+          [questionKey]: currentValues.filter((val) => val !== option),
         };
       }
     });
@@ -165,7 +165,7 @@ export default function JobForm({
     if (alreadySubmitted) {
       toast("Alert", {
         description: "You have already submitted this application.",
-      })
+      });
       return;
     }
 
@@ -175,24 +175,21 @@ export default function JobForm({
       const formEl = e.currentTarget;
       const answers: Record<string, any> = {};
 
-      // Add profile data first (like previous format) - only if profileData exists
       if (profileData) {
         answers["Full Name"] = profileData.name || "";
         answers["Phone Number"] = profileData.phone || "";
         answers["Email Address"] = profileData.email || "";
       }
 
-      // Process form questions
       (formData.questions ?? []).forEach((q: any, idx: number) => {
         const name = `question-${idx}`;
         let value = "";
 
         if (q.type === "MULTI") {
-          // Get values from multiSelectValues state and convert to JSON string
           value = JSON.stringify(multiSelectValues[name] || []);
         } else {
           const el = (formEl.elements as any)[name];
-          
+
           if (el && typeof el.value === "string") {
             value = el.value ?? "";
           } else if (el && "length" in el) {
@@ -208,10 +205,8 @@ export default function JobForm({
         answers[q.title ?? name] = value;
       });
 
-      // Add selected resume at the end
       answers["selected_resume"] = selectedResume ?? null;
 
-      // Validate we have profileId before submitting
       if (!profileId) {
         toast.error("Error", {
           description: "Profile not loaded. Please refresh the page.",
@@ -220,7 +215,6 @@ export default function JobForm({
         return;
       }
 
-      // Insert response
       const { error: responseError } = await supabaseClient.from("responses").insert([
         {
           form_id: formId,
@@ -233,58 +227,48 @@ export default function JobForm({
       if (responseError) {
         toast.error("Error", {
           description: "Failed to submit application.",
-        })
+        });
         setSubmitting(false);
         return;
       }
 
-      // Update Applied_Candidates array in jobs table
+      // ✅ Fixed Applied_Candidates logic
       if (jobId && profileId) {
-        try {
-          // First, get the current Applied_Candidates array
-          const { data: jobData, error: fetchError } = await supabaseClient
+        const { data: jobData, error: jobFetchError } = await supabaseClient
+          .from("jobs")
+          .select("Applied_Candidates")
+          .eq("job_id", jobId)
+          .single();
+
+        if (jobFetchError) console.error("Job fetch error:", jobFetchError);
+
+        let currentCandidates: string[] = [];
+
+        if (jobData?.Applied_Candidates) {
+          if (Array.isArray(jobData.Applied_Candidates)) {
+            currentCandidates = jobData.Applied_Candidates;
+          } else if (typeof jobData.Applied_Candidates === "string") {
+            try {
+              currentCandidates = JSON.parse(jobData.Applied_Candidates);
+            } catch {
+              currentCandidates = [];
+            }
+          }
+        } else {
+          currentCandidates = [];
+        }
+
+        if (!currentCandidates.includes(profileId)) {
+          currentCandidates.push(profileId);
+
+          const { error: updateError } = await supabaseClient
             .from("jobs")
-            .select("Applied_Candidates")
-            .eq("job_id", jobId)
-            .single();
+            .update({ Applied_Candidates: JSON.stringify(currentCandidates) })
+            .eq("job_id", jobId);
 
-          if (fetchError) {
-            console.error("Failed to fetch job data:", fetchError);
+          if (updateError) {
+            console.error("Failed to update Applied_Candidates:", updateError);
           }
-
-          let currentCandidates: string[] = [];
-          
-          if (jobData?.Applied_Candidates) {
-            // Parse the Applied_Candidates field
-            if (Array.isArray(jobData.Applied_Candidates)) {
-              currentCandidates = jobData.Applied_Candidates;
-            } else if (typeof jobData.Applied_Candidates === 'string') {
-              try {
-                currentCandidates = JSON.parse(jobData.Applied_Candidates);
-              } catch {
-                currentCandidates = [];
-              }
-            }
-          }
-
-          // Add the new profile_id if not already present
-          if (!currentCandidates.includes(profileId)) {
-            currentCandidates.push(profileId);
-
-            // Update the jobs table
-            const { error: updateError } = await supabaseClient
-              .from("jobs")
-              .update({ Applied_Candidates: currentCandidates })
-              .eq("job_id", jobId);
-
-            if (updateError) {
-              console.error("Failed to update Applied_Candidates:", updateError);
-            } else {
-              console.log("Successfully updated Applied_Candidates:", currentCandidates);
-            }
-          }
-        } catch (err) {
-          console.error("Error updating Applied_Candidates:", err);
         }
       }
 
@@ -318,9 +302,7 @@ export default function JobForm({
     >
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight">{formData.title}</h1>
-        <p className="text-sm text-muted-foreground">
-          Fill out the application form below
-        </p>
+        <p className="text-sm text-muted-foreground">Fill out the application form below</p>
       </div>
 
       {/* Resume Selector */}
@@ -331,22 +313,23 @@ export default function JobForm({
               <FileText className="h-5 w-5" />
               Resume
             </CardTitle>
-            <CardDescription>
-              Select a resume to attach to this application.
-            </CardDescription>
+            <CardDescription>Select a resume to attach to this application.</CardDescription>
           </CardHeader>
 
           <CardContent>
             {loadingProfile ? (
               <p className="text-sm text-muted-foreground">Loading resumes…</p>
             ) : notLoggedIn ? (
-              <p className="text-sm text-muted-foreground">You must be logged in to select a resume.</p>
+              <p className="text-sm text-muted-foreground">
+                You must be logged in to select a resume.
+              </p>
             ) : hasResumes ? (
               <div className="space-y-3">
                 {resumes.map((url, idx) => {
                   const fileName = url.split("/").pop() ?? url;
                   const isSelected = selectedResume === url;
-                  const toggle = () => setSelectedResume((prev) => (prev === url ? null : url));
+                  const toggle = () =>
+                    setSelectedResume((prev) => (prev === url ? null : url));
 
                   return (
                     <div
@@ -361,25 +344,36 @@ export default function JobForm({
                         }
                       }}
                       className={`flex items-center justify-between gap-3 rounded-lg border p-3 transition-colors cursor-pointer ${
-                        isSelected ? "bg-accent/10 border-accent" : "hover:bg-accent"
+                        isSelected
+                          ? "bg-accent/10 border-accent"
+                          : "hover:bg-accent"
                       }`}
                       title={fileName}
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div
                           className={`h-4 w-4 rounded-full border flex-shrink-0 ${
-                            isSelected ? "bg-primary border-accent" : "bg-transparent"
+                            isSelected
+                              ? "bg-primary border-accent"
+                              : "bg-transparent"
                           }`}
                           aria-hidden
                         />
                         <div className="min-w-0">
                           <div className="truncate font-medium">{fileName}</div>
-                          <div className="text-xs text-muted-foreground">Resume</div>
+                          <div className="text-xs text-muted-foreground">
+                            Resume
+                          </div>
                         </div>
                       </div>
 
                       <div className="text-sm text-muted-foreground truncate max-w-[40%]">
-                        <a className="underline" href={url} target="_blank" rel="noreferrer">
+                        <a
+                          className="underline"
+                          href={url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
                           View
                         </a>
                       </div>
@@ -388,7 +382,16 @@ export default function JobForm({
                 })}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No resumes found in your profile. You can add resumes in your <Link href="/Dashboard/Account" about="View Profile" className="underline-offset-2 underline text-primary">profile</Link></p>
+              <p className="text-sm text-muted-foreground">
+                No resumes found in your profile. You can add resumes in your{" "}
+                <Link
+                  href="/Dashboard/Account"
+                  about="View Profile"
+                  className="underline-offset-2 underline text-primary"
+                >
+                  profile
+                </Link>
+              </p>
             )}
           </CardContent>
         </Card>
@@ -398,7 +401,7 @@ export default function JobForm({
       <div className="flex flex-col gap-6">
         {formData.questions?.map((q: any, idx: number) => {
           const name = `question-${idx}`;
-          
+
           if (q.type === "TEXT") {
             return (
               <div key={idx} className="flex flex-col gap-2">
@@ -407,14 +410,17 @@ export default function JobForm({
               </div>
             );
           }
-          
+
           if (q.type === "RADIO") {
             return (
               <div key={idx} className="flex flex-col gap-3">
                 <Label>{q.title}</Label>
                 <RadioGroup name={name}>
                   {q.options.map((option: string, i: number) => (
-                    <div key={i} className="flex items-center gap-2 border p-3 rounded-lg">
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 border p-3 rounded-lg"
+                    >
                       <RadioGroupItem value={option} id={`${name}-${i}`} />
                       <Label htmlFor={`${name}-${i}`}>{option}</Label>
                     </div>
@@ -423,7 +429,7 @@ export default function JobForm({
               </div>
             );
           }
-          
+
           if (q.type === "MULTI") {
             return (
               <div key={idx} className="flex flex-col gap-3">
@@ -432,13 +438,16 @@ export default function JobForm({
                   {q.options.map((option: string, i: number) => {
                     const optionId = `${name}-${i}`;
                     const isChecked = (multiSelectValues[name] || []).includes(option);
-                    
+
                     return (
-                      <div key={i} className="flex items-center gap-2 border p-3 rounded-lg">
+                      <div
+                        key={i}
+                        className="flex items-center gap-2 border p-3 rounded-lg"
+                      >
                         <Checkbox
                           id={optionId}
                           checked={isChecked}
-                          onCheckedChange={(checked) => 
+                          onCheckedChange={(checked) =>
                             handleMultiSelectChange(idx, option, checked as boolean)
                           }
                         />
@@ -450,7 +459,7 @@ export default function JobForm({
               </div>
             );
           }
-          
+
           return null;
         })}
       </div>
