@@ -1374,13 +1374,8 @@ export default function NovareTalentLanding() {
               <a
                 href={getDashboardPath()}
                 className="btn btn--outline"
-                onClick={(e) => {
-                  if (loading) {
-                    e.preventDefault(); // Prevent navigation while checking auth
-                  }
-                }}
               >
-                {loading ? "Loading..." : user ? "Dashboard" : "Try Zenhyre"}
+                {user ? "Dashboard" : "Try Zenhyre"}
               </a>
               <div className="nav__socials">
                 <a
@@ -1675,13 +1670,8 @@ export default function NovareTalentLanding() {
               <a
                 href={getDashboardPath()}
                 className="btn btn--outline"
-                onClick={(e) => {
-                  if (loading) {
-                    e.preventDefault(); // Prevent navigation while checking auth
-                  }
-                }}
               >
-                {loading ? "Loading..." : user ? "Try Zenhyre" : "Try Zenhyre"}
+                {user ? "Try Zenhyre" : "Try Zenhyre"}
               </a>
             </div>
 
