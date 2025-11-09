@@ -18,12 +18,12 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription>New Jobs Posted</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            78
+            18
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
               <IconTrendingUp />
-              +5% vs. last month
+              +25% vs. last month
             </Badge>
           </CardAction>
         </CardHeader>
@@ -40,12 +40,12 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription>Total Applications</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            2,420
+            242
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
               <IconTrendingUp />
-              +150%
+              +50%
             </Badge>
           </CardAction>
         </CardHeader>
