@@ -544,7 +544,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                       type="email"
                       required
                       className="pl-10"
-                      placeholder="roll_number@iit.ac.in"
+                      placeholder="@iit.ac.in or work@company.com"
                       value={userFormData.email}
                       onChange={handleUserChange}
                     />
