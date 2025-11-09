@@ -122,7 +122,7 @@ export default function AppliedJobsGrid() {
       </h1>
 
       {/* Grid Layout */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-h-16 items-center">
         {jobs.slice(0, visible).map((job) => {
           const appliedCount = Array.isArray(job.Applied_Candidates)
             ? job.Applied_Candidates.length
@@ -154,7 +154,7 @@ export default function AppliedJobsGrid() {
 
       {/* No Jobs */}
       {jobs.length === 0 && (
-        <p className="text-center text-gray-500">
+        <p className="text-center text-gray-500 mb-4">
           You haven’t applied to any jobs yet.
         </p>
       )}
