@@ -49,7 +49,7 @@ export function BillingPage() {
   
   const supabase = createClient()
 
-  const AMOUNT_PER_JOB = 99
+  const AMOUNT_PER_JOB = 5000
   const API_BASE_URL = 'https://api.novaretalent.com/payment'
 
   const showNotification = (type: 'success' | 'error' | 'info', title: string, message: string) => {
