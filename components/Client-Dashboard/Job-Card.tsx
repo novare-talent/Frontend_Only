@@ -1,9 +1,12 @@
+"use client"
+
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { CheckCircle2, MapPin, Wallet, Timer, Edit, Trash2, Users } from "lucide-react"
+import { Edit, Trash2, Users, Wallet, MapPin } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 export type JobCardProps = {
   jobId?: string
@@ -19,7 +22,6 @@ export type JobCardProps = {
   proposals?: string
   className?: string
   onDelete?: (jobId: string) => void
-  onEvaluate?: (jobId: string) => void
 }
 
 export function JobCard({
@@ -33,39 +35,47 @@ export function JobCard({
   proposals = "Less than 5",
   className,
   onDelete,
-  onEvaluate,
 }: JobCardProps) {
   const router = useRouter()
+  const [loading, setLoading] = useState(false)
 
   const handleEdit = () => {
-    if (jobId) {
-      router.push(`/client/edit/${jobId}`)
-    }
+    if (jobId) router.push(`/client/edit/${jobId}`)
   }
 
   const handleDelete = () => {
-    if (jobId && onDelete) {
-      onDelete(jobId)
-    }
+    if (jobId && onDelete) onDelete(jobId)
   }
 
-  const handleEvaluate = () => {
-    if (jobId && onEvaluate) {
-      onEvaluate(jobId)
+  const handleEvaluate = async () => {
+    if (!jobId) return
+    try {
+      setLoading(true)
+      const res = await fetch("/api/evaluate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ job_id: jobId }),
+      })
+
+      if (!res.ok) throw new Error("Evaluation failed")
+      router.push(`/client/evaluate/${jobId}`)
+    } catch (err) {
+      console.error(err)
+      alert("Error while evaluating job.")
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
     <Card
       className={cn(
-        // structure + theme
         "group relative rounded-2xl border bg-card/80 shadow-sm transition-colors",
-        // subtle hover with brand ring
         "hover:border-brand/60 hover:ring-1 hover:ring-primary/70",
         className,
       )}
     >
-      {/* Action Buttons - Top Right Corner */}
+      {/* Action Buttons */}
       <div className="absolute right-4 top-4 z-10 flex gap-2">
         <Button
           variant="ghost"
@@ -109,9 +119,7 @@ export function JobCard({
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4">
-        <p className="text-pretty leading-relaxed">
-          {description}{" "}
-        </p>
+        <p className="text-pretty leading-relaxed">{description}</p>
 
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-2">
@@ -131,9 +139,10 @@ export function JobCard({
             size="sm"
             onClick={handleEvaluate}
             className="gap-2"
+            disabled={loading}
           >
             <Users className="size-4" />
-            Evaluate Candidates
+            {loading ? "Evaluating..." : "Evaluate Candidates"}
           </Button>
         </div>
 
