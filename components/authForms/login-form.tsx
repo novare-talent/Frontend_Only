@@ -94,7 +94,7 @@ export function LoginForm({
               id="email"
               type="email"
               name="email"
-              placeholder="roll_number@iit.ac.in"
+              placeholder="roll_number@iit.ac.in or work@company.com"
               required
               value={userInput.email}
               onChange={handleChange}

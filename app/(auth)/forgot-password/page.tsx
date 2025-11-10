@@ -69,7 +69,7 @@ export default async function ForgotPasswordPage({
                 required
                 name="email"
                 id="email"
-                placeholder="roll_number@iit.ac.in"
+                placeholder="roll_number@iit.ac.in or work@company.com"
               />
             </div>
 

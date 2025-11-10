@@ -83,11 +83,11 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       )
 
-    /* ----------------------- 8️⃣ Fetch Profiles ----------------------- */
+    /* ----------------------- 8️⃣ Fetch Profiles with resume_url ----------------------- */
     const profileIds = responses.map((r) => r.profile_id).filter(Boolean)
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
-      .select("*")
+      .select("id, first_name, last_name, email, phone, resume_url")
       .in("id", profileIds)
 
     if (profilesError || !profiles || profiles.length === 0)
@@ -99,21 +99,27 @@ export async function POST(request: NextRequest) {
     /* ----------------------- 9️⃣ Combine Candidates ----------------------- */
     const candidates = profiles.map((p) => {
       const response = responses.find((r) => r.profile_id === p.id)
+      
+      // Parse resume_url to get the first resume if it's an array
+      let resumeUrl = null
+      if (p.resume_url) {
+        try {
+          const parsed = typeof p.resume_url === 'string' 
+            ? JSON.parse(p.resume_url) 
+            : p.resume_url
+          resumeUrl = Array.isArray(parsed) ? parsed[0] : parsed
+        } catch {
+          resumeUrl = p.resume_url
+        }
+      }
+      
       return {
         ...p,
         ...response,
-        name:
-          p.full_name ||
-          p.name ||
-          `${p.first_name || ""} ${p.last_name || ""}`.trim() ||
-          "Unnamed",
-        email: p.email || p.contact_email || "Not provided",
-        phone:
-          p.phone ||
-          p.contact_number ||
-          p.phone_number ||
-          p.mobile ||
-          "Not provided",
+        name: `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Unnamed",
+        email: p.email || "Not provided",
+        phone: p.phone || "Not provided",
+        resume_url: resumeUrl,
       }
     })
 
@@ -127,6 +133,7 @@ export async function POST(request: NextRequest) {
           name: candidate.name,
           email: candidate.email,
           phone: candidate.phone,
+          resume_url: candidate.resume_url,
           results: evalResult,
         }
       })
