@@ -1,12 +1,13 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Edit, Trash2, Users, Wallet, MapPin } from "lucide-react"
+import { Edit, Trash2, Users, Wallet, MapPin, Eye } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { createClient } from "@/utils/supabase/client"
 
 export type JobCardProps = {
   jobId?: string
@@ -38,6 +39,44 @@ export function JobCard({
 }: JobCardProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [hasEvaluation, setHasEvaluation] = useState(false)
+  const supabase = createClient()
+
+  // Check evaluations table directly to see if an evaluation exists for this job_id
+  useEffect(() => {
+    const checkEvaluation = async () => {
+      if (!jobId) return
+      try {
+        // Query the evaluations table directly
+        const { data, error } = await supabase
+          .from("evaluations")
+          .select("job_id")
+          .eq("job_id", jobId)
+          .limit(1)
+          .maybeSingle()
+
+        if (error) {
+          // Log but don't disrupt UI
+          console.error("Error checking evaluations table:", error)
+          setHasEvaluation(false)
+          return
+        }
+
+        // If data present, mark hasEvaluation true
+        if (data && Object.keys(data).length > 0) {
+          setHasEvaluation(true)
+        } else {
+          setHasEvaluation(false)
+        }
+      } catch (err) {
+        console.error("Unexpected error checking evaluation existence:", err)
+        setHasEvaluation(false)
+      }
+    }
+
+    checkEvaluation()
+    // run when jobId changes
+  }, [jobId, supabase])
 
   const handleEdit = () => {
     if (jobId) router.push(`/client/edit/${jobId}`)
@@ -65,6 +104,10 @@ export function JobCard({
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleViewResults = () => {
+    if (jobId) router.push(`/client/evaluate/${jobId}`)
   }
 
   return (
@@ -142,8 +185,24 @@ export function JobCard({
             disabled={loading}
           >
             <Users className="size-4" />
-            {loading ? "Evaluating..." : "Evaluate Candidates"}
+            {loading
+              ? "Evaluating..."
+              : hasEvaluation
+              ? "Re-Evaluate"
+              : "Evaluate Candidates"}
           </Button>
+
+          {hasEvaluation && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleViewResults}
+              className="gap-2"
+            >
+              <Eye className="size-4" />
+              View Results
+            </Button>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-4">

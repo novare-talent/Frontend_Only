@@ -95,10 +95,14 @@ export default function EvaluationPage() {
   if (!evaluation)
     return <p className="text-center mt-10">No evaluation found.</p>;
 
-  const results: EvalRecord[] = evaluation.results || [];
+  const results: EvalRecord[] = (evaluation.results || []).sort((a : any, b : any) => {
+    const scoreA = Number(a.results?.final_score ?? 0);
+    const scoreB = Number(b.results?.final_score ?? 0);
+    return scoreB - scoreA;
+  });
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto py-10 px-6">
       <Card className="border border-primary/30 shadow-lg">
         <CardHeader>
           <CardTitle className="text-2xl font-bold">
@@ -121,7 +125,12 @@ export default function EvaluationPage() {
                 <div className="mb-3 space-y-1">
                   <h3 className="text-lg font-semibold flex items-center gap-2">
                     <User className="size-4 text-primary" />
-                    <span>{r.name || "Unnamed Candidate"}</span>
+                    <span>
+                      {r.name || "Unnamed Candidate"}{" "}
+                      <span className="text-sm text-muted-foreground">
+                        (Rank #{i + 1})
+                      </span>
+                    </span>
                   </h3>
                   <p className="text-sm text-muted-foreground flex items-center gap-2">
                     <Mail className="size-4 text-muted-foreground" />{" "}
