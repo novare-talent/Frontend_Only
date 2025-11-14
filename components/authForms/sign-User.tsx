@@ -90,7 +90,7 @@ export function SignUpForm({
     console.log("📝 Form data:", userFormData);
 
     const emailRegex =
-      /^[a-zA-Z0-9._%+-]+@(ds\.study\.iitm\.ac\.in|smail\.iitm\.ac\.in|iitkgp\.ac\.in|iitb\.ac\.in|iitm\.ac\.in|iitk\.ac\.in|iitd\.ac\.in|iitg\.ac\.in|iitr\.ac\.in|iitbhu\.ac\.in|iitrpr\.ac\.in|iitbbs\.ac\.in|iitgn\.ac\.in|iith\.ac\.in|iiti\.ac\.in|iitj\.ac\.in|iitp\.ac\.in|iitmandi\.ac\.in|iitpkd\.ac\.in|iittp\.ac\.in|iitism\.ac\.in|iitbhilai\.ac\.in|iitgoa\.ac\.in|iitdh\.ac\.in)$/;
+      /^[a-zA-Z0-9._%+-]+@(ds\.study\.iitm\.ac\.in|smail\.iitm\.ac\.in|kgpian\.iitkgp\.ac\.in|iitkgp\.ac\.in|iitb\.ac\.in|iitm\.ac\.in|iitk\.ac\.in|iitd\.ac\.in|iitg\.ac\.in|iitr\.ac\.in|iitbhu\.ac\.in|iitrpr\.ac\.in|iitbbs\.ac\.in|iitgn\.ac\.in|iith\.ac\.in|iiti\.ac\.in|iitj\.ac\.in|iitp\.ac\.in|iitmandi\.ac\.in|iitpkd\.ac\.in|iittp\.ac\.in|iitism\.ac\.in|iitbhilai\.ac\.in|iitgoa\.ac\.in|iitdh\.ac\.in)$/;
 
     if (!emailRegex.test(userFormData.email)) {
       console.error("❌ Email domain validation failed");
