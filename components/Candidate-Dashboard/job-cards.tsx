@@ -276,7 +276,7 @@ export default function JobsGrid() {
 
   return (
     <div className="p-6 space-y-6" suppressHydrationWarning>
-      <h1 className="text-3xl font-bold text-foreground">Available Jobs</h1>
+      <h1 className="text-2xl text-primary">Available Jobs</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {jobs.slice(0, visible).map((job) => {
