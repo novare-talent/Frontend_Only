@@ -86,51 +86,40 @@ export function SignUpForm({
     e.preventDefault();
     setIsLoading(true);
 
-    console.group("🔍 USER SIGNUP DEBUG - START");
-    console.log("📝 Form data:", userFormData);
-
     const emailRegex =
-      /^[a-zA-Z0-9._%+-]+@(ds\.study\.iitm\.ac\.in|smail\.iitm\.ac\.in|kgpian\.iitkgp\.ac\.in|iitkgp\.ac\.in|iitb\.ac\.in|iitm\.ac\.in|iitk\.ac\.in|iitd\.ac\.in|iitg\.ac\.in|iitr\.ac\.in|iitbhu\.ac\.in|iitrpr\.ac\.in|iitbbs\.ac\.in|iitgn\.ac\.in|iith\.ac\.in|iiti\.ac\.in|iitj\.ac\.in|iitp\.ac\.in|iitmandi\.ac\.in|iitpkd\.ac\.in|iittp\.ac\.in|iitism\.ac\.in|iitbhilai\.ac\.in|iitgoa\.ac\.in|iitdh\.ac\.in)$/;
+      /^[a-zA-Z0-9._%+-]+@(ds\.study\.iitm\.ac\.in|smail\.iitm\.ac\.in|kgpian\.iitkgp\.ac\.in|iitkgp\.ac\.in|iitb\.ac\.in|iitm\.ac\.in|iitk\.ac\.in|iitd\.ac\.in|iitg\.ac\.in|iitr\.ac\.in|iitbhu\.ac\.in|iitrpr\.ac\.in|iitbbs\.ac\.in|iitgn\.ac\.in|iith\.ac\.in|iiti\.ac\.in|iitj\.ac\.in|iitp\.ac\.in|iitmandi\.ac\.in|iitpkd\.ac\.in|iittp\.ac\.in|iitism\.ac\.in|iitbhilai\.ac\.in|iitgoa\.ac\.in|iitdh\.ac\.in|ce\.iitr\.ac\.in|me\.iitr\.ac\.in|mfs\.iitr\.ac\.in|ee\.iitr\.ac\.in|ece\.iitr\.ac\.in|cy\.iitr\.ac\.in|cs\.iitr\.ac\.in|mt\.iitr\.ac\.in|ph\.iitr\.ac\.in|pt\.iitr\.ac\.in|ma\.iitr\.ac\.in|hy\.iitr\.ac\.in|es\.iitr\.ac\.in|eq\.iitr\.ac\.in|ch\.iitr\.ac\.in)$/;
 
     if (!emailRegex.test(userFormData.email)) {
-      console.error("❌ Email domain validation failed");
       toast.error("Invalid Email Domain", {
         description: "Only IIT institutional emails are allowed.",
         duration: 5000,
         position: "top-right",
       });
       setIsLoading(false);
-      console.groupEnd();
       return;
     }
 
     if (!validateUserUrls()) {
-      console.error("❌ URL validation failed:", userErrors);
       toast.error("Invalid URL", {
         description: "Please fix the URL errors before submitting.",
         duration: 5000,
         position: "top-right",
       });
       setIsLoading(false);
-      console.groupEnd();
       return;
     }
 
     if (userFormData.password.length < 6) {
-      console.error("❌ Password too short:", userFormData.password.length);
       toast.error("Password too short", {
         description: "Password must be at least 6 characters.",
         duration: 5000,
         position: "top-right",
       });
       setIsLoading(false);
-      console.groupEnd();
       return;
     }
 
     try {
-      console.log("🚀 Attempting Supabase auth signup...");
-
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: userFormData.email,
         password: userFormData.password,
@@ -143,18 +132,7 @@ export function SignUpForm({
         },
       });
 
-      console.log("📨 Auth signup response:", {
-        data: data ? "Received" : "No data",
-        error: signUpError,
-      });
-
       if (signUpError) {
-        console.error("❌ Auth signup failed with details:", {
-          name: signUpError.name,
-          message: signUpError.message,
-          status: signUpError.status,
-        });
-
         let errorDescription = signUpError.message;
         let errorTitle = "Sign-up Failed";
 
@@ -186,34 +164,23 @@ export function SignUpForm({
         });
 
         setIsLoading(false);
-        console.groupEnd();
         return;
       }
 
       const user = data?.user;
-      console.log(
-        "👤 User object received:",
-        user ? { id: user.id, email: user.email } : "No user object"
-      );
 
       if (!user) {
-        console.error("❌ No user object returned from auth");
         toast.error("Sign-up Failed", {
           description: "No user account was created. Please try again.",
           duration: 5000,
           position: "top-right",
         });
         setIsLoading(false);
-        console.groupEnd();
         return;
       }
 
-      console.log("✅ Auth successful, proceeding to profile creation...");
-
       let profileImageUrl: string | null = null;
       if (profileImage) {
-        console.log("🖼️ Starting profile image upload...");
-
         try {
           const { data: uploadData, error: uploadError } =
             await supabase.storage
@@ -224,7 +191,6 @@ export function SignUpForm({
               });
 
           if (uploadError) {
-            console.error("❌ Profile image upload failed:", uploadError);
             toast.error("Profile Image Upload Failed", {
               description:
                 "Your account was created but we couldn't upload your profile image. You can update it later.",
@@ -232,20 +198,16 @@ export function SignUpForm({
               position: "top-right",
             });
           } else if (uploadData) {
-            console.log("✅ Profile image uploaded successfully");
             const { data: publicUrlData } = supabase.storage
               .from("profile-images")
               .getPublicUrl(uploadData.path);
 
             profileImageUrl = publicUrlData.publicUrl;
-            console.log("🔗 Profile image URL:", profileImageUrl);
           }
         } catch (uploadErr) {
-          console.error("❌ Unexpected error during image upload:", uploadErr);
+          // Silent failure for non-critical image upload errors
         }
       }
-
-      console.log("💾 Inserting profile data...");
 
       const profileData = {
         id: user.id,
@@ -259,18 +221,11 @@ export function SignUpForm({
         role: "user",
       };
 
-      console.log("📋 Profile data to insert:", profileData);
-
       const { error: profileError } = await supabase
         .from("profiles")
         .upsert([profileData]);
 
       if (profileError) {
-        console.error("❌ Profile creation failed:", {
-          message: profileError.message,
-          code: profileError.code,
-        });
-
         toast.error("Profile Creation Failed", {
           description: `Account created but profile setup failed: ${profileError.message}`,
           duration: 7000,
@@ -278,12 +233,8 @@ export function SignUpForm({
         });
 
         setIsLoading(false);
-        console.groupEnd();
         return;
       }
-
-      console.log("✅ Profile created successfully!");
-      console.log("🎉 User signup process completed successfully");
 
       toast.success("Account Created Successfully!", {
         description: "Please check your email to confirm your account.",
@@ -302,7 +253,6 @@ export function SignUpForm({
       });
       setProfileImage(null);
     } catch (err) {
-      console.error("💥 Unexpected error in signup process:", err);
       toast.error("Unexpected Error", {
         description: `An unexpected error occurred: ${err instanceof Error ? err.message : "Unknown error"}`,
         duration: 7000,
@@ -310,16 +260,12 @@ export function SignUpForm({
       });
     } finally {
       setIsLoading(false);
-      console.groupEnd();
     }
   };
 
   const handleClientSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
-    console.group("🔍 CLIENT SIGNUP DEBUG - START");
-    console.log("📝 Form data:", clientFormData);
 
     if (!clientFormData.email || !clientFormData.email.includes("@")) {
       toast.error("Invalid Email", {
@@ -328,12 +274,11 @@ export function SignUpForm({
         position: "top-right",
       });
       setIsLoading(false);
-      console.groupEnd();
       return;
     }
 
     // 🚫 Block gmail and iit emails
-    const blockedEmailRegex = /@(gmail\.com|iit[a-z]*\.ac\.in)$/i;
+    const blockedEmailRegex = /@(gmail\.com|iit[a-z]*\.ac\.in|ce\.iitr\.ac\.in|me\.iitr\.ac\.in|mfs\.iitr\.ac\.in|ee\.iitr\.ac\.in|ece\.iitr\.ac\.in|cy\.iitr\.ac\.in|cs\.iitr\.ac\.in|mt\.iitr\.ac\.in|ph\.iitr\.ac\.in|pt\.iitr\.ac\.in|ma\.iitr\.ac\.in|hy\.iitr\.ac\.in|es\.iitr\.ac\.in|eq\.iitr\.ac\.in|ch\.iitr\.ac\.in)$/i;
     if (blockedEmailRegex.test(clientFormData.email)) {
       toast.error("Invalid Company Email", {
         description:
@@ -342,25 +287,20 @@ export function SignUpForm({
         position: "top-right",
       });
       setIsLoading(false);
-      console.groupEnd();
       return;
     }
 
     if (clientFormData.password.length < 6) {
-      console.error("❌ Password too short:", clientFormData.password.length);
       toast.error("Password too short", {
         description: "Password must be at least 6 characters.",
         duration: 5000,
         position: "top-right",
       });
       setIsLoading(false);
-      console.groupEnd();
       return;
     }
 
     try {
-      console.log("🚀 Attempting Supabase auth signup for client...");
-
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: clientFormData.email,
         password: clientFormData.password,
@@ -373,14 +313,7 @@ export function SignUpForm({
         },
       });
 
-      console.log("📨 Auth signup response:", {
-        data: data ? "Received" : "No data",
-        error: signUpError,
-      });
-
       if (signUpError) {
-        console.error("❌ Auth signup failed:", signUpError.message);
-
         let errorDescription = signUpError.message;
         let errorTitle = "Sign-up Failed";
 
@@ -400,31 +333,20 @@ export function SignUpForm({
         });
 
         setIsLoading(false);
-        console.groupEnd();
         return;
       }
 
       const user = data?.user;
-      console.log(
-        "👤 User object received:",
-        user ? { id: user.id, email: user.email } : "No user object"
-      );
 
       if (!user) {
-        console.error("❌ No user object returned from auth");
         toast.error("Sign-up Failed", {
           description: "No user account was created. Please try again.",
           duration: 5000,
           position: "top-right",
         });
         setIsLoading(false);
-        console.groupEnd();
         return;
       }
-
-      console.log("✅ Auth successful, proceeding to profile creation...");
-
-      console.log("💾 Inserting client profile data...");
 
       const profileData = {
         id: user.id,
@@ -436,15 +358,11 @@ export function SignUpForm({
         role: "client",
       };
 
-      console.log("📋 Profile data to insert:", profileData);
-
       const { error: profileError } = await supabase
         .from("profiles")
         .upsert([profileData]);
 
       if (profileError) {
-        console.error("❌ Profile creation failed:", profileError.message);
-
         toast.error("Profile Creation Failed", {
           description: `Account created but profile setup failed: ${profileError.message}`,
           duration: 7000,
@@ -452,12 +370,8 @@ export function SignUpForm({
         });
 
         setIsLoading(false);
-        console.groupEnd();
         return;
       }
-
-      console.log("✅ Client profile created successfully!");
-      console.log("🎉 Client signup process completed successfully");
 
       toast.success("Client Account Created Successfully!", {
         description: "Please check your email to confirm your account.",
@@ -474,7 +388,6 @@ export function SignUpForm({
         password: "",
       });
     } catch (err) {
-      console.error("💥 Unexpected error in client signup process:", err);
       toast.error("Unexpected Error", {
         description: `An unexpected error occurred: ${err instanceof Error ? err.message : "Unknown error"}`,
         duration: 7000,
@@ -482,7 +395,6 @@ export function SignUpForm({
       });
     } finally {
       setIsLoading(false);
-      console.groupEnd();
     }
   };
 

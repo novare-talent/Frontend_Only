@@ -6,6 +6,9 @@ import PDFParser from "pdf2json"
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 export const runtime = "nodejs"
 
+// Helper to delay execution
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
 export async function POST(request: NextRequest) {
   try {
     /* ----------------------- 1️⃣ Authenticate ----------------------- */
@@ -123,25 +126,66 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    /* ----------------------- 🔟 Evaluate Candidates ----------------------- */
-    const evaluated = await Promise.all(
-      candidates.map(async (candidate) => {
-        const evalResult = await evaluateCandidate(candidate, jobDescription)
-        if (!evalResult) return null
-        return {
-          id: candidate.id,
-          name: candidate.name,
-          email: candidate.email,
-          phone: candidate.phone,
-          resume_url: candidate.resume_url,
-          results: evalResult,
+    /* ----------------------- 🔟 Evaluate Candidates with Rate Limiting ----------------------- */
+    console.log(`Starting evaluation of ${candidates.length} candidates...`)
+    const evaluated = []
+    
+    // Process candidates sequentially with delay to avoid rate limits
+    for (let i = 0; i < candidates.length; i++) {
+      const candidate = candidates[i]
+      console.log(`Evaluating candidate ${i + 1}/${candidates.length}: ${candidate.name}`)
+      
+      try {
+        // Extract resume text if available
+        let resumeText = null
+        if (candidate.resume_url) {
+          try {
+            console.log(`  Fetching resume for ${candidate.name}`)
+            resumeText = await extractResumeText(candidate.resume_url)
+            console.log(`  Extracted ${resumeText?.length || 0} characters from resume`)
+          } catch (resumeErr) {
+            console.warn(`  Failed to extract resume for ${candidate.name}:`, resumeErr)
+            // Continue without resume
+          }
         }
-      })
-    )
 
-    const validEvaluations = evaluated.filter((e) => e !== null)
-    if (validEvaluations.length === 0)
-      throw new Error("No successful evaluations")
+        const evalResult = await evaluateCandidateWithRetry(candidate, jobDescription, resumeText)
+        
+        if (evalResult) {
+          evaluated.push({
+            id: candidate.id,
+            name: candidate.name,
+            email: candidate.email,
+            phone: candidate.phone,
+            resume_url: candidate.resume_url,
+            has_resume: !!resumeText,
+            results: evalResult,
+          })
+          console.log(`  ✓ Successfully evaluated ${candidate.name}`)
+        } else {
+          console.warn(`  ✗ Failed to evaluate ${candidate.name}`)
+        }
+        
+        // Add delay between requests to avoid rate limits (2 seconds)
+        if (i < candidates.length - 1) {
+          console.log(`  Waiting 2s before next evaluation...`)
+          await delay(2000)
+        }
+      } catch (err) {
+        console.error(`  Error evaluating candidate ${candidate.name}:`, err)
+        // Continue with next candidate
+      }
+    }
+
+    if (evaluated.length === 0) {
+      return NextResponse.json(
+        { 
+          error: "No successful evaluations. This may be due to API rate limits. Please try again in a few minutes.",
+          candidates_attempted: candidates.length 
+        },
+        { status: 429 }
+      )
+    }
 
     /* ----------------------- 1️⃣1️⃣ Save or Update Evaluation ----------------------- */
     const { data: existingEval } = await supabase
@@ -150,7 +194,7 @@ export async function POST(request: NextRequest) {
       .eq("job_id", job_id)
       .maybeSingle()
 
-    const record = { job_id, results: validEvaluations }
+    const record = { job_id, results: evaluated }
 
     if (existingEval) {
       console.log(`Updating existing evaluation for job_id: ${job_id}`)
@@ -172,10 +216,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       job_id,
-      results: validEvaluations,
+      results: evaluated,
       message: existingEval
         ? "Evaluation updated successfully"
         : "Evaluation completed successfully",
+      stats: {
+        total: candidates.length,
+        evaluated: evaluated.length,
+        failed: candidates.length - evaluated.length,
+        with_resume: evaluated.filter(e => e.has_resume).length,
+        without_resume: evaluated.filter(e => !e.has_resume).length,
+      }
     })
   } catch (error: any) {
     console.error("Evaluation Error:", error)
@@ -195,7 +246,7 @@ async function extractTextFromPDFBuffer(buffer: Buffer): Promise<string> {
 
       pdfParser.on("pdfParser_dataError", (errData: any) => {
         console.error("PDF Parse Error:", errData.parserError)
-        reject(new Error("Failed to parse JD PDF"))
+        reject(new Error("Failed to parse PDF"))
       })
 
       pdfParser.on("pdfParser_dataReady", () => {
@@ -210,38 +261,130 @@ async function extractTextFromPDFBuffer(buffer: Buffer): Promise<string> {
   })
 }
 
-/* ----------------------- Helper: Evaluate Candidate ----------------------- */
-async function evaluateCandidate(candidate: any, jobDescription: string) {
+/* ----------------------- Helper: Extract Resume Text ----------------------- */
+async function extractResumeText(resumeUrl: string): Promise<string | null> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
+    if (!resumeUrl || typeof resumeUrl !== 'string') {
+      return null
+    }
+
+    const response = await fetch(resumeUrl)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch resume: ${response.statusText}`)
+    }
+
+    const buffer = Buffer.from(await response.arrayBuffer())
+    const text = await extractTextFromPDFBuffer(buffer)
+    return text
+  } catch (error) {
+    console.error("Resume extraction error:", error)
+    return null
+  }
+}
+
+/* ----------------------- Helper: Evaluate with Retry ----------------------- */
+async function evaluateCandidateWithRetry(
+  candidate: any,
+  jobDescription: string,
+  resumeText: string | null,
+  maxRetries: number = 3
+) {
+  let lastError: any = null
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`    Attempt ${attempt}/${maxRetries}`)
+      const result = await evaluateCandidate(candidate, jobDescription, resumeText)
+      return result
+    } catch (error: any) {
+      lastError = error
+      
+      // Check if it's a rate limit error
+      if (error.message?.includes('429') || error.message?.includes('quota')) {
+        console.warn(`    Rate limit hit on attempt ${attempt}`)
+        
+        if (attempt < maxRetries) {
+          // Exponential backoff: 5s, 10s, 20s
+          const waitTime = 5000 * Math.pow(2, attempt - 1)
+          console.log(`    Waiting ${waitTime / 1000}s before retry...`)
+          await delay(waitTime)
+          continue
+        }
+      } else {
+        // For non-rate-limit errors, don't retry
+        console.error(`    Non-rate-limit error:`, error.message)
+        break
+      }
+    }
+  }
+  
+  console.error(`    Failed after ${maxRetries} attempts:`, lastError?.message)
+  return null
+}
+
+/* ----------------------- Helper: Evaluate Candidate ----------------------- */
+async function evaluateCandidate(
+  candidate: any, 
+  jobDescription: string, 
+  resumeText: string | null
+) {
+  try {
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash", // Using stable model instead of experimental
+    })
+
+    // Prepare candidate info without resume content
+    const candidateInfo = {
+      name: candidate.name,
+      email: candidate.email,
+      phone: candidate.phone,
+      responses: candidate.response || {},
+    }
 
     const prompt = `
 You are an AI recruiter. Evaluate this candidate for the given job description.
-Return JSON with the following structure:
+${resumeText ? 'A resume has been provided.' : 'NOTE: No resume available - evaluate based on form responses only.'}
+
+Return ONLY a valid JSON object with this exact structure (no markdown, no extra text):
 
 {
-  "skills_match": "..."(less than 400 chars),
-  "experience_relevance": "..."(less than 400 chars),
-  "communication_clarity": "..."(less than 400 chars),
-  "overall_fit": "..."(less than 400 chars),
-  "final_score": 0-100,
-  "justification": "...(less than 400 chars)"
+  "skills_match": "brief assessment (max 400 chars)",
+  "experience_relevance": "brief assessment (max 400 chars)",
+  "communication_clarity": "brief assessment (max 400 chars)",
+  "overall_fit": "brief assessment (max 400 chars)",
+  "final_score": 75,
+  "justification": "brief justification (max 400 chars)"
 }
 
 Job Description:
-${jobDescription}
+${jobDescription.substring(0, 2000)}
 
-Candidate Profile (with name, email, and phone):
-${JSON.stringify(candidate, null, 2)}
+Candidate Profile:
+${JSON.stringify(candidateInfo, null, 2)}
+
+${resumeText ? `\nResume Content:\n${resumeText.substring(0, 3000)}` : '\nNo resume provided - base evaluation on form responses and profile information.'}
 `
+
     const result = await model.generateContent(prompt)
     const text = result.response.text().trim()
+    
+    // Extract JSON from response
     const jsonMatch = text.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) throw new Error("Invalid Gemini response format")
+    if (!jsonMatch) {
+      console.error("Invalid Gemini response:", text)
+      throw new Error("Invalid Gemini response format")
+    }
 
-    return JSON.parse(jsonMatch[0])
-  } catch (err) {
-    console.error("Gemini Evaluation Error:", err)
-    return null
+    const evaluation = JSON.parse(jsonMatch[0])
+    
+    // Add note if evaluated without resume
+    if (!resumeText) {
+      evaluation.note = "Evaluated without resume"
+    }
+
+    return evaluation
+  } catch (err: any) {
+    console.error("Gemini Evaluation Error:", err.message || err)
+    throw err
   }
 }
