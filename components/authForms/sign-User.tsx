@@ -87,7 +87,7 @@ export function SignUpForm({
     setIsLoading(true);
 
     const emailRegex =
-      /^[a-zA-Z0-9._%+-]+@(ds\.study\.iitm\.ac\.in|smail\.iitm\.ac\.in|kgpian\.iitkgp\.ac\.in|iitkgp\.ac\.in|iitb\.ac\.in|iitm\.ac\.in|iitk\.ac\.in|iitd\.ac\.in|iitg\.ac\.in|iitr\.ac\.in|iitbhu\.ac\.in|iitrpr\.ac\.in|iitbbs\.ac\.in|iitgn\.ac\.in|iith\.ac\.in|iiti\.ac\.in|iitj\.ac\.in|iitp\.ac\.in|iitmandi\.ac\.in|iitpkd\.ac\.in|iittp\.ac\.in|iitism\.ac\.in|iitbhilai\.ac\.in|iitgoa\.ac\.in|iitdh\.ac\.in|ce\.iitr\.ac\.in|me\.iitr\.ac\.in|mfs\.iitr\.ac\.in|ee\.iitr\.ac\.in|ece\.iitr\.ac\.in|cy\.iitr\.ac\.in|cs\.iitr\.ac\.in|mt\.iitr\.ac\.in|ph\.iitr\.ac\.in|pt\.iitr\.ac\.in|ma\.iitr\.ac\.in|hy\.iitr\.ac\.in|es\.iitr\.ac\.in|eq\.iitr\.ac\.in|ch\.iitr\.ac\.in)$/;
+      /^[a-zA-Z0-9._%+-]+@(ds\.study\.iitm\.ac\.in|smail\.iitm\.ac\.in|kgpian\.iitkgp\.ac\.in|iitkgp\.ac\.in|iitb\.ac\.in|iitm\.ac\.in|iitk\.ac\.in|iitd\.ac\.in|iitg\.ac\.in|iitr\.ac\.in|iitbhu\.ac\.in|iitrpr\.ac\.in|iitbbs\.ac\.in|iitgn\.ac\.in|iith\.ac\.in|iiti\.ac\.in|iitj\.ac\.in|iitp\.ac\.in|iitmandi\.ac\.in|iitpkd\.ac\.in|iittp\.ac\.in|iitism\.ac\.in|iitbhilai\.ac\.in|iitgoa\.ac\.in|iitdh\.ac\.in|ce\.iitr\.ac\.in|me\.iitr\.ac\.in|mfs\.iitr\.ac\.in|ee\.iitr\.ac\.in|ece\.iitr\.ac\.in|cy\.iitr\.ac\.in|cs\.iitr\.ac\.in|mt\.iitr\.ac\.in|ph\.iitr\.ac\.in|pt\.iitr\.ac\.in|ma\.iitr\.ac\.in|hy\.iitr\.ac\.in|es\.iitr\.ac\.in|eq\.iitr\.ac\.in|ch\.iitr\.ac\.in|iitism\.ac\.in)$/;
 
     if (!emailRegex.test(userFormData.email)) {
       toast.error("Invalid Email Domain", {
@@ -277,8 +277,7 @@ export function SignUpForm({
       return;
     }
 
-    // 🚫 Block gmail and iit emails
-    const blockedEmailRegex = /@(gmail\.com|iit[a-z]*\.ac\.in|ce\.iitr\.ac\.in|me\.iitr\.ac\.in|mfs\.iitr\.ac\.in|ee\.iitr\.ac\.in|ece\.iitr\.ac\.in|cy\.iitr\.ac\.in|cs\.iitr\.ac\.in|mt\.iitr\.ac\.in|ph\.iitr\.ac\.in|pt\.iitr\.ac\.in|ma\.iitr\.ac\.in|hy\.iitr\.ac\.in|es\.iitr\.ac\.in|eq\.iitr\.ac\.in|ch\.iitr\.ac\.in)$/i;
+    const blockedEmailRegex = /@(gmail\.com|iit[a-z]*\.ac\.in|ce\.iitr\.ac\.in|me\.iitr\.ac\.in|mfs\.iitr\.ac\.in|ee\.iitr\.ac\.in|ece\.iitr\.ac\.in|cy\.iitr\.ac\.in|cs\.iitr\.ac\.in|mt\.iitr\.ac\.in|ph\.iitr\.ac\.in|pt\.iitr\.ac\.in|ma\.iitr\.ac\.in|hy\.iitr\.ac\.in|es\.iitr\.ac\.in|eq\.iitr\.ac\.in|ch\.iitr\.ac\.in|iitism\.ac\.in)$/i;
     if (blockedEmailRegex.test(clientFormData.email)) {
       toast.error("Invalid Company Email", {
         description:
