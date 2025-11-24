@@ -67,28 +67,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
+            <div
+              className="h-8"
             >
               <Link href="/">
                 <Image
                   src="/LogoDark.png"
                   alt="Logo"
-                  width={160}
-                  height={40}
-                  className="block dark:hidden"
+                  width={140}
+                  height={32}
+                  className="block dark:hidden ml-2"
                 />
                 {/* Dark Mode Logo */}
                 <Image
                   src="/Logo.png"
                   alt="Logo Dark"
-                  width={160}
-                  height={40}
-                  className="hidden dark:block"
+                  width={140}
+                  height={32}
+                  className="hidden dark:block ml-2"
                 />
               </Link>
-            </SidebarMenuButton>
+            </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

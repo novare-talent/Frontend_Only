@@ -27,15 +27,17 @@ export function NavMain({
       <SidebarGroupContent className="flex flex-col gap-2">
         <SidebarMenu>
           <SidebarMenuItem className="flex items-center gap-2">
+            <Link  href="/client/create-job" className="w-full">
             <SidebarMenuButton
               tooltip="Quick Create"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-5 duration-200 ease-linear"
+              className="bg-primary pr-38 pl-1 text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-5 duration-200 ease-linear cursor-pointer justify-center"
             >
-              <Link href="/client/create-job" about="Create Job" className="flex flex-row items-center gap-1">
+              <div about="Create Job" className="flex flex-row items-center gap-1">
                 <IconCirclePlusFilled />
                 <span className="mt-0.5">Create Jobs</span>
-              </Link>
+              </div>
             </SidebarMenuButton>
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
         <SidebarMenu>

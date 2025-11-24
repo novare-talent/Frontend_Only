@@ -1080,6 +1080,7 @@ export default function NovareTalentLanding() {
           height: auto;
           overflow: visible;
           margin-top: -160px;
+          margin-bottom: 60px;
         }
 
         .faq__bg {
@@ -1242,6 +1243,7 @@ export default function NovareTalentLanding() {
         .footer {
           height: 855px;
           margin-top: 60px;
+          z-index: 1;
         }
 
         .footer__bg {

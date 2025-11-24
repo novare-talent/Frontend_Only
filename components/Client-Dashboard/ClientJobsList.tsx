@@ -85,7 +85,7 @@ export default function ClientJobs() {
       </header>
 
       {jobs.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="flex flex-col items-center justify-center py-16 text-center mt-20">
           <div className="mb-4 rounded-full bg-muted p-6">
             <svg 
               className="h-12 w-12 text-muted-foreground" 
@@ -105,12 +105,12 @@ export default function ClientJobs() {
           <p className="mb-6 text-muted-foreground max-w-md">
             You have not created any jobs yet. Start by posting your first job opening.
           </p>
-          <Link href="/client/create-job">
+          {/* <Link href="/client/create-job">
             <Button className="bg-primary hover:bg-primary/90 text-lg gap-1">
               <Plus className="size-5" />
               Create Job
             </Button>
-          </Link>
+          </Link> */}
         </div>
       ) : (
         jobs.map((job) => (
