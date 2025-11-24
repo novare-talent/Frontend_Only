@@ -25,7 +25,7 @@ export function NavMain({
 }) {
   return (
     <SidebarGroup>
-      <SidebarMenu>
+      {/* <SidebarMenu>
           <SidebarMenuItem className="flex items-center gap-2 mb-2">
             <SidebarMenuButton
               tooltip="Quick Create"
@@ -35,7 +35,7 @@ export function NavMain({
               <span>Apply For Jobs</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-        </SidebarMenu>
+        </SidebarMenu> */}
       <SidebarMenu>
         {items.map((item) => {
           const isActive = pathname === item.url;

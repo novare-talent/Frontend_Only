@@ -800,7 +800,8 @@ export default function NovareTalentLanding() {
         }
 
         .students {
-          margin-top: -200px;
+          /* ORIGINAL: margin-top: -200px; */
+          margin-top: -100px; /* Adjusted to reduce gap */
         }
 
         .students__marquee,
@@ -1012,7 +1013,13 @@ export default function NovareTalentLanding() {
           inset: 0;
           width: 100%;
           height: 100%;
+          margin-top: 20px;
           object-fit: contain;
+        }
+        
+        /* Adjusted height to minimize gap above it */
+        .trust {
+          height: 100px; /* ORIGINAL: 1080px */
         }
 
         .flare {

@@ -1,5 +1,4 @@
 import { SectionCards } from "@/components/Candidate-Dashboard/section-cards";
-import JobsGrid from "@/components/Candidate-Dashboard/job-cards";
 import AppliedJobsGrid from "@/components/Candidate-Dashboard/AppliedJobsGrid";
 
 export default function Page() {
@@ -12,7 +11,6 @@ export default function Page() {
             <ChartAreaInteractive />
           </div> */}
           <AppliedJobsGrid />
-          <JobsGrid />
         </div>
       </div>
     </div>

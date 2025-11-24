@@ -275,7 +275,7 @@ export default function JobsGrid() {
   };
 
   return (
-    <div className="p-6 space-y-6" suppressHydrationWarning>
+    <div className="p-6 pt-0 space-y-6" suppressHydrationWarning>
       <h1 className="text-2xl text-primary">Available Jobs</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -316,7 +316,7 @@ export default function JobsGrid() {
 
       {jobs.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12">
-          <p className="text-center text-lg text-muted-foreground">
+          <p className="text-center text-gray-500 text-md">
             No jobs available at the moment.
           </p>
         </div>
