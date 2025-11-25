@@ -5,12 +5,19 @@ import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { IconPlus } from "@tabler/icons-react";
 
 type FetchSuccess = { ok: true; jobs_remaining: number };
 type FetchFailure = { ok: false; reason?: string };
 type FetchResult = FetchSuccess | FetchFailure;
 
-export default function CreateJobButtonServerChecked({ text = "Create Job" }: { text?: string }) {
+export default function CreateJobButtonServerChecked({ 
+  text = "Create Job", 
+  className 
+}: { 
+  text?: string; 
+  className?: string; 
+}) {
   const supabase = createClient();
   const router = useRouter();
 
@@ -110,8 +117,16 @@ export default function CreateJobButtonServerChecked({ text = "Create Job" }: { 
   }
 
   return (
-    <Button onClick={handleCreateJob} disabled={loading}>
-      {loading ? "Checking..." : text}
-    </Button>
+    <Button
+    onClick={handleCreateJob}
+    disabled={loading}
+    className={`w-full flex ${className || ""}`}
+  >
+    <div className="flex flex-row mr-36 pr-3 items-center gap-2">
+    <IconPlus className="w-5 h-5" />
+    <span>{loading ? "Checking..." : text}</span>
+    </div>
+  </Button>
+
   );
 }

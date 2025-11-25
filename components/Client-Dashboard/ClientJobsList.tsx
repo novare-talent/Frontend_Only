@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/utils/supabase/client"
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import CreateJobButtonServerChecked from "./CreateJobButton"
 
 type Job = {
   job_id: string
@@ -73,15 +74,12 @@ export default function ClientJobs() {
   }
 
   return (
-    <main className="max-w-6xl px-5 pl-10 py-2">
+    <main className="max-w-7xl px-5 pl-6 py-2">
       <header className="mb-6 flex items-center justify-between">
         <h1 className="text-balance text-2xl font-semibold text-brand">Created Jobs</h1>
-        <Link href="/client/create-job">
-        <Button className="bg-primary hover:bg-primary/90 gap-0.5" onClick={handleCreateJob}>
-          <Plus className="size-4" />
-          Create Job
-        </Button>
-        </Link>
+        <div className="gap-0.5 mr-2">
+          <CreateJobButtonServerChecked className="max-w-36 pl-32"/>
+        </div>
       </header>
 
       {jobs.length === 0 ? (
