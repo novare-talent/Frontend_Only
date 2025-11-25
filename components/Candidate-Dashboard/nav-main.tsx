@@ -5,12 +5,10 @@ import Link from "next/link";
 import { type LucideIcon } from "lucide-react";
 import {
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { IconCirclePlusFilled } from "@tabler/icons-react";
 
 export function NavMain({
   items,

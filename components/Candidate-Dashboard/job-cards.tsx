@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ChevronRight, Users, FileText, Wallet, MapPin, Clock, Calendar } from "lucide-react";
+import { ChevronRight, Users, FileText, Wallet, MapPin, Clock, Calendar, AlertCircle } from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -78,14 +78,38 @@ const IntegrationCard = ({
   tags?: string[] | string | null;
 }) => {
   const tagsArray = Array.isArray(tags) ? tags : tags ? [tags] : [];
+  const [isDeadlinePassed, setIsDeadlinePassed] = useState(false);
+
+  // Check if deadline has passed
+  useEffect(() => {
+    if (!closingTime) {
+      setIsDeadlinePassed(false);
+      return;
+    }
+
+    const checkDeadline = () => {
+      const deadlineDate = new Date(closingTime);
+      const now = new Date();
+      setIsDeadlinePassed(now > deadlineDate);
+    };
+
+    // Check immediately
+    checkDeadline();
+
+    // Check every minute to keep it updated
+    const interval = setInterval(checkDeadline, 60000);
+    return () => clearInterval(interval);
+  }, [closingTime]);
 
   return (
     <Card
       className={cn(
         "group relative rounded-2xl border bg-card/80 shadow-sm transition-all duration-300",
-        "hover:border-primary/60 hover:ring-1 hover:ring-primary/70 hover:shadow-xl hover:-translate-y-1 pb-4"
+        "hover:border-primary/60 hover:ring-1 hover:ring-primary/70 hover:shadow-xl hover:-translate-y-1 pb-4",
+        isDeadlinePassed && "opacity-75"
       )}
     >
+
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-balance text-xl font-semibold leading-tight text-foreground">
@@ -123,10 +147,19 @@ const IntegrationCard = ({
         <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
           {closingTime && (
             <div className="flex items-center gap-1.5">
-              <Calendar className="size-4 text-red-500 flex-shrink-0" />
+              <Calendar className={cn(
+                "size-4 flex-shrink-0",
+                isDeadlinePassed ? "text-destructive" : "text-red-500"
+              )} />
               <div className="flex flex-row">
-                <span className="font-semibold text-foreground text-sm pr-1">Closing:</span>
-                <span className="text-muted-foreground text-sm">{formatIST(closingTime)}</span>
+                <span className={cn(
+                  "font-semibold text-sm pr-1",
+                  isDeadlinePassed ? "text-destructive" : "text-foreground"
+                )}>Closing:</span>
+                <span className={cn(
+                  "text-sm",
+                  isDeadlinePassed ? "text-destructive" : "text-muted-foreground"
+                )}>{formatIST(closingTime)}</span>
               </div>
             </div>
           )}
@@ -173,6 +206,17 @@ const IntegrationCard = ({
             <Badge variant="outline" className="text-sm font-medium text-muted-foreground">
               Already Applied
             </Badge>
+          ) : isDeadlinePassed ? (
+            <Button
+              variant="default"
+              size="sm"
+              className="gap-2"
+              disabled
+              title="Application deadline has passed"
+            >
+              Deadline Passed
+              <AlertCircle className="size-4" />
+            </Button>
           ) : (
             <Link href={`/Dashboard/Jobs/${link}`}>
               <Button
