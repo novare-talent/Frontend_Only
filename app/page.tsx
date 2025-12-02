@@ -1663,7 +1663,7 @@ export default function NovareTalentLanding() {
               ))}
             </div>
           </section>
-
+          <div className="mt-64 pb-4"></div>
           {/* Footer */}
           <footer className="section footer" role="contentinfo">
             <Image
