@@ -78,7 +78,7 @@ export default function ClientJobs() {
       <header className="mb-6 flex items-center justify-between">
         <h1 className="text-balance text-2xl font-semibold text-brand">Created Jobs</h1>
         <div className="gap-0.5 mr-2">
-          <CreateJobButtonServerChecked className="max-w-36 pl-32"/>
+          <CreateJobButtonServerChecked className="max-w-20 pl-40"/>
         </div>
       </header>
 
