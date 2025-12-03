@@ -77,6 +77,9 @@ export default function JobForm({
   const [jobDetails, setJobDetails] = useState<any>(null);
   const [loadingJob, setLoadingJob] = useState(true);
 
+  // Auto-open guard so we only open profile page once per mount
+  const [autoOpenedProfile, setAutoOpenedProfile] = useState(false);
+
   useEffect(() => {
     let mounted = true;
 
@@ -149,20 +152,52 @@ export default function JobForm({
     };
   }, [supabaseClient, formId, jobId]);
 
+  // If user has no resumes (and is logged in), auto-open profile page so they can upload one.
+  useEffect(() => {
+    if (
+      !loadingProfile &&
+      !notLoggedIn &&
+      resumes.length === 0 &&
+      !autoOpenedProfile
+    ) {
+      // Only run in browser
+      if (typeof window !== "undefined") {
+        try {
+          // open profile page in a new tab
+          window.open("/Dashboard/Account", "_blank");
+        } catch (err) {
+          // fallback to in-app navigation if popup blocked
+          router.push("/Dashboard/Account");
+        }
+
+        toast(
+          "No resume found",
+          {
+            description:
+              "We've opened your profile in a new tab so you can upload a resume. Please add one and come back to submit your application.",
+          }
+        );
+
+        setAutoOpenedProfile(true);
+      }
+    }
+  }, [loadingProfile, notLoggedIn, resumes, autoOpenedProfile, router]);
+
   const hasResumes = useMemo(() => resumes.length > 0, [resumes]);
+
   function formatISTDate(dateString: string) {
-  if (!dateString) return "—";
-  const date = new Date(dateString);
-  return date.toLocaleString("en-IN", {
-    timeZone: "Asia/Kolkata",
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
-}
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    return date.toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  }
 
   const handleMultiSelectChange = (questionIndex: number, option: string, checked: boolean) => {
     const questionKey = `question-${questionIndex}`;
@@ -187,6 +222,68 @@ export default function JobForm({
     return <div className="p-6 text-center text-muted-foreground">No form found</div>;
   }
 
+  // Client-side validation helper
+  const validateFormBeforeSubmit = (formEl: HTMLFormElement) => {
+    // Resume is absolutely required
+    if (!selectedResume) {
+      toast.error("Resume required", { description: "Please select a resume before submitting." });
+      // focus the resume card (try focusing the first resume view link or the form)
+      const resumeLink = formEl.querySelector("a[href]") as HTMLElement | null;
+      if (resumeLink) resumeLink.focus();
+      return false;
+    }
+
+    // Validate all required questions
+    for (let idx = 0; idx < (formData.questions ?? []).length; idx++) {
+      const q = formData.questions[idx];
+      if (!q?.required) continue;
+
+      const name = `question-${idx}`;
+
+      if (q.type === "TEXT") {
+        const el = (formEl.elements as any)[name] as HTMLInputElement | undefined;
+        const val = el?.value?.trim?.() ?? "";
+        if (!val) {
+          toast.error("Required", { description: "Please answer: " + (q.title || "Required question") });
+          if (el && typeof el.focus === "function") el.focus();
+          return false;
+        }
+      } else if (q.type === "RADIO") {
+        const el = (formEl.elements as any)[name];
+        let found = false;
+        if (el) {
+          if (typeof el.value === "string" && el.value) {
+            found = true;
+          } else if ("length" in el) {
+            for (let i = 0; i < el.length; i++) {
+              if (el[i].checked) {
+                found = true;
+                break;
+              }
+            }
+          }
+        }
+        if (!found) {
+          toast.error("Required", { description: "Please select an option for: " + (q.title || "Required question") });
+          // try focusing first radio input
+          if (el && el.length && el[0] && typeof el[0].focus === "function") el[0].focus();
+          return false;
+        }
+      } else if (q.type === "MULTI") {
+        const key = `question-${idx}`;
+        const vals = multiSelectValues[key] || [];
+        if (!vals || vals.length === 0) {
+          toast.error("Required", { description: "Please select at least one option for: " + (q.title || "Required question") });
+          // can't reliably focus checkbox, so focus the form
+          formEl.focus();
+          return false;
+        }
+      }
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (submitting) return;
@@ -202,6 +299,14 @@ export default function JobForm({
 
     try {
       const formEl = e.currentTarget;
+
+      // client-side validation
+      const ok = validateFormBeforeSubmit(formEl);
+      if (!ok) {
+        setSubmitting(false);
+        return;
+      }
+
       const answers: Record<string, any> = {};
 
       if (profileData) {
@@ -212,7 +317,7 @@ export default function JobForm({
 
       (formData.questions ?? []).forEach((q: any, idx: number) => {
         const name = `question-${idx}`;
-        let value = "";
+        let value: any = "";
 
         if (q.type === "MULTI") {
           value = JSON.stringify(multiSelectValues[name] || []);
@@ -372,9 +477,9 @@ export default function JobForm({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Resume
+              Resume <span className="text-destructive ml-2">*</span>
             </CardTitle>
-            <CardDescription>Select a resume to attach to this application.</CardDescription>
+            <CardDescription>Select a resume to attach to this application. This is required.</CardDescription>
           </CardHeader>
 
           <CardContent>
@@ -410,6 +515,8 @@ export default function JobForm({
                           : "hover:bg-accent"
                       }`}
                       title={fileName}
+                      aria-pressed={isSelected}
+                      aria-label={`Select resume ${fileName}`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div
@@ -434,15 +541,22 @@ export default function JobForm({
                 })}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                No resumes found in your profile. You can add resumes in your{" "}
-                <Link
-                  href="/Dashboard/Account"
-                  className="underline-offset-2 underline text-primary"
-                >
-                  profile
-                </Link>
-              </p>
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  No resumes found in your profile.
+                </p>
+                <p className="text-sm">
+                  After uploading, come back to this page and refresh.
+                </p>
+                <div>
+                  <Link
+                    href="/Dashboard/Account"
+                    className="underline-offset-2 underline text-primary"
+                  >
+                    Open profile to upload resume
+                  </Link>
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -456,8 +570,16 @@ export default function JobForm({
           if (q.type === "TEXT") {
             return (
               <div key={idx} className="flex flex-col gap-2">
-                <Label htmlFor={name}>{q.title}</Label>
-                <Input id={name} name={name} placeholder={q.title} />
+                <Label htmlFor={name}>
+                  {q.title} {q.required ? <span className="text-destructive">*</span> : null}
+                </Label>
+                <Input
+                  id={name}
+                  name={name}
+                  placeholder={q.title}
+                  required={!!q.required}
+                  aria-required={!!q.required}
+                />
               </div>
             );
           }
@@ -465,11 +587,13 @@ export default function JobForm({
           if (q.type === "RADIO") {
             return (
               <div key={idx} className="flex flex-col gap-3">
-                <Label>{q.title}</Label>
-                <RadioGroup name={name}>
+                <Label>
+                  {q.title} {q.required ? <span className="text-destructive">*</span> : null}
+                </Label>
+                <RadioGroup name={name} aria-required={!!q.required}>
                   {q.options.map((option: string, i: number) => (
                     <div key={i} className="flex items-center gap-2 border p-3 rounded-lg">
-                      <RadioGroupItem value={option} id={`${name}-${i}`} />
+                      <RadioGroupItem value={option} id={`${name}-${i}`} aria-required={!!q.required} />
                       <Label htmlFor={`${name}-${i}`}>{option}</Label>
                     </div>
                   ))}
@@ -481,7 +605,9 @@ export default function JobForm({
           if (q.type === "MULTI") {
             return (
               <div key={idx} className="flex flex-col gap-3">
-                <Label>{q.title}</Label>
+                <Label>
+                  {q.title} {q.required ? <span className="text-destructive">*</span> : null}
+                </Label>
                 <div className="space-y-2">
                   {q.options.map((option: string, i: number) => {
                     const optionId = `${name}-${i}`;
@@ -495,6 +621,7 @@ export default function JobForm({
                           onCheckedChange={(checked) =>
                             handleMultiSelectChange(idx, option, checked as boolean)
                           }
+                          aria-required={!!q.required}
                         />
                         <Label htmlFor={optionId}>{option}</Label>
                       </div>
@@ -510,7 +637,16 @@ export default function JobForm({
       </div>
 
       <div className="flex justify-end">
-        <Button type="submit" size="lg" disabled={loadingProfile || submitting}>
+        <Button
+          type="submit"
+          size="lg"
+          disabled={loadingProfile || submitting || notLoggedIn || !hasResumes}
+          title={
+            !hasResumes
+              ? "Please upload a resume in your profile before submitting."
+              : undefined
+          }
+        >
           {submitting ? "Submitting…" : "Submit Application"}
         </Button>
       </div>
