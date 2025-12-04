@@ -325,14 +325,18 @@ export default function TrainingPage() {
                         {course.level}
                       </span>
                     </div>
+                    <div className="min-h-10"></div>
+                  </div>
 
+                  {/* Footer */}
+                  <CardFooter className="justify-between before:bg-white/10 border-white/20 border-1 overflow-hidden py-1 absolute before:rounded-xl rounded-b-s bottom-2 w-[calc(100%_-_16px)] shadow-small left-2 z-10">
                     {/* file icon + open link */}
                     {course.pdfUrl ? (
                       <a
                         href={course.pdfUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="mt-4 flex items-center gap-3 pb-0.5 z-40"
+                        className="flex items-center gap-1 pb-0.5 mr-26"
                       >
                         <FileText className="h-5 w-5 text-muted-foreground" />
                         <div className="text-sm text-primary hover:underline">
@@ -344,10 +348,6 @@ export default function TrainingPage() {
                         PDF not uploaded
                       </span>
                     )}
-                  </div>
-
-                  {/* Footer */}
-                  <CardFooter className="justify-between before:bg-white/10 border-white/20 border-1 overflow-hidden py-1 absolute before:rounded-xl rounded-b-s bottom-2 w-[calc(100%_-_16px)] shadow-small left-2 z-10">
                     <div className="flex items-center gap-2">
                       <Button
                         className="text-tiny bg-black/10"
