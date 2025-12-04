@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion";
 
 const allCourses = [
   {
@@ -24,7 +24,7 @@ const allCourses = [
     title: "AI ML Engineer",
     description: "Intro to AI and Machine Learning",
     level: "Beginner",
-    pdfUrl: "\Training\AI_ML_ENGINEER.pdf",
+    pdfUrl: "/Training/AI_ML_ENGINEER.pdf",
     imageUrl: "https://heroui.com/images/hero-card.jpeg",
   },
   {
@@ -32,7 +32,7 @@ const allCourses = [
     title: "Chief of Staff Resources",
     description: "Comprehensive guide for Chiefs of Staff",
     level: "Beginner",
-    pdfUrl: "\Training\Chief_of_Staff_Resources.pdf",
+    pdfUrl: "/Training/Chief_of_Staff_Resources.pdf",
     imageUrl: "https://heroui.com/images/hero-card.jpeg",
   },
   {
@@ -40,23 +40,87 @@ const allCourses = [
     title: "Cloud Engineer",
     description: "AWS, Azure, GCP fundamentals",
     level: "Intermediate",
-    pdfUrl: "\Training\Cloud_Engineer.pdf",
+    pdfUrl: "/Training/Cloud_Engineer.pdf",
     imageUrl: "https://heroui.com/images/hero-card.jpeg",
   },
   {
-    id: "t-jenkins",
-    title: "CI/CD with Jenkins",
-    description: "Automating builds & pipelines",
+    id: "Consulting",
+    title: "Consulting Basics",
+    description: "Consulting frameworks and methodologies",
     level: "Intermediate",
-    pdfUrl: "",
+    pdfUrl: "/Training/Consulting.pdf",
     imageUrl: "https://heroui.com/images/hero-card.jpeg",
   },
   {
-    id: "t-k8s",
-    title: "Kubernetes Deep Dive",
-    description: "Clusters, services, controllers",
+    id: "Data_Scientist",
+    title: "Data Scientist",
+    description: "Data analysis and visualization techniques",
+    level: "Beginner",
+    pdfUrl: "/Training/Data_Scientist.pdf",
+    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+  },
+  {
+    id: "Founder_Office",
+    title: "Founder's Office",
+    description: "Strategies for startup success and growth.",
+    level: "Beginner",
+    pdfUrl: "/Training/Founder_Office.pdf",
+    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+  },
+  {
+    id: "Software_Engineer",
+    title: "Software Engineer",
+    description: "Software development principles and practices",
+    level: "Beginner",
+    pdfUrl: "/Training/Software Engineer.pdf",
+    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+  },
+  {
+    id: "Strategy_and_Operations",
+    title: "Strategy and Operations",
+    description: "Business strategy and operational excellence",
+    level: "Beginner",
+    pdfUrl: "/Training/Strategy and Operations Job Role Resource.docx.pdf",
+    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+  },
+  {
+    id: "UI_UX_Designer",
+    title: "UI UX Designer",
+    description: "Design principles for user interfaces and experiences",
+    level: "Beginner",
+    pdfUrl: "/Training/UI UX Resource.docx.pdf",
+    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+  },
+  {
+    id: "Web_Development",
+    title: "Web Development",
+    description: "Web development fundamentals and best practices",
+    level: "Beginner",
+    pdfUrl: "/Training/Web_Development.pdf",
+    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+  },
+  {
+    id: "RA_1",
+    title: "Resource on Analyst roles (part 1)",
+    description: "Guide to Analyst roles and responsibilities",
+    level: "Beginner",
+    pdfUrl: "/Training/Resource on Analyst roles (part 1).docx.pdf",
+    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+  },
+  {
+    id: "RA_2",
+    title: "Resource on Analyst roles (part 2)",
+    description: "Business strategy and operations",
+    level: "Intermediate",
+    pdfUrl: "/Training/Resource on Analyst roles (part 2).docx.pdf",
+    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+  },
+  {
+    id: "RA_3",
+    title: "Resource on Analyst roles (part 3)",
+    description: "Guide to Analyst roles and responsibilities - Advanced",
     level: "Advanced",
-    pdfUrl: "",
+    pdfUrl: "/Training/Resource on Analyst roles (part 3).docx.pdf",
     imageUrl: "https://heroui.com/images/hero-card.jpeg",
   },
 ];
@@ -71,7 +135,12 @@ const gridVariants = {
 
 const cardVariants = {
   hidden: { opacity: 0, y: 10, scale: 0.995 },
-  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.35, ease: "easeOut" } },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.35, ease: "easeOut" },
+  },
   exit: { opacity: 0, y: 8, scale: 0.995, transition: { duration: 0.25 } },
 };
 
@@ -97,7 +166,11 @@ export default function TrainingPage() {
     if (sortBy === "title") {
       res = res.slice().sort((a, b) => a.title.localeCompare(b.title));
     } else if (sortBy === "level") {
-      const order: Record<string, number> = { beginner: 1, intermediate: 2, advanced: 3 };
+      const order: Record<string, number> = {
+        beginner: 1,
+        intermediate: 2,
+        advanced: 3,
+      };
       res = res
         .slice()
         .sort(
@@ -206,7 +279,11 @@ export default function TrainingPage() {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                whileHover={{ scale: 1.02, y: -6, transition: { duration: 0.22 } }}
+                whileHover={{
+                  scale: 1.02,
+                  y: -6,
+                  transition: { duration: 0.22 },
+                }}
                 className="will-change-transform"
               >
                 <Card
@@ -221,7 +298,10 @@ export default function TrainingPage() {
                       className="object-cover w-full h-full"
                       height={160}
                       width={400}
-                      src={course.imageUrl || "https://heroui.com/images/hero-card.jpeg"}
+                      src={
+                        course.imageUrl ||
+                        "https://heroui.com/images/hero-card.jpeg"
+                      }
                     />
                   </div>
 
@@ -229,8 +309,12 @@ export default function TrainingPage() {
                   <div className="p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold leading-tight">{course.title}</h3>
-                        <p className="text-sm text-muted-foreground mt-1">{course.description}</p>
+                        <h3 className="text-lg font-semibold leading-tight">
+                          {course.title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {course.description}
+                        </p>
                       </div>
 
                       <span
@@ -243,21 +327,23 @@ export default function TrainingPage() {
                     </div>
 
                     {/* file icon + open link */}
-                    <div className="mt-4 flex items-center gap-3 pb-0.5">
-                      <FileText className="h-5 w-5 text-muted-foreground" />
-                      {course.pdfUrl ? (
-                        <a
-                          href={course.pdfUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-sm text-primary hover:underline"
-                        >
+                    {course.pdfUrl ? (
+                      <a
+                        href={course.pdfUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-4 flex items-center gap-3 pb-0.5 z-40"
+                      >
+                        <FileText className="h-5 w-5 text-muted-foreground" />
+                        <div className="text-sm text-primary hover:underline">
                           Open PDF
-                        </a>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">PDF not uploaded</span>
-                      )}
-                    </div>
+                        </div>
+                      </a>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">
+                        PDF not uploaded
+                      </span>
+                    )}
                   </div>
 
                   {/* Footer */}
