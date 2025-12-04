@@ -21,6 +21,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const supabase = createClient();
 
@@ -61,10 +62,9 @@ export default function UserDetailPage() {
     setDeleting(false);
 
     if (error) {
-      console.error("Error deleting user:", error);
-      alert("Failed to delete user");
+      toast.error("Error", { description: "Failed to delete user" });
     } else {
-      alert("User deleted successfully");
+      toast("Successful", { description: "User deleted successfully" });
       router.push("/users"); // redirect back to users list
     }
   };
