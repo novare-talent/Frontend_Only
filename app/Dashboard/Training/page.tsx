@@ -148,11 +148,9 @@ export default function TrainingPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("none"); // "none", "title", "level"
 
-  // computed filtered + sorted courses (keeps original allCourses unchanged)
   const filteredCourses = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
 
-    // filter
     let res = allCourses.filter((c) => {
       if (!q) return true;
       return (
@@ -162,7 +160,6 @@ export default function TrainingPage() {
       );
     });
 
-    // sort
     if (sortBy === "title") {
       res = res.slice().sort((a, b) => a.title.localeCompare(b.title));
     } else if (sortBy === "level") {
@@ -198,10 +195,8 @@ export default function TrainingPage() {
 
   return (
     <div className="w-full bg-background p-4 sm:p-6 lg:p-8">
-      {/* Header: Search + Sort (inline on sm+) */}
       <header className="mb-6 w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex w-full items-center gap-3">
-          {/* Search */}
           <div className="relative w-full sm:w-80 max-w-full">
             <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -213,7 +208,6 @@ export default function TrainingPage() {
             />
           </div>
 
-          {/* Sort (shadcn Select) */}
           <div className="hidden sm:block">
             <Select value={sortBy} onValueChange={(v) => setSortBy(v)}>
               <SelectTrigger
@@ -223,7 +217,6 @@ export default function TrainingPage() {
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent className="bg-card/95 border rounded-md shadow-md">
-                {/* placeholder must NOT have an empty string value */}
                 <SelectItem value="none">Sort by</SelectItem>
                 <SelectItem value="title">Title</SelectItem>
                 <SelectItem value="level">Level</SelectItem>
@@ -232,7 +225,6 @@ export default function TrainingPage() {
           </div>
         </div>
 
-        {/* On small screens show Sort below as full width */}
         <div className="sm:hidden w-full">
           <Select value={sortBy} onValueChange={(v) => setSortBy(v)}>
             <SelectTrigger
@@ -242,7 +234,6 @@ export default function TrainingPage() {
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent className="bg-card/95 border rounded-md shadow-md">
-              {/* also ensure non-empty value here */}
               <SelectItem value="none">Sort by</SelectItem>
               <SelectItem value="title">Title</SelectItem>
               <SelectItem value="level">Level</SelectItem>
@@ -251,7 +242,6 @@ export default function TrainingPage() {
         </div>
       </header>
 
-      {/* Course Grid */}
       <motion.div
         className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5"
         variants={gridVariants}
@@ -282,16 +272,17 @@ export default function TrainingPage() {
                 whileHover={{
                   scale: 1.02,
                   y: -6,
+                  boxShadow:
+                    "0 0 20px var(--primary), 0 0 40px var(--primary)",
                   transition: { duration: 0.22 },
                 }}
-                className="will-change-transform"
+                className="will-change-transform transition-shadow rounded-2xl"
               >
                 <Card
                   isFooterBlurred
                   className="relative overflow-hidden rounded-2xl border bg-card/80 shadow-sm"
                   radius="lg"
                 >
-                  {/* Image */}
                   <div className="h-40 w-full overflow-hidden rounded-t-2xl">
                     <Image
                       alt={course.title}
@@ -305,7 +296,6 @@ export default function TrainingPage() {
                     />
                   </div>
 
-                  {/* Body */}
                   <div className="p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
@@ -328,65 +318,68 @@ export default function TrainingPage() {
                     <div className="min-h-10"></div>
                   </div>
 
-                  {/* Footer */}
                   <CardFooter className="justify-between before:bg-white/10 border-white/20 border-1 overflow-hidden py-1 absolute before:rounded-xl rounded-b-s bottom-2 w-[calc(100%_-_16px)] shadow-small left-2 z-10">
-                    {/* file icon + open link */}
-                    {course.pdfUrl ? (
-                      <a
-                        href={course.pdfUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-1 pb-0.5 mr-26"
-                      >
-                        <FileText className="h-5 w-5 text-muted-foreground" />
-                        <div className="text-sm text-primary hover:underline">
-                          Open PDF
-                        </div>
-                      </a>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">
-                        PDF not uploaded
-                      </span>
-                    )}
-                    <div className="flex items-center gap-2">
-                      <Button
-                        className="text-tiny bg-black/10"
-                        color="default"
-                        radius="lg"
-                        size="sm"
-                        variant="flat"
-                        disabled={!course.pdfUrl}
-                      >
-                        {course.pdfUrl ? (
-                          <a
-                            href={course.pdfUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex items-center gap-2"
-                          >
-                            <DownloadCloud className="h-4 w-4" />
-                            <span className="text-sm">Download</span>
-                          </a>
-                        ) : (
-                          <span className="flex items-center gap-2">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-4 w-4 opacity-80"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
+                    <div className="w-full flex items-center justify-between">
+                      {/* Left: Open PDF */}
+                      {course.pdfUrl ? (
+                        <a
+                          href={course.pdfUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-1 pb-0.5"
+                        >
+                          <FileText className="h-5 w-5 text-muted-foreground" />
+                          <div className="text-sm text-primary hover:underline">
+                            Open PDF
+                          </div>
+                        </a>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">
+                          PDF not uploaded
+                        </span>
+                      )}
+
+                      {/* Right: Download */}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          className="text-tiny bg-black/10"
+                          color="default"
+                          radius="lg"
+                          size="sm"
+                          variant="flat"
+                          disabled={!course.pdfUrl}
+                        >
+                          {course.pdfUrl ? (
+                            <a
+                              href={course.pdfUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex items-center gap-2"
                             >
-                              <path d="M12 2v6" />
-                              <path d="M5 12h14" />
-                              <path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
-                            </svg>
-                            <span className="text-sm">Notify me</span>
-                          </span>
-                        )}
-                      </Button>
+                              <DownloadCloud className="h-4 w-4" />
+                              <span className="text-sm">Download</span>
+                            </a>
+                          ) : (
+                            <span className="flex items-center gap-2">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4 opacity-80"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M12 2v6" />
+                                <path d="M5 12h14" />
+                                <path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
+                              </svg>
+                              <span className="text-sm">Notify me</span>
+                            </span>
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   </CardFooter>
                 </Card>
