@@ -25,7 +25,7 @@ const allCourses = [
     description: "Intro to AI and Machine Learning",
     level: "Beginner",
     pdfUrl: "/Training/AI_ML_ENGINEER.pdf",
-    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+    imageUrl: "/Training/Images/AI ML Engineer.png",
   },
   {
     id: "Chief_of_Staff_Resources",
@@ -33,7 +33,7 @@ const allCourses = [
     description: "Comprehensive guide for Chiefs of Staff",
     level: "Beginner",
     pdfUrl: "/Training/Chief_of_Staff_Resources.pdf",
-    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+    imageUrl: "/Training/Images/Chief of staff.png",
   },
   {
     id: "Cloud_Engineer",
@@ -41,7 +41,7 @@ const allCourses = [
     description: "AWS, Azure, GCP fundamentals",
     level: "Intermediate",
     pdfUrl: "/Training/Cloud_Engineer.pdf",
-    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+    imageUrl: "/Training/Images/Cloud engineer.png",
   },
   {
     id: "Consulting",
@@ -49,7 +49,7 @@ const allCourses = [
     description: "Consulting frameworks and methodologies",
     level: "Intermediate",
     pdfUrl: "/Training/Consulting.pdf",
-    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+    imageUrl: "/Training/Images/Consulting.png",
   },
   {
     id: "Data_Scientist",
@@ -57,7 +57,7 @@ const allCourses = [
     description: "Data analysis and visualization techniques",
     level: "Beginner",
     pdfUrl: "/Training/Data_Scientist.pdf",
-    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+    imageUrl: "/Training/Images/Data Science.png",
   },
   {
     id: "Founder_Office",
@@ -65,7 +65,7 @@ const allCourses = [
     description: "Strategies for startup success and growth.",
     level: "Beginner",
     pdfUrl: "/Training/Founder_Office.pdf",
-    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+    imageUrl: "/Training/Images/Founder's office.png",
   },
   {
     id: "Software_Engineer",
@@ -73,7 +73,7 @@ const allCourses = [
     description: "Software development principles and practices",
     level: "Beginner",
     pdfUrl: "/Training/Software Engineer.pdf",
-    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+    imageUrl: "/Training/Images/Software Engineer.png",
   },
   {
     id: "Strategy_and_Operations",
@@ -81,7 +81,7 @@ const allCourses = [
     description: "Business strategy and operational excellence",
     level: "Beginner",
     pdfUrl: "/Training/Strategy and Operations Job Role Resource.docx.pdf",
-    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+    imageUrl: "/Training/Images/Strat and Ops.png",
   },
   {
     id: "UI_UX_Designer",
@@ -89,7 +89,7 @@ const allCourses = [
     description: "Design principles for user interfaces and experiences",
     level: "Beginner",
     pdfUrl: "/Training/UI UX Resource.docx.pdf",
-    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+    imageUrl: "/Training/Images/UI UX Design.png",
   },
   {
     id: "Web_Development",
@@ -97,7 +97,7 @@ const allCourses = [
     description: "Web development fundamentals and best practices",
     level: "Beginner",
     pdfUrl: "/Training/Web_Development.pdf",
-    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+    imageUrl: "/Training/Images/Web development.png",
   },
   {
     id: "RA_1",
@@ -105,7 +105,7 @@ const allCourses = [
     description: "Guide to Analyst roles and responsibilities",
     level: "Beginner",
     pdfUrl: "/Training/Resource on Analyst roles (part 1).docx.pdf",
-    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+    imageUrl: "/Training/Images/Analyst (part 1).png",
   },
   {
     id: "RA_2",
@@ -113,7 +113,7 @@ const allCourses = [
     description: "Business strategy and operations",
     level: "Intermediate",
     pdfUrl: "/Training/Resource on Analyst roles (part 2).docx.pdf",
-    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+    imageUrl: "/Training/Images/Analyst (part 2).png",
   },
   {
     id: "RA_3",
@@ -121,27 +121,28 @@ const allCourses = [
     description: "Guide to Analyst roles and responsibilities - Advanced",
     level: "Advanced",
     pdfUrl: "/Training/Resource on Analyst roles (part 3).docx.pdf",
-    imageUrl: "https://heroui.com/images/hero-card.jpeg",
+    imageUrl: "/Training/Images/Analyst (part 3).png",
   },
 ];
 
 const gridVariants = {
-  hidden: { opacity: 0 },
+  // removed opacity so grid doesn't animate from invisible
+  hidden: { }, 
   visible: {
-    opacity: 1,
+    // no opacity here either
     transition: { staggerChildren: 0.06, when: "beforeChildren" },
   },
 };
 
 const cardVariants = {
-  hidden: { opacity: 0, y: 10, scale: 0.995 },
+  // removed opacity so each card (and its image) is always visible
+  hidden: { y: 10, scale: 0.995 },
   visible: {
-    opacity: 1,
     y: 0,
     scale: 1,
     transition: { duration: 0.35, ease: "easeOut" },
   },
-  exit: { opacity: 0, y: 8, scale: 0.995, transition: { duration: 0.25 } },
+  exit: { y: 8, scale: 0.995, transition: { duration: 0.25 } },
 };
 
 export default function TrainingPage() {
@@ -254,9 +255,6 @@ export default function TrainingPage() {
             <motion.p
               layout
               key="no-courses"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
               className="col-span-full text-center text-muted-foreground p-8"
             >
               No courses found.
@@ -287,12 +285,12 @@ export default function TrainingPage() {
                     <Image
                       alt={course.title}
                       className="object-cover w-full h-full"
-                      height={160}
-                      width={400}
-                      src={
-                        course.imageUrl ||
-                        "https://heroui.com/images/hero-card.jpeg"
-                      }
+                      height={200}
+                      width={500}
+                      src={course.imageUrl}
+                      loading="eager"
+                      onLoad={(e: any) => { e.currentTarget.style.opacity = "1"; }}
+                      style={{ opacity: 1 }}
                     />
                   </div>
 
@@ -318,7 +316,7 @@ export default function TrainingPage() {
                     <div className="min-h-10"></div>
                   </div>
 
-                  <CardFooter className="justify-between before:bg-white/10 border-white/20 border-1 overflow-hidden py-1 absolute before:rounded-xl rounded-b-s bottom-2 w-[calc(100%_-_16px)] shadow-small left-2 z-10">
+                  <CardFooter className="justify-between before:bg-white/10 border-white/20 border overflow-hidden py-1 absolute before:rounded-xl rounded-b-s bottom-2 w-[calc(100%_-_16px)] shadow-small left-2 z-10">
                     <div className="w-full flex items-center justify-between">
                       {/* Left: Open PDF */}
                       {course.pdfUrl ? (
