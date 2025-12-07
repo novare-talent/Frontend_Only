@@ -30,7 +30,7 @@ const allCourses = [
   {
     id: "Chief_of_Staff_Resources",
     title: "Chief of Staff Resources",
-    description: "Comprehensive guide for Chiefs of Staff",
+    description: "Comprehensive guide for Chief of Staff",
     level: "Beginner",
     pdfUrl: "/Training/Chief_of_Staff_Resources.pdf",
     imageUrl: "/Training/Images/Chief of staff.png",
@@ -316,7 +316,7 @@ export default function TrainingPage() {
                     <div className="min-h-10"></div>
                   </div>
 
-                  <CardFooter className="justify-between before:bg-white/10 border-white/20 border overflow-hidden py-1 absolute before:rounded-xl rounded-b-s bottom-2 w-[calc(100%_-_16px)] shadow-small left-2 z-10">
+                  <CardFooter className="justify-between before:bg-white/10 border-white/20 border overflow-hidden py-1 absolute before:rounded-xl rounded-sm bottom-2 w-[calc(100%_-_16px)] shadow-small left-2 z-10">
                     <div className="w-full flex items-center justify-between">
                       {/* Left: Open PDF */}
                       {course.pdfUrl ? (
@@ -337,10 +337,9 @@ export default function TrainingPage() {
                         </span>
                       )}
 
-                      {/* Right: Download */}
                       <div className="flex items-center gap-2">
                         <Button
-                          className="text-tiny bg-black/10"
+                          className="text-tin"
                           color="default"
                           radius="lg"
                           size="sm"
