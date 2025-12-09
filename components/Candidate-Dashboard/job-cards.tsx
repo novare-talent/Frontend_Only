@@ -4,7 +4,16 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ChevronRight, Users, FileText, Wallet, MapPin, Clock, Calendar, AlertCircle } from "lucide-react";
+import {
+  ChevronRight,
+  Users,
+  FileText,
+  Wallet,
+  MapPin,
+  Clock,
+  Calendar,
+  AlertCircle,
+} from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -109,7 +118,6 @@ const IntegrationCard = ({
         isDeadlinePassed && "opacity-75"
       )}
     >
-
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-balance text-xl font-semibold leading-tight text-foreground">
@@ -117,7 +125,11 @@ const IntegrationCard = ({
           </CardTitle>
           {jdPdf && (
             <Link href={jdPdf} target="_blank" title="View JD PDF">
-              <Button variant="ghost" size="sm" className="size-8 rounded-full p-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="size-8 rounded-full p-0"
+              >
                 <FileText className="size-6 text-purple-500" />
               </Button>
             </Link>
@@ -147,19 +159,31 @@ const IntegrationCard = ({
         <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
           {closingTime && (
             <div className="flex items-center gap-1.5">
-              <Calendar className={cn(
-                "size-4 flex-shrink-0",
-                isDeadlinePassed ? "text-destructive" : "text-red-500"
-              )} />
+              <Calendar
+                className={cn(
+                  "size-4 flex-shrink-0",
+                  isDeadlinePassed ? "text-destructive" : "text-red-500"
+                )}
+              />
               <div className="flex flex-row">
-                <span className={cn(
-                  "font-semibold text-sm pr-1",
-                  isDeadlinePassed ? "text-destructive" : "text-foreground"
-                )}>Closing:</span>
-                <span className={cn(
-                  "text-sm",
-                  isDeadlinePassed ? "text-destructive" : "text-muted-foreground"
-                )}>{formatIST(closingTime)}</span>
+                <span
+                  className={cn(
+                    "font-semibold text-sm pr-1",
+                    isDeadlinePassed ? "text-destructive" : "text-foreground"
+                  )}
+                >
+                  Closing:
+                </span>
+                <span
+                  className={cn(
+                    "text-sm",
+                    isDeadlinePassed
+                      ? "text-destructive"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  {formatIST(closingTime)}
+                </span>
               </div>
             </div>
           )}
@@ -167,43 +191,54 @@ const IntegrationCard = ({
             <div className="flex items-center gap-1.5">
               <Clock className="size-4 text-blue-500 flex-shrink-0" />
               <div className="flex flex-row">
-                <span className="font-semibold text-foreground text-sm pr-1">Duration:</span>
-                <span className="text-muted-foreground text-sm">{duration}</span>
+                <span className="font-semibold text-foreground text-sm pr-1">
+                  Duration:
+                </span>
+                <span className="text-muted-foreground text-sm">
+                  {duration}
+                </span>
               </div>
             </div>
           )}
           <div className="flex flex-row gap-10">
-          {location && (
-            <div className="flex items-center gap-1.5 col-span-2">
-              <MapPin className="size-4 text-accent-foreground flex-shrink-0" />
-              <div className="flex flex-row">
-                <span className="font-semibold text-foreground text-sm pr-1">Location:</span>
-                <span className="text-muted-foreground text-sm">{location}</span>
+            {location && (
+              <div className="flex items-center gap-1.5 col-span-2">
+                <MapPin className="size-4 text-accent-foreground flex-shrink-0" />
+                <div className="flex flex-row">
+                  <span className="font-semibold text-foreground text-sm pr-1">
+                    Location:
+                  </span>
+                  <span className="text-muted-foreground text-sm">
+                    {location}
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
-          {/* Tags */}
-        {tagsArray.length > 0 && (
-          <div className="flex flex-row gap-1.5">
-            {tagsArray.map((tag, idx) => (
-              <Badge
-                key={idx}
-                variant="secondary"
-                className="rounded-full bg-muted text-muted-foreground text-xs py-0"
-              >
-                {tag}
-              </Badge>
-            ))}
+            )}
+            {/* Tags */}
+            {tagsArray.length > 0 && (
+              <div className="flex flex-row gap-1.5 overflow-hidden min-w-sm max-h-48 flex-wrap">
+                {tagsArray.map((tag, idx) => (
+                  <Badge
+                    key={idx}
+                    variant="secondary"
+                    className="rounded-full bg-muted text-muted-foreground text-xs py-0"
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
-        )}
-        </div>
         </div>
       </CardContent>
 
       <CardFooter className="flex flex-wrap items-center justify-between">
         <div className="flex items-center gap-2">
           {alreadySubmitted ? (
-            <Badge variant="outline" className="text-sm font-medium text-muted-foreground">
+            <Badge
+              variant="outline"
+              className="text-sm font-medium text-muted-foreground"
+            >
               Already Applied
             </Badge>
           ) : isDeadlinePassed ? (
@@ -327,8 +362,8 @@ export default function JobsGrid() {
           const appliedCount = Array.isArray(job.Applied_Candidates)
             ? job.Applied_Candidates.length
             : typeof job.Applied_Candidates === "number"
-            ? job.Applied_Candidates
-            : 0;
+              ? job.Applied_Candidates
+              : 0;
 
           return (
             <IntegrationCard
@@ -352,7 +387,11 @@ export default function JobsGrid() {
 
       {visible < jobs.length && (
         <div className="flex justify-center">
-          <Button onClick={() => setVisible((prev) => prev + 6)} variant="outline" size="lg">
+          <Button
+            onClick={() => setVisible((prev) => prev + 6)}
+            variant="outline"
+            size="lg"
+          >
             View More Jobs
           </Button>
         </div>
