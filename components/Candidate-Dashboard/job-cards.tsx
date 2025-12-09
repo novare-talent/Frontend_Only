@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -89,23 +89,62 @@ const IntegrationCard = ({
   const tagsArray = Array.isArray(tags) ? tags : tags ? [tags] : [];
   const [isDeadlinePassed, setIsDeadlinePassed] = useState(false);
 
-  // Check if deadline has passed
-  useEffect(() => {
-    if (!closingTime) {
-      setIsDeadlinePassed(false);
-      return;
-    }
+  // -----------------------------
+  // ⭐ Description Expand States
+  // -----------------------------
+  const [expanded, setExpanded] = useState(false);
+  const [isTruncatable, setIsTruncatable] = useState(false);
+  const descRef = useRef<HTMLParagraphElement | null>(null);
 
-    const checkDeadline = () => {
-      const deadlineDate = new Date(closingTime);
-      const now = new Date();
-      setIsDeadlinePassed(now > deadlineDate);
+  // Measure description height safely
+  useEffect(() => {
+    const measure = () => {
+      const el = descRef.current;
+      if (!el) return;
+
+      // Clone node to measure full-height version
+      const clone = el.cloneNode(true) as HTMLElement;
+      clone.classList.remove("line-clamp-2");
+      clone.style.position = "absolute";
+      clone.style.visibility = "hidden";
+      clone.style.pointerEvents = "none";
+      clone.style.height = "auto";
+      clone.style.whiteSpace = "normal";
+      clone.style.width = `${el.offsetWidth}px`;
+      document.body.appendChild(clone);
+
+      const fullHeight = clone.clientHeight;
+      const clampedHeight = el.clientHeight;
+
+      document.body.removeChild(clone);
+      setIsTruncatable(fullHeight > clampedHeight + 1);
     };
 
-    // Check immediately
-    checkDeadline();
+    measure();
 
-    // Check every minute to keep it updated
+    // Re-measure on resize (debounced)
+    let t: NodeJS.Timeout | null = null;
+    const onResize = () => {
+      if (t) clearTimeout(t);
+      t = setTimeout(measure, 120);
+    };
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      window.removeEventListener("resize", onResize);
+      if (t) clearTimeout(t);
+    };
+  }, [description]);
+
+  // -----------------------------
+  // Deadline calculation
+  // -----------------------------
+  useEffect(() => {
+    if (!closingTime) return;
+    const checkDeadline = () => {
+      setIsDeadlinePassed(new Date() > new Date(closingTime));
+    };
+    checkDeadline();
     const interval = setInterval(checkDeadline, 60000);
     return () => clearInterval(interval);
   }, [closingTime]);
@@ -120,16 +159,13 @@ const IntegrationCard = ({
     >
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-balance text-xl font-semibold leading-tight text-foreground">
+          <CardTitle className="text-xl font-semibold leading-tight text-foreground">
             {title}
           </CardTitle>
+
           {jdPdf && (
-            <Link href={jdPdf} target="_blank" title="View JD PDF">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="size-8 rounded-full p-0"
-              >
+            <Link href={jdPdf} target="_blank">
+              <Button variant="ghost" size="sm" className="size-8 rounded-full p-0">
                 <FileText className="size-6 text-purple-500" />
               </Button>
             </Link>
@@ -140,7 +176,7 @@ const IntegrationCard = ({
           {stipend && (
             <>
               <span className="inline-flex items-center gap-1">
-                <Wallet className="size-4 text-accent-foreground" aria-hidden />
+                <Wallet className="size-4 text-accent-foreground" />
                 <span className="font-medium text-foreground">{stipend}</span>
               </span>
               <span className="text-muted-foreground">•</span>
@@ -151,72 +187,73 @@ const IntegrationCard = ({
       </CardHeader>
 
       <CardContent className="flex flex-col gap-3">
-        <p className="text-pretty leading-relaxed text-muted-foreground line-clamp-2">
+
+        {/* ------------------------- */}
+        {/* ⭐ Expandable Description */}
+        {/* ------------------------- */}
+        <p
+          ref={descRef}
+          className={cn(
+            "text-muted-foreground leading-relaxed text-pretty transition-all",
+            !expanded && "line-clamp-2"
+          )}
+        >
           {description}
         </p>
 
-        {/* Job Details - Compressed in 2 columns */}
+        {isTruncatable && (
+          <button
+            type="button"
+            onClick={() => setExpanded((p) => !p)}
+            className="text-sm text-primary underline w-fit"
+          >
+            {expanded ? "Show Less" : "Show More"}
+          </button>
+        )}
+
+        {/* ------------------------- */}
+        {/* Job Details */}
+        {/* ------------------------- */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
           {closingTime && (
             <div className="flex items-center gap-1.5">
               <Calendar
                 className={cn(
-                  "size-4 flex-shrink-0",
+                  "size-4 shrink-0",
                   isDeadlinePassed ? "text-destructive" : "text-red-500"
                 )}
               />
-              <div className="flex flex-row">
-                <span
-                  className={cn(
-                    "font-semibold text-sm pr-1",
-                    isDeadlinePassed ? "text-destructive" : "text-foreground"
-                  )}
-                >
-                  Closing:
-                </span>
-                <span
-                  className={cn(
-                    "text-sm",
-                    isDeadlinePassed
-                      ? "text-destructive"
-                      : "text-muted-foreground"
-                  )}
-                >
-                  {formatIST(closingTime)}
-                </span>
-              </div>
+              <span className="font-semibold text-foreground pr-1">Closing:</span>
+              <span
+                className={cn(
+                  isDeadlinePassed ? "text-destructive" : "text-muted-foreground"
+                )}
+              >
+                {formatIST(closingTime)}
+              </span>
             </div>
           )}
+
           {duration && (
             <div className="flex items-center gap-1.5">
-              <Clock className="size-4 text-blue-500 flex-shrink-0" />
-              <div className="flex flex-row">
-                <span className="font-semibold text-foreground text-sm pr-1">
-                  Duration:
-                </span>
-                <span className="text-muted-foreground text-sm">
-                  {duration}
-                </span>
-              </div>
+              <Clock className="size-4 text-blue-500 shrink-0" />
+              <span className="font-semibold text-foreground pr-1">Duration:</span>
+              <span className="text-muted-foreground">{duration}</span>
             </div>
           )}
-          <div className="flex flex-row gap-10">
+
+          <div className="flex flex-row gap-10 col-span-2">
             {location && (
-              <div className="flex items-center gap-1.5 col-span-2">
-                <MapPin className="size-4 text-accent-foreground flex-shrink-0" />
-                <div className="flex flex-row">
-                  <span className="font-semibold text-foreground text-sm pr-1">
-                    Location:
-                  </span>
-                  <span className="text-muted-foreground text-sm">
-                    {location}
-                  </span>
-                </div>
+              <div className="flex items-center gap-1.5">
+                <MapPin className="size-4 text-accent-foreground shrink-0" />
+                <span className="font-semibold text-foreground pr-1">Location:</span>
+                <span className="text-muted-foreground">{location}</span>
               </div>
             )}
-            {/* Tags */}
+
+            {/* Tags (2-line max) */}
             {tagsArray.length > 0 && (
-              <div className="flex flex-row gap-1.5 overflow-hidden min-w-sm max-h-48 flex-wrap">
+              <div className="flex flex-row flex-wrap gap-1.5 overflow-hidden max-h-[48px]">
                 {tagsArray.map((tag, idx) => (
                   <Badge
                     key={idx}
@@ -232,48 +269,31 @@ const IntegrationCard = ({
         </div>
       </CardContent>
 
-      <CardFooter className="flex flex-wrap items-center justify-between">
-        <div className="flex items-center gap-2">
-          {alreadySubmitted ? (
-            <Badge
-              variant="outline"
-              className="text-sm font-medium text-muted-foreground"
-            >
-              Already Applied
-            </Badge>
-          ) : isDeadlinePassed ? (
-            <Button
-              variant="default"
-              size="sm"
-              className="gap-2"
-              disabled
-              title="Application deadline has passed"
-            >
-              Deadline Passed
-              <AlertCircle className="size-4" />
+      <CardFooter className="flex justify-between items-center">
+        {alreadySubmitted ? (
+          <Badge variant="outline" className="text-sm text-muted-foreground">
+            Already Applied
+          </Badge>
+        ) : isDeadlinePassed ? (
+          <Button disabled variant="default" size="sm" className="gap-2">
+            Deadline Passed <AlertCircle className="size-4" />
+          </Button>
+        ) : (
+          <Link href={`/Dashboard/Jobs/${link}`}>
+            <Button variant="default" size="sm" className="gap-2">
+              Apply Now <ChevronRight className="size-4" />
             </Button>
-          ) : (
-            <Link href={`/Dashboard/Jobs/${link}`}>
-              <Button
-                variant="default"
-                size="sm"
-                className="gap-2 transition-all duration-300"
-              >
-                Apply Now
-                <ChevronRight className="size-4" />
-              </Button>
-            </Link>
-          )}
-        </div>
+          </Link>
+        )}
 
         <span className="inline-flex items-center gap-1 text-sm text-green-600 font-medium">
-          <Users className="size-4" />
-          {appliedCount} applied
+          <Users className="size-4" /> {appliedCount} applied
         </span>
       </CardFooter>
     </Card>
   );
 };
+
 
 export default function JobsGrid() {
   const [jobs, setJobs] = useState<JobWithFormStatus[]>([]);
