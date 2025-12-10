@@ -1,12 +1,9 @@
 "use client"
 
 import { JobCard } from "./Job-Card"
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/utils/supabase/client"
 import { useEffect, useState } from "react"
-import Link from "next/link"
 import CreateJobButtonServerChecked from "./CreateJobButton"
 
 type Job = {
@@ -20,6 +17,7 @@ type Job = {
   tags: string[]
   Applied_Candidates?: string[]
   status: string
+  closingTime?: string | null
 }
 
 export default function ClientJobs() {
@@ -125,6 +123,9 @@ export default function ClientJobs() {
             location={job.location}
             proposals={job.Applied_Candidates?.length?.toString() || "0"}
             className="mb-8"
+            // NEW: pass duration and closingTime so JobCard can display them
+            duration={job.duration}
+            closingTime={job.closingTime}
           />
         ))
       )}

@@ -331,7 +331,7 @@ export function BillingPage() {
                 variant="outline"
                 onClick={handleRefreshCredits}
                 disabled={isRefreshing}
-                className="rounded-full"
+                className="hidden sm:rounded-full"
               >
                 {isRefreshing ? (
                   <>

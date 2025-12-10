@@ -7,6 +7,7 @@ import { QuestionBuilder, type Question } from "@/components/Client-Dashboard/qu
 import { JobFormPreview } from "@/components/Client-Dashboard/job-form-preview"
 import { createClient } from "@/utils/supabase/client"
 import { useParams, useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 export default function EditJobPage() {
   const params = useParams()
@@ -41,7 +42,7 @@ export default function EditJobPage() {
       setUserId(user?.id || null)
 
       if (!user) {
-        alert("You must be logged in to edit a job")
+        toast("Error", { description: "You must be logged in to edit a job" });
         router.push('/login')
         return
       }
@@ -58,7 +59,7 @@ export default function EditJobPage() {
 
         // Check if user owns this job
         if (job.employer_id !== user.id) {
-          alert("You don't have permission to edit this job")
+          toast.error("Error", { description: "You don't have permission to edit this job" });
           router.push('/client/jobs')
           return
         }
@@ -99,8 +100,7 @@ export default function EditJobPage() {
 
         setQuestions(formQuestions)
       } catch (error: any) {
-        console.error('Failed to fetch job:', error)
-        alert(`Failed to load job: ${error.message}`)
+        toast.error("Error", { description: `Failed to load job: ${error.message}` });
       } finally {
         setIsLoading(false)
       }
@@ -111,7 +111,7 @@ export default function EditJobPage() {
 
   async function handleUpdate() {
     if (!userId) {
-      alert("You must be logged in to update a job")
+      toast.error("Error", { description: `You must be logged in to update a job` });
       return
     }
 
@@ -229,13 +229,11 @@ export default function EditJobPage() {
       }
 
       // Success
-      console.log("Job updated successfully")
-      alert("Job updated successfully!")
+      toast("Success", { description: `Job updated successfully!` });
       router.push('/client')
       
     } catch (error: any) {
-      console.error('Failed to update job:', error)
-      alert(`Failed to update job: ${error.message}`)
+      toast.error("Error", { description: `Failed to update job: ${error.message}` });
     } finally {
       setIsUpdating(false)
     }
@@ -268,8 +266,7 @@ export default function EditJobPage() {
       
       setQuestions(convertedQuestions)
     } catch (error) {
-      console.error('Failed to generate form with AI:', error)
-      alert('Failed to generate form with AI. Please try again.')
+      toast("Error", { description: 'Failed to generate form with AI. Please try again.' });
     }
   }
 

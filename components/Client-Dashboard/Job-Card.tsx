@@ -21,6 +21,8 @@ import {
   CheckCircle2,
   XCircle,
   Info,
+  Calendar,
+  Clock,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
@@ -41,6 +43,23 @@ export type JobCardProps = {
   proposals?: string
   className?: string
   onDelete?: (jobId: string) => void
+  // New optional fields for displaying job details
+  duration?: string
+  closingTime?: string | null
+}
+
+function formatIST(dateString: string | null | undefined) {
+  if (!dateString) return "—"
+  const date = new Date(dateString)
+  return date.toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  })
 }
 
 export function JobCard({
@@ -54,6 +73,8 @@ export function JobCard({
   proposals = "Less than 5",
   className,
   onDelete,
+  duration,
+  closingTime,
 }: JobCardProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -125,75 +146,74 @@ export function JobCard({
   }
 
   const handleDelete = async () => {
-  if (!jobId) return
+    if (!jobId) return
 
-  // Inform user we began deletion
-  showNotification("info", "Deleting job", "Please wait while the job and related data are removed.")
+    // Inform user we began deletion
+    showNotification("info", "Deleting job", "Please wait while the job and related data are removed.")
 
-  try {
-    setLoading(true)
-
-    // 1) Delete evaluations tied to this job (if any)
-    const { error: evalError } = await supabase
-      .from("evaluations")
-      .delete()
-      .eq("job_id", jobId)
-
-    if (evalError) {
-      // If DB has strict FK rules this might fail; notify and abort
-      showNotification("error", "Failed to delete evaluations", evalError.message || "Could not remove evaluations.")
-      return
-    }
-
-    // 2) Delete forms tied to this job (this is the table causing the FK error)
-    const { error: formsError } = await supabase
-      .from("forms")
-      .delete()
-      .eq("job_id", jobId)
-
-    if (formsError) {
-      showNotification("error", "Failed to delete forms", formsError.message || "Could not remove forms referencing this job.")
-      return
-    }
-
-    // 3) (Optional) Delete other dependent tables here if you have any, for example:
-    // await supabase.from("applications").delete().eq("job_id", jobId)
-    // handle errors similarly.
-
-    // 4) Attempt to delete job itself
-    const { error: jobError } = await supabase
-      .from("jobs")
-      .delete()
-      .eq("job_id", jobId)
-
-    if (jobError) {
-      // If deletion still fails, surface a useful error message
-      showNotification("error", "Failed to delete job", jobError.message || "Could not delete job.")
-      return
-    }
-
-    // 5) Notify parent and refresh
-    if (onDelete) {
-      try {
-        onDelete(jobId)
-      } catch {
-        // ignore callback errors
-      }
-    }
-
-    showNotification("success", "Job deleted", "Job and related data removed successfully.")
     try {
-      router.refresh()
-    } catch {
-      // ignore
-    }
-  } catch (err: any) {
-    showNotification("error", "Unexpected error", err?.message || "Something went wrong.")
-  } finally {
-    setLoading(false)
-  }
-}
+      setLoading(true)
 
+      // 1) Delete evaluations tied to this job (if any)
+      const { error: evalError } = await supabase
+        .from("evaluations")
+        .delete()
+        .eq("job_id", jobId)
+
+      if (evalError) {
+        // If DB has strict FK rules this might fail; notify and abort
+        showNotification("error", "Failed to delete evaluations", evalError.message || "Could not remove evaluations.")
+        return
+      }
+
+      // 2) Delete forms tied to this job (this is the table causing the FK error)
+      const { error: formsError } = await supabase
+        .from("forms")
+        .delete()
+        .eq("job_id", jobId)
+
+      if (formsError) {
+        showNotification("error", "Failed to delete forms", formsError.message || "Could not remove forms referencing this job.")
+        return
+      }
+
+      // 3) (Optional) Delete other dependent tables here if you have any, for example:
+      // await supabase.from("applications").delete().eq("job_id", jobId)
+      // handle errors similarly.
+
+      // 4) Attempt to delete job itself
+      const { error: jobError } = await supabase
+        .from("jobs")
+        .delete()
+        .eq("job_id", jobId)
+
+      if (jobError) {
+        // If deletion still fails, surface a useful error message
+        showNotification("error", "Failed to delete job", jobError.message || "Could not delete job.")
+        return
+      }
+
+      // 5) Notify parent and refresh
+      if (onDelete) {
+        try {
+          onDelete(jobId)
+        } catch {
+          // ignore callback errors
+        }
+      }
+
+      showNotification("success", "Job deleted", "Job and related data removed successfully.")
+      try {
+        router.refresh()
+      } catch {
+        // ignore
+      }
+    } catch (err: any) {
+      showNotification("error", "Unexpected error", err?.message || "Something went wrong.")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleEvaluate = async () => {
     if (!jobId) return
@@ -355,6 +375,23 @@ export function JobCard({
               <MapPin className="size-4 text-accent-foreground" aria-hidden />
               <span className="text-foreground">{location}</span>
             </span>
+
+            {/* New: Duration display */}
+            {duration && (
+              <span className="inline-flex items-center gap-1">
+                <Clock className="size-4" aria-hidden />
+                <span className="text-foreground">{duration}</span>
+              </span>
+            )}
+
+            {/* New: Closing Time display */}
+            {closingTime && (
+              <span className="inline-flex items-center gap-1">
+                <Calendar className="size-4" aria-hidden />
+                <span className="text-foreground">{formatIST(closingTime)}</span>
+              </span>
+            )}
+
             <span className="text-green-600">Applied Candidates: {proposals}</span>
           </div>
         </CardFooter>

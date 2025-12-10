@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const supabase = createClient();
 
@@ -43,9 +44,7 @@ export default function JobTable() {
   };
 
   const handleApply = async (jobId: number) => {
-    // TODO: integrate apply logic (save into Applied_Candidates)
-    console.log("Applying to job:", jobId);
-    alert(`You have applied to job #${jobId}`);
+    toast("Applied", { description: `You have applied to job #${jobId}` });
   };
 
   return (

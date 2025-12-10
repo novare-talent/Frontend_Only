@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const supabase = createClient();
 
@@ -65,8 +66,7 @@ export default function JobList() {
       router.push(`/admin/${result.evaluation_id}`); // ✅ correct route
     }
   } catch (err: any) {
-    console.error("Evaluation error:", err.message);
-    alert("Failed to evaluate candidates. Check console for details.");
+    toast.error("Error", { description: "Failed to evaluate candidates. Check console for details." });
   } finally {
     setEvaluatingJob(null);
   }
@@ -81,8 +81,7 @@ const handleViewSelected = async (jobId: string) => {
     .single();
 
   if (error || !data) {
-    console.error("Error fetching evaluation:", error?.message);
-    alert("No evaluation found for this job.");
+    toast.error("Error", { description: "No evaluation found for this job." });
     return;
   }
 
