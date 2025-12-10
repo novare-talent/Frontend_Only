@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Trash2, Eye, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Resume {
   name: string;
@@ -126,13 +127,13 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({
         !validTypes.includes(file.type) &&
         !validExtensions.includes(fileExtension)
       ) {
-        alert("Please upload only PDF files");
+        toast.error("PDF Only", { description: "Please upload only PDF files" });
         continue;
       }
 
       // Check file size (2MB max)
       if (file.size > 2 * 1024 * 1024) {
-        alert("File size exceeds 2MB limit");
+        toast.error("Size Limit", { description: "File size exceeds 2MB limit" });
         continue;
       }
 
@@ -184,8 +185,7 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({
       const allUrls = [...resumes.map((r) => r.url), ...newResumeUrls];
       onResumeUpdate(allUrls);
     } catch (error) {
-      console.error("Error uploading resumes:", error);
-      alert("Error uploading resumes. Please try again.");
+      toast.error("Error", { description: "Error uploading resumes. Please try again." });
     } finally {
       setUploading(false);
     }
@@ -227,13 +227,11 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({
         .remove([filePath]);
 
       if (error) {
-        console.error("Error deleting file from storage:", error);
-        alert("Failed to delete file from storage. Please try again.");
+        toast.error("Error", { description: "Failed to delete file from storage. Please try again." });
         return;
       }
     } else {
-      console.error("Could not extract file path from URL:", resumeToDelete.url);
-      alert("Failed to delete file. Invalid URL format.");
+      toast.error("Error", { description: "Failed to delete file. Invalid URL format."});
       return;
     }
 
@@ -246,8 +244,7 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({
     onResumeUpdate(newResumes.map((r) => r.url));
     
   } catch (error) {
-    console.error("Error deleting resume:", error);
-    alert("Error deleting resume. Please try again.");
+    toast.error("Error", { description: "Error deleting resume. Please try again."});
   }
 };
 
