@@ -145,12 +145,12 @@ export default function AppliedJobsGrid() {
 
       {/* No Jobs */}
       {jobs.length === 0 && (
-        <p className="text-center text-gray-500 mb-4 mt-24">
+        <p className="text-center text-gray-500 mb-4 mt-24 pt-20">
           You haven’t applied to any jobs yet.
         </p>
       )}
       {/* View All Jobs Button - Bottom Right */}
-      <div className="flex justify-end pt-44 pr-2">
+      <div className="flex justify-end pt-72 pr-2">
         <Link href="/Dashboard/Jobs" className="text-primary flex items-center gap-1">
           View All Jobs
           <ChevronRight className="w-4 h-4" />

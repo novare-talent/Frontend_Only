@@ -31,7 +31,7 @@ const data = {
       icon: IconDashboard,
     },
     {
-      title: "All Jobs",
+      title: "Applied Jobs",
       url: "/Dashboard/Jobs",
       icon: IconFileDescription,
     },
@@ -70,7 +70,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           setUser({
             name: fullName,
             email: profile.email || session.user.email,
-            avatar: profile.profile_image || "/avatars/default.jpg",
+            avatar: profile.profile_image,
           });
         } else {
           // Fallback to metadata if profile not found
