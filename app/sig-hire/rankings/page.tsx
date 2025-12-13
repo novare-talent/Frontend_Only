@@ -49,7 +49,9 @@ export default function Page() {
         {/* LEFT: main content (takes remaining space) */}
         <main className="flex flex-col gap-6">
           {/* pass the required prop to satisfy TS (change name if different) */}
-          <CandidateRankingScreen />
+          <CandidateRankingScreen onSubmitUploads={function (candidates: string[]): void {
+            throw new Error("Function not implemented.");
+          } } />
         </main>
 
         {/* RIGHT: Chatbot sidebar — fixed width (360px) on lg+, stacks below on sm */}

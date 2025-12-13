@@ -71,7 +71,7 @@ export function ChatbotCard({ className = "" }: { className?: string }) {
         <Card className="w-full flex flex-rol">
           <CardHeader>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-primary">Ranking Bot</CardTitle>
-            <CardDescription>Use this to find what candidates you're looking for!</CardDescription>
+            <CardDescription>Use this to find what candidates you&apos;re looking for!</CardDescription>
           </CardHeader>
           {/* Messages area */}
           <div className="px-4 pb-0 h-[30vh] overflow-hidden bg-card border border-primary/30 p-1 m-2 rounded-sm">
