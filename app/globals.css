@@ -34,9 +34,6 @@
   --sidebar-accent-foreground: oklch(0 0 0);
   --sidebar-border: oklch(0.9401 0 0);
   --sidebar-ring: oklch(0 0 0);
-  --font-sans: Plus Jakarta Sans, sans-serif;
-  --font-serif: Lora, serif;
-  --font-mono: IBM Plex Mono, monospace;
   --radius: 1.4rem;
   --shadow-2xs: 0px 2px 3px 0px hsl(0 0% 0% / 0.08);
   --shadow-xs: 0px 2px 3px 0px hsl(0 0% 0% / 0.08);
@@ -92,9 +89,6 @@
   --sidebar-accent-foreground: oklch(0.6132 0.2294 291.7437);
   --sidebar-border: oklch(0.3289 0.0092 268.3843);
   --sidebar-ring: oklch(0.6132 0.2294 291.7437);
-  --font-sans: Plus Jakarta Sans, sans-serif;
-  --font-serif: Lora, serif;
-  --font-mono: IBM Plex Mono, monospace;
   --radius: 1.4rem;
   --shadow-2xs: 0px 2px 3px 0px hsl(0 0% 0% / 0.08);
   --shadow-xs: 0px 2px 3px 0px hsl(0 0% 0% / 0.08);
@@ -148,10 +142,6 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --font-sans: Plus Jakarta Sans, sans-serif;
-  --font-mono: IBM Plex Mono, monospace;
-  --font-serif: Lora, serif;
-
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -194,5 +184,6 @@ body {
   body {
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
+    @apply font-sans;
   }
 }

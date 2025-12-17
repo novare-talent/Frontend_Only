@@ -1,11 +1,6 @@
-import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react"
-
-import { Badge } from "@/components/ui/badge"
 import {
   Card,
-  CardAction,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -31,19 +26,8 @@ function SelectedCandidateCard({firstName, lastName, email}: SelectedCandidatesP
               {firstName} {lastName}
             </div>
           </CardTitle>
-          {/*} <CardAction>
-            <Badge variant="outline">
-              <IconTrendingUp />
-              +25% vs. last month
-            </Badge> 
-          </CardAction> */}
           <CardDescription className="text-m text-muted-foreground mt-1">{email}</CardDescription>
         </CardHeader>
-        {/* <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Some more instructions
-          </div>
-        </CardFooter> */}
       </Card>
     </div>
   )

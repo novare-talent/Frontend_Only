@@ -1,17 +1,14 @@
 "use client"
 
-import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react"
-import { Badge } from "@/components/ui/badge"
 import {
   Card,
-  CardAction,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button";
-import { FileUpload } from "../ui/file-upload"
+// import { FileUpload } from "../ui/file-upload"
 import { SelectedCandidates } from "./selected-candidates";
 
 export function SectionCards() {
@@ -69,12 +66,6 @@ export function SectionCards() {
           <CardTitle className="text-2xl text-primary font-semibold tabular-nums @[250px]/card:text-2xl">
             Assignment Preview
           </CardTitle>
-          <CardAction>
-            {/* <Badge variant="outline">
-              <IconTrendingUp />
-              +25% vs. last month
-            </Badge> */}
-          </CardAction>
           <CardDescription className="text-xl text-primary mt-3"></CardDescription>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">

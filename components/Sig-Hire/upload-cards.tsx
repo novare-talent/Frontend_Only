@@ -1,6 +1,4 @@
-import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge"
 import {
   Card,
   CardAction,
@@ -16,10 +14,10 @@ export function SectionCards() {
       {/* Card 1: Welcome to SmartHire */}
       <Card className="@container/card">
         <CardHeader>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-primary">
+          <CardTitle className="text-3xl text-brand font-bold tabular-nums @[250px]/card:text-3xl text-black">
             Welcome
             To
-            Smart Hire
+            <span className="text-primary"> Smart Hire</span>
           </CardTitle>
           <CardAction>
             {/* <Badge variant="outline">

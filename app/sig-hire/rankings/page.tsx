@@ -1,7 +1,7 @@
 "use client"
 import { CandidateRankingScreen } from "@/components/Sig-Hire/candidate-rankings";
 import { ChatbotCard } from "@/components/Sig-Hire/chatbot";
-import { CandidateRankingScreenProps } from "@/components/Sig-Hire/candidate-rankings";
+// import { CandidateRankingScreenProps } from "@/components/Sig-Hire/candidate-rankings";
 
 export default function Page() {
 //   return (
@@ -37,10 +37,12 @@ export default function Page() {
 
 //   );
 // }
+
+
 // Example handler — replace with your real implementation
-  const handleUploads = (files: File[]) => {
-    console.log("uploads from CandidateRankingScreen:", files);
-  };
+  // const handleUploads = (files: File[]) => {
+  //   console.log("uploads from CandidateRankingScreen:", files);
+  // };
 
   return (
     <div className="px-4 py-4">

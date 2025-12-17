@@ -1,8 +1,6 @@
 import {
   Card,
-  CardAction,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -14,7 +12,7 @@ interface SubmissionCardProps {
   submittedAt: string
 }
 
-function SubmissionCard({candidate, repoUrl, submittedAt}: SubmissionCardProps) {
+function SubmissionCard({candidate, submittedAt}: SubmissionCardProps) {
 
   return (
     <div>
