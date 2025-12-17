@@ -153,35 +153,35 @@ export default function JobForm({
   }, [supabaseClient, formId, jobId]);
 
   // If user has no resumes (and is logged in), auto-open profile page so they can upload one.
-  useEffect(() => {
-    if (
-      !loadingProfile &&
-      !notLoggedIn &&
-      resumes.length === 0 &&
-      !autoOpenedProfile
-    ) {
-      // Only run in browser
-      if (typeof window !== "undefined") {
-        try {
-          // open profile page in a new tab
-          window.open("/Dashboard/Account", "_blank");
-        } catch (err) {
-          // fallback to in-app navigation if popup blocked
-          router.push("/Dashboard/Account");
-        }
+  // useEffect(() => {
+  //   if (
+  //     !loadingProfile &&
+  //     !notLoggedIn &&
+  //     resumes.length === 0 &&
+  //     !autoOpenedProfile
+  //   ) {
+  //     // Only run in browser
+  //     if (typeof window !== "undefined") {
+  //       try {
+  //         // open profile page in a new tab
+  //         window.open("/Dashboard/Account", "_blank");
+  //       } catch (err) {
+  //         // fallback to in-app navigation if popup blocked
+  //         router.push("/Dashboard/Account");
+  //       }
 
-        toast(
-          "No resume found",
-          {
-            description:
-              "We've opened your profile in a new tab so you can upload a resume. Please add one and come back to submit your application.",
-          }
-        );
+  //       toast(
+  //         "No resume found",
+  //         {
+  //           description:
+  //             "We've opened your profile in a new tab so you can upload a resume. Please add one and come back to submit your application.",
+  //         }
+  //       );
 
-        setAutoOpenedProfile(true);
-      }
-    }
-  }, [loadingProfile, notLoggedIn, resumes, autoOpenedProfile, router]);
+  //       setAutoOpenedProfile(true);
+  //     }
+  //   }
+  // }, [loadingProfile, notLoggedIn, resumes, autoOpenedProfile, router]);
 
   const hasResumes = useMemo(() => resumes.length > 0, [resumes]);
 
@@ -423,9 +423,14 @@ export default function JobForm({
 
   return (
     <form
-      onSubmit={handleSubmit}
-      className="max-w-4xl mx-auto p-8 flex flex-col gap-8 rounded-2xl border bg-card shadow-md"
-    >
+  onSubmit={handleSubmit}
+  className="max-w-4xl mx-auto p-8 flex flex-col gap-8 rounded-2xl border bg-card shadow-md"
+>
+  <fieldset
+    disabled={loadingProfile || notLoggedIn || !hasResumes}
+    className="contents"
+  >
+
       <div className="space-y-4">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-semibold tracking-tight">{formData.title}</h1>
@@ -542,8 +547,8 @@ export default function JobForm({
               </div>
             ) : (
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  No resumes found in your profile.
+                <p className="text-lg text-red-600">
+                  No resumes found in your profile. Please Upload the resume to continue with the Application
                 </p>
                 <p className="text-sm">
                   After uploading, come back to this page and refresh.
@@ -650,6 +655,7 @@ export default function JobForm({
           {submitting ? "Submitting…" : "Submit Application"}
         </Button>
       </div>
+      </fieldset>
     </form>
   );
 }

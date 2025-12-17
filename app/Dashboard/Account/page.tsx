@@ -234,7 +234,7 @@ export default function ProfilePage() {
                 Update your personal and professional information.
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex-grow">
+            <CardContent className="grow overflow-y-auto min-h-0">
               <form
                 onSubmit={handleFormSubmit}
                 className="flex flex-col h-full"
@@ -268,7 +268,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <div className="space-y-6 flex-grow mt-2">
+                <div className="space-y-6 grow mt-2">
                   {/* Name Fields */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">

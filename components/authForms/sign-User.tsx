@@ -562,10 +562,9 @@ export function SignUpForm({
                   <Input
                     id="githubLink"
                     type="url"
-                    required
                     value={userFormData.githubLink}
                     onChange={handleUserChange}
-                    placeholder="https://github.com/username"
+                    placeholder="https://github.com/username (optional)"
                     className={userErrors.githubLink ? "border-red-500" : ""}
                   />
                   {userErrors.githubLink && (
