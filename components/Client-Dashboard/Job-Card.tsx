@@ -43,7 +43,6 @@ export type JobCardProps = {
   proposals?: string
   className?: string
   onDelete?: (jobId: string) => void
-  // New optional fields for displaying job details
   duration?: string
   closingTime?: string | null
 }
@@ -81,7 +80,6 @@ export function JobCard({
   const [hasEvaluation, setHasEvaluation] = useState(false)
   const supabase = createClient()
 
-  // Notification state (pattern borrowed from BillingPage)
   const [notificationOpen, setNotificationOpen] = useState(false)
   const [notification, setNotification] = useState<{
     type: "success" | "error" | "info"
@@ -89,7 +87,11 @@ export function JobCard({
     message: string
   } | null>(null)
 
-  const showNotification = (type: "success" | "error" | "info", title: string, message: string) => {
+  const showNotification = (
+    type: "success" | "error" | "info",
+    title: string,
+    message: string,
+  ) => {
     setNotification({ type, title, message })
     setNotificationOpen(true)
     setTimeout(() => setNotificationOpen(false), 5000)
@@ -119,23 +121,17 @@ export function JobCard({
     }
   }
 
-  // Check evaluations existence
   useEffect(() => {
     const checkEvaluation = async () => {
       if (!jobId) return
-      try {
-        const { data, error } = await supabase
-          .from("evaluations")
-          .select("job_id")
-          .eq("job_id", jobId)
-          .limit(1)
-          .maybeSingle()
+      const { data } = await supabase
+        .from("evaluations")
+        .select("job_id")
+        .eq("job_id", jobId)
+        .limit(1)
+        .maybeSingle()
 
-        if (error || !data) setHasEvaluation(false)
-        else setHasEvaluation(true)
-      } catch {
-        setHasEvaluation(false)
-      }
+      setHasEvaluation(!!data)
     }
 
     checkEvaluation()
@@ -147,96 +143,67 @@ export function JobCard({
 
   const handleDelete = async () => {
     if (!jobId) return
-
-    // Inform user we began deletion
-    showNotification("info", "Deleting job", "Please wait while the job and related data are removed.")
-
-    try {
-      setLoading(true)
-
-      // 1) Delete evaluations tied to this job (if any)
-      const { error: evalError } = await supabase
-        .from("evaluations")
-        .delete()
-        .eq("job_id", jobId)
-
-      if (evalError) {
-        // If DB has strict FK rules this might fail; notify and abort
-        showNotification("error", "Failed to delete evaluations", evalError.message || "Could not remove evaluations.")
-        return
-      }
-
-      // 2) Delete forms tied to this job (this is the table causing the FK error)
-      const { error: formsError } = await supabase
-        .from("forms")
-        .delete()
-        .eq("job_id", jobId)
-
-      if (formsError) {
-        showNotification("error", "Failed to delete forms", formsError.message || "Could not remove forms referencing this job.")
-        return
-      }
-
-      // 3) (Optional) Delete other dependent tables here if you have any, for example:
-      // await supabase.from("applications").delete().eq("job_id", jobId)
-      // handle errors similarly.
-
-      // 4) Attempt to delete job itself
-      const { error: jobError } = await supabase
-        .from("jobs")
-        .delete()
-        .eq("job_id", jobId)
-
-      if (jobError) {
-        // If deletion still fails, surface a useful error message
-        showNotification("error", "Failed to delete job", jobError.message || "Could not delete job.")
-        return
-      }
-
-      // 5) Notify parent and refresh
-      if (onDelete) {
-        try {
-          onDelete(jobId)
-        } catch {
-          // ignore callback errors
-        }
-      }
-
-      showNotification("success", "Job deleted", "Job and related data removed successfully.")
-      try {
-        router.refresh()
-      } catch {
-        // ignore
-      }
-    } catch (err: any) {
-      showNotification("error", "Unexpected error", err?.message || "Something went wrong.")
-    } finally {
-      setLoading(false)
-    }
+    setLoading(true)
+    await supabase.from("evaluations").delete().eq("job_id", jobId)
+    await supabase.from("forms").delete().eq("job_id", jobId)
+    await supabase.from("jobs").delete().eq("job_id", jobId)
+    onDelete?.(jobId)
+    router.refresh()
+    setLoading(false)
   }
 
+  // --------------------------------------------------
+  // ✅ CORRECT EVALUATION FLOW (FIXED)
+  // --------------------------------------------------
   const handleEvaluate = async () => {
     if (!jobId) return
+
     try {
       setLoading(true)
-      showNotification("info", "Starting evaluation", "Preparing evaluation. You will be redirected shortly.")
-      const res = await fetch("/api/evaluate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ job_id: jobId }),
-      })
+      showNotification("info", "Starting evaluation", "Fetching form details…")
 
-      if (!res.ok) {
-        const text = await res.text().catch(() => "")
-        const errMsg = text || "Evaluation failed"
-        showNotification("error", "Evaluation failed", errMsg)
+      console.log("[JobCard] jobId:", jobId)
+
+      // 1️⃣ Fetch form_id from jobs table
+      const { data: job, error } = await supabase
+        .from("jobs")
+        .select("form_id")
+        .eq("job_id", jobId)
+        .single()
+
+      console.log("[JobCard] job fetch result:", { job, error })
+
+      if (error || !job?.form_id) {
+        showNotification(
+          "error",
+          "Evaluation failed",
+          "Form ID not found for this job.",
+        )
         return
       }
 
-      showNotification("success", "Evaluation started", "Redirecting to evaluation page.")
+      const formId = job.form_id
+      console.log("[JobCard] Using form_id:", formId)
+
+      // 2️⃣ Call hosted evaluation API with CORRECT IDs
+      const url = `https://evaluation.novaretalent.com/evaluate/${jobId}/${formId}`
+      console.log("[JobCard] Calling evaluation API:", url)
+
+      const res = await fetch(url, { method: "POST" })
+
+      const body = await res.text()
+      console.log("[JobCard] Evaluation response:", res.status, body)
+
+      if (!res.ok) {
+        showNotification("error", "Evaluation failed", body || "Request failed")
+        return
+      }
+
+      showNotification("success", "Evaluation started", "Redirecting…")
       router.push(`/client/evaluate/${jobId}`)
     } catch (err: any) {
-      showNotification("error", "Evaluation failed", err?.message || "Something went wrong.")
+      console.error("[JobCard] Evaluation error:", err)
+      showNotification("error", "Evaluation failed", err?.message || "Unknown error")
     } finally {
       setLoading(false)
     }
@@ -248,7 +215,6 @@ export function JobCard({
 
   return (
     <>
-      {/* Notification Popover - fixed to top-right similar to BillingPage */}
       <div className="fixed top-4 right-4 z-50">
         <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
           <PopoverTrigger asChild>
@@ -261,12 +227,7 @@ export function JobCard({
                 <h4 className="font-semibold text-sm mb-1">{notification?.title}</h4>
                 <p className="text-sm text-muted-foreground">{notification?.message}</p>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-                onClick={() => setNotificationOpen(false)}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setNotificationOpen(false)}>
                 ×
               </Button>
             </div>
