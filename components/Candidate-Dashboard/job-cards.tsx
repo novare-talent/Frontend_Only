@@ -297,7 +297,7 @@ const IntegrationCard = ({
 
 export default function JobsGrid() {
   const [jobs, setJobs] = useState<JobWithFormStatus[]>([]);
-  const [visible, setVisible] = useState(6);
+  const [visible, setVisible] = useState(106);
 
   useEffect(() => {
     fetchJobsWithFormStatus();

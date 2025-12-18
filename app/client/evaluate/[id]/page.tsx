@@ -11,7 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useParams } from "next/navigation";
-import { User, FileText } from "lucide-react";
+import { User, FileText, Mail, Phone } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
 type Candidate = {
@@ -23,6 +23,8 @@ type Candidate = {
   communication_clarity?: number;
   final_score?: number;
   justification?: string;
+  email?: string;
+  phone?: string;
 };
 
 export default function EvaluationPage() {
@@ -31,6 +33,7 @@ export default function EvaluationPage() {
 
   const [evaluation, setEvaluation] = useState<any>(null);
   const [jobTitle, setJobTitle] = useState<string>("Untitled Job");
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,32 +41,56 @@ export default function EvaluationPage() {
       try {
         setLoading(true);
 
-        // 1️⃣ Fetch evaluation row
-        const { data, error } = await supabase
+        // 1️⃣ Fetch evaluation
+        const { data: evalRow, error: evalError } = await supabase
           .from("evaluations")
           .select("*")
           .eq("job_id", id)
           .maybeSingle();
 
-        console.log("[EvaluationPage] evaluation row:", data);
+        console.log("[EvaluationPage] evaluation row:", evalRow);
 
-        if (error || !data) {
+        if (evalError || !evalRow) {
           setEvaluation(null);
           return;
         }
 
-        setEvaluation(data);
+        setEvaluation(evalRow);
 
         // 2️⃣ Fetch job title
         const { data: job } = await supabase
           .from("jobs")
           .select("Job_Name, Job_Description")
-          .eq("job_id", data.job_id)
+          .eq("job_id", evalRow.job_id)
           .maybeSingle();
 
         setJobTitle(
           job?.Job_Name || job?.Job_Description || "Untitled Job"
         );
+
+        // 3️⃣ Enrich candidates with email & phone
+        const baseCandidates: Candidate[] =
+          evalRow?.results?.candidates ?? [];
+
+        const enriched = await Promise.all(
+          baseCandidates.map(async (c) => {
+            if (!c.profile_id) return c;
+
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("email, phone")
+              .eq("id", c.profile_id)
+              .maybeSingle();
+
+            return {
+              ...c,
+              email: profile?.email,
+              phone: profile?.phone,
+            };
+          })
+        );
+
+        setCandidates(enriched);
       } catch (err) {
         console.error("[EvaluationPage] fetch error:", err);
       } finally {
@@ -79,10 +106,6 @@ export default function EvaluationPage() {
 
   if (!evaluation)
     return <p className="text-center mt-10">No evaluation found.</p>;
-
-  // ✅ CORRECT DATA ACCESS
-  const candidates: Candidate[] =
-    evaluation?.results?.candidates ?? [];
 
   const sortedCandidates = [...candidates].sort(
     (a, b) => (b.final_score ?? 0) - (a.final_score ?? 0)
@@ -114,8 +137,8 @@ export default function EvaluationPage() {
                 key={c.profile_id || i}
                 className="rounded-lg border p-4 bg-muted/20"
               >
-                {/* Candidate header */}
-                <div className="mb-3">
+                {/* Candidate Header */}
+                <div className="mb-3 space-y-1">
                   <h3 className="text-lg font-semibold flex items-center gap-2">
                     <User className="size-4 text-primary" />
                     {c.full_name || "Unnamed Candidate"}
@@ -124,12 +147,24 @@ export default function EvaluationPage() {
                     </span>
                   </h3>
 
+                  {c.email && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-2">
+                      <Mail className="size-4" /> {c.email}
+                    </p>
+                  )}
+
+                  {c.phone && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-2">
+                      <Phone className="size-4" /> {c.phone}
+                    </p>
+                  )}
+
                   {c.resume_url && (
                     <a
                       href={c.resume_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-primary hover:underline flex items-center gap-1 text-sm mt-1"
+                      className="text-primary hover:underline flex items-center gap-1 text-sm"
                     >
                       View Resume <FileText className="size-4" />
                     </a>
@@ -159,7 +194,7 @@ export default function EvaluationPage() {
                   </p>
                 </div>
 
-                {/* Final score */}
+                {/* Final Score */}
                 <div className="mt-4">
                   <Badge variant="outline" className="text-base">
                     Final Score:{" "}
