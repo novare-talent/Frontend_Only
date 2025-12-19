@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/utils/supabase/client"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Progress } from "@/components/ui/progress"
 
 export type JobCardProps = {
   jobId?: string
@@ -108,6 +109,24 @@ export function JobCard({
         return <Info className="h-5 w-5 text-blue-600" />
     }
   }
+  const [progress, setProgress] = useState(0)
+
+  useEffect(() => {
+    if (!loading) {
+      setProgress(0)
+      return
+    }
+
+    let value = 10
+    setProgress(value)
+
+    const interval = setInterval(() => {
+      value = Math.min(value + Math.random() * 15, 95)
+      setProgress(value)
+    }, 500)
+
+    return () => clearInterval(interval)
+  }, [loading])
 
   const getNotificationStyles = () => {
     if (!notification) return ""
@@ -162,7 +181,6 @@ export function JobCard({
       setLoading(true)
       showNotification("info", "Starting evaluation", "Fetching form details…")
 
-      console.log("[JobCard] jobId:", jobId)
 
       // 1️⃣ Fetch form_id from jobs table
       const { data: job, error } = await supabase
@@ -171,7 +189,6 @@ export function JobCard({
         .eq("job_id", jobId)
         .single()
 
-      console.log("[JobCard] job fetch result:", { job, error })
 
       if (error || !job?.form_id) {
         showNotification(
@@ -183,28 +200,26 @@ export function JobCard({
       }
 
       const formId = job.form_id
-      console.log("[JobCard] Using form_id:", formId)
 
-      // 2️⃣ Call hosted evaluation API with CORRECT IDs
       const url = `https://evaluation.novaretalent.com/evaluate/${jobId}/${formId}`
-      console.log("[JobCard] Calling evaluation API:", url)
 
       const res = await fetch(url, { method: "POST" })
 
       const body = await res.text()
-      console.log("[JobCard] Evaluation response:", res.status, body)
 
       if (!res.ok) {
         showNotification("error", "Evaluation failed", body || "Request failed")
         return
       }
 
-      showNotification("success", "Evaluation started", "Redirecting…")
+      showNotification("success", "Evaluation Completed", "Redirecting…")
       router.push(`/client/evaluate/${jobId}`)
     } catch (err: any) {
-      console.error("[JobCard] Evaluation error:", err)
       showNotification("error", "Evaluation failed", err?.message || "Unknown error")
     } finally {
+      setLoading(false)
+      setProgress(100)
+      setTimeout(() => setProgress(0), 400)
       setLoading(false)
     }
   }
@@ -355,6 +370,15 @@ export function JobCard({
 
             <span className="text-green-600">Applied Candidates: {proposals}</span>
           </div>
+          {loading && (
+            <div className="w-full space-y-2">
+              <div className="flex items-center justify-between text-xs text-primary">
+                <span>Evaluating job…</span>
+                <span>{Math.round(progress)}%</span>
+              </div>
+              <Progress value={progress} className="h-2 text-primary" />
+            </div>
+          )}
         </CardFooter>
       </Card>
     </>
