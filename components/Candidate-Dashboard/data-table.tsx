@@ -33,8 +33,8 @@ export default function JobTable() {
   const fetchJobs = async () => {
     const { data, error } = await supabase
       .from("jobs")
-      .select("id, Job_Name, Job_Description, JD_pdf, form_link")
-      .order("id", { ascending: false });
+      .select("id, Job_Name, Job_Description, JD_pdf, form_link, status")
+      .eq("status", "active").order("id", { ascending: false });
 
     if (error) {
       console.error("Error fetching jobs:", error.message);
