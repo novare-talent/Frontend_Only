@@ -307,9 +307,9 @@ export default function JobsGrid() {
     const { data: jobsData, error: jobsError } = await supabase
       .from("jobs")
       .select(
-        "job_id, Job_Name, Job_Description, JD_pdf, Applied_Candidates, closingTime, duration, level, stipend, location, tags"
+        "job_id, Job_Name, Job_Description, JD_pdf, Applied_Candidates, closingTime, duration, level, stipend, location, tags, status"
       )
-      .order("job_id", { ascending: false });
+      .eq("status", "active").order("job_id", { ascending: false });
 
     if (jobsError) {
       console.error("Error fetching jobs:", jobsError.message);
