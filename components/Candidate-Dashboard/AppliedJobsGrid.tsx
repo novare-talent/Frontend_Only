@@ -85,7 +85,7 @@ export default function AppliedJobsGrid() {
       .from("jobs")
       .select(
         "job_id, Job_Name, Job_Description, JD_pdf, form_link, Applied_Candidates"
-      )
+      ).neq("status", "draft")
       .order("job_id", { ascending: false });
 
     if (error) {
