@@ -84,7 +84,7 @@ export default function AppliedJobsGrid() {
     const { data, error } = await supabase
       .from("jobs")
       .select(
-        "job_id, Job_Name, Job_Description, JD_pdf, form_link, Applied_Candidates"
+        "job_id, Job_Name, Job_Description, JD_pdf, form_link, Applied_Candidates, status"
       ).neq("status", "draft")
       .order("job_id", { ascending: false });
 
