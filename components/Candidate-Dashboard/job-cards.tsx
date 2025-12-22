@@ -309,7 +309,7 @@ export default function JobsGrid() {
       .select(
         "job_id, Job_Name, Job_Description, JD_pdf, Applied_Candidates, closingTime, duration, level, stipend, location, tags, status, closingTime"
       )
-      .eq("status", "active").order("closingTime", { ascending: true, nullsFirst: false });
+      .eq("status", "active").order("closingTime", { ascending: false, nullsFirst: false });
 
     if (jobsError) {
       console.error("Error fetching jobs:", jobsError.message);
