@@ -12,30 +12,75 @@ export function SectionCards() {
   return (
     <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:h-fit-content *:data-[slot=card]:shadow-s lg:px-6 @xl/main:grid-cols-2 @4xl/main:grid-cols-3">
       {/* Card 1: Welcome to SmartHire */}
-      <Card className="@container/card">
-        <CardHeader>
-          <CardTitle className="text-3xl text-brand font-bold tabular-nums @[250px]/card:text-3xl text-black">
-            Welcome
-            To
-            <span className="text-primary"> Smart Hire</span>
-          </CardTitle>
-          <CardAction>
-            {/* <Badge variant="outline">
-              <IconTrendingUp />
-              +25% vs. last month
-            </Badge> */}
-          </CardAction>
-          <CardDescription className="text-xl text-primary mt-3">Information on how the website works!</CardDescription>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Some more instructions
-          </div>
-        </CardFooter>
-      </Card>
+      <Card
+  className="@container/card relative overflow-hidden rounded-3xl
+  bg-gradient-to-br from-purple-50 via-white to-indigo-50
+  border border-purple-100
+  shadow-[0_20px_40px_-20px_rgba(124,58,237,0.50)]
+  transition-all duration-500
+  hover:shadow-[0_30px_70px_-25px_rgba(124,58,237,0.35)]
+
+  dark:bg-gradient-to-br dark:from-neutral-900/90 dark:via-neutral-900/70 dark:to-neutral-950
+  dark:border-white/10
+  dark:shadow-[0_0_80px_-20px_rgba(124,58,237,0.45)]
+"
+>
+  {/* Glow layer */}
+  <div className="pointer-events-none absolute inset-0">
+    <div
+      className="absolute -top-24 -left-24 h-80 w-80 rounded-full
+      bg-purple-300/30 blur-3xl
+      dark:bg-purple-600/20"
+    />
+    <div
+      className="absolute bottom-0 right-0 h-72 w-72 rounded-full
+      bg-indigo-200/30 blur-3xl
+      dark:bg-indigo-500/10"
+    />
+  </div>
+
+  <CardHeader className="relative z-10 space-y-5">
+    <div
+      className="h-1 w-12 rounded-full
+      bg-gradient-to-r from-purple-500 to-indigo-500"
+    />
+
+    <CardTitle
+      className="text-4xl font-extrabold tracking-tight
+      text-neutral-900 dark:text-white"
+    >
+      Welcome To
+      <div
+        className="text-5xl text-primary py-2"
+      >
+      SigHire
+      </div>
+    </CardTitle>
+
+    <CardDescription
+      className="max-w-md text-lg leading-relaxed
+      text-neutral-600 dark:text-neutral-300"
+    >
+      Enter your job description and candidate information, then click{" "}
+      <span className="font-medium text-primary">
+        Continue
+      </span>{" "}
+      to let our ranking engine find the best matches.
+    </CardDescription>
+  </CardHeader>
+</Card>
+
 
       {/* Card 2: Job Upload */}
-<Card className="@container/card">
+<Card className="@container/card relative overflow-hidden rounded-3xl
+  bg-gradient-to-br from-purple-50 via-white to-indigo-50
+  border border-purple-100
+  shadow-[0_20px_40px_-20px_rgba(124,58,237,0.50)]
+  transition-all duration-500
+  dark:bg-gradient-to-br dark:from-neutral-900/90 dark:via-neutral-900/70 dark:to-neutral-950
+  dark:border-white/10
+  dark:shadow-[0_0_80px_-20px_rgba(124,58,237,0.45)]
+">
   <CardHeader>
     <CardTitle className="text-2xl text-primary font-semibold tabular-nums @[250px]/card:text-2xl">
       Job Description
@@ -63,20 +108,19 @@ export function SectionCards() {
       />
     </div>
  </div>
-
-  {/* <CardFooter className="flex-col items-start gap-1.5 text-sm">
-    <div className="line-clamp-1 flex gap-2 font-medium">
-      Spike due to new marketing campaign <IconTrendingUp className="size-4" />
-    </div>
-    <div className="text-muted-foreground">
-      Across all active job postings
-    </div>
-  </CardFooter> */}
 </Card>
 
 
       {/* Card 3: Average Time to Fill */}
-      <Card className="@container/card">
+      <Card className="@container/card relative overflow-hidden rounded-3xl
+  bg-gradient-to-br from-purple-50 via-white to-indigo-50
+  border border-purple-100
+  shadow-[0_20px_40px_-20px_rgba(124,58,237,0.50)]
+  transition-all duration-500
+  dark:bg-gradient-to-br dark:from-neutral-900/90 dark:via-neutral-900/70 dark:to-neutral-950
+  dark:border-white/10
+  dark:shadow-[0_0_80px_-20px_rgba(124,58,237,0.45)]
+">
   <CardHeader>
     <CardTitle className="text-2xl text-primary font-semibold tabular-nums @[250px]/card:text-2xl">
       Candidates

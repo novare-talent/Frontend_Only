@@ -67,10 +67,18 @@ function SubmittedAssignmentsList() {
 export function SubmissionReceivedCard({ className = "" }: { className?: string }) {
     return(
         <div>
-            <Card className="@container/card">
+            <Card className="@container/card relative overflow-hidden rounded-3xl
+  bg-gradient-to-br from-purple-50 via-white to-indigo-50
+  border border-purple-100
+  shadow-[0_20px_40px_-20px_rgba(124,58,237,0.50)]
+  transition-all duration-500
+  dark:bg-gradient-to-br dark:from-neutral-900/90 dark:via-neutral-900/70 dark:to-neutral-950
+  dark:border-white/10
+  dark:shadow-[0_0_80px_-20px_rgba(124,58,237,0.45)]
+">
         <CardHeader>
             <CardTitle className="text-2xl text-primary font-semibold tabular-nums @[250px]/card:text-2xl">
-            Selected Candidates
+            Submissions Received
             </CardTitle>
             <CardDescription></CardDescription>
         </CardHeader>
@@ -84,7 +92,7 @@ export function SubmissionReceivedCard({ className = "" }: { className?: string 
           <Button
                 variant="default"
                 size="lg"
-                className="mx-auto block gap-2 transition-all duration-300"
+                className="mx-auto block gap-2 transition-all duration-300 cursor-pointer"
         >Insights</Button>
         </div>
       </Card>

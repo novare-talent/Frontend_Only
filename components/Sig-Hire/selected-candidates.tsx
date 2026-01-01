@@ -36,7 +36,9 @@ function SelectedCandidateCard({firstName, lastName, email}: SelectedCandidatesP
 export function SelectedCandidates() {
     const selectedList = [
         {key: 1, firstName: 'John', lastName: 'Cena', email: 'joncena@gmail.com'},
-        {key: 2, firstName: 'Serena', lastName: 'Williams', email: 'serena@gmail.com'}
+        {key: 2, firstName: 'Serena', lastName: 'Williams', email: 'serena@gmail.com'},
+        {key: 3, firstName: 'Jack', lastName: 'Williams', email: 'serena@gmail.com'},
+        {key: 4, firstName: 'Jack', lastName: 'Williams', email: 'serena@gmail.com'}
     ]
     const candidateDisplay = selectedList.map((item) => 
     <SelectedCandidateCard key={item.key} firstName={item.firstName} lastName={item.lastName} email={item.email}></SelectedCandidateCard>)

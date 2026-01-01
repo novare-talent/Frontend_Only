@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FeatureCard } from "@/components/ui/feature-card"
 import {
   IconBrain,
   IconChecklist,
@@ -30,27 +30,6 @@ export default function LandingPage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
 
-      {/* NAVBAR */}
-      <header className="flex items-center justify-between px-8 py-4 border-b">
-        <div className="flex items-center gap-3">
-          {/* Logo placeholder */}
-          <div className="h-9 w-9 rounded-md bg-primary text-white flex items-center justify-center font-bold">
-            S
-          </div>
-          <span className="text-xl font-semibold text-primary">Sighire</span>
-        </div>
-
-        <nav className="hidden md:flex items-right gap-6 text-md">
-          <a className="hover:text-primary cursor-pointer">Uploads</a>
-          <a className="hover:text-primary cursor-pointer">Rankings</a>
-          <a className="hover:text-primary cursor-pointer">Assignments</a>
-          <a className="hover:text-primary cursor-pointer">Evaluations</a>
-          <a className="hover:text-primary cursor-pointer">Insights</a>
-        </nav>
-
-        <Button size="sm">Get Started</Button>
-      </header>
-
       {/* HERO */}
       <motion.section
         variants={fadeUp}
@@ -62,7 +41,8 @@ export default function LandingPage() {
         <div className="space-y-6">
           <h1 className="text-5xl font-bold leading-tight">
             Hire smarter with{" "}
-            <span className="text-primary">AI-powered</span> candidate ranking
+            <span className="bg-gradient-to-r from-purple-600 to-indigo-600
+          bg-clip-text text-transparent">AI-powered</span> candidate ranking
           </h1>
 
           <p className="text-muted-foreground text-lg">
@@ -71,7 +51,7 @@ export default function LandingPage() {
           </p>
 
           <div className="flex gap-4">
-            <Button size="lg">Start Hiring</Button>
+            <Button size="lg" className="bg-gradient-to-r from-primary to-indigo-600 hover:bg-primary cursor-pointer">Start Hiring</Button>
             <Button variant="outline" size="lg">
               See Demo
             </Button>
@@ -86,7 +66,7 @@ export default function LandingPage() {
 
       {/* FEATURES */}
       <section className="px-8 py-16 bg-muted/30">
-        <div className="max-w-6xl mx-auto space-y-10">
+        <div className="max-w-6xl mx-auto space-y-10 dark:text-white">
           <h2 className="text-3xl font-semibold text-center">
             Everything you need to shortlist better candidates
           </h2>
@@ -145,7 +125,7 @@ export default function LandingPage() {
         transition={{ duration: 0.5 }}
         className="px-8 py-20 bg-primary text-primary-foreground"
       >
-        <div className="max-w-4xl mx-auto text-center space-y-6">
+        <div className="max-w-4xl mx-auto text-center space-y-6 bg-primary">
           <IconRobot className="mx-auto h-10 w-10" />
           <h2 className="text-3xl font-bold">
             Talk to your ranking assistant
@@ -159,21 +139,9 @@ export default function LandingPage() {
           </Button>
         </div>
       </motion.section>
-
-      FINAL CTA
-      <section className="px-8 py-20 max-w-6xl mx-auto text-center space-y-6">
-        <h2 className="text-4xl font-bold">
-          Ready to upgrade your hiring?
-        </h2>
-        <p className="text-muted-foreground">
-          Join teams that hire faster and smarter with Sighire.
-        </p>
-        <Button size="lg">Get Started for Free</Button>
-      </section>
-
       {/* FOOTER */}
       <footer className="px-8 py-6 border-t text-sm text-muted-foreground flex justify-between">
-        <span>© 2025 Sighire</span>
+        <span>© 2025 Novare Talent Private Limited. All rights reserved</span>
         <span>Privacy · Terms</span>
       </footer>
     </main>
@@ -181,36 +149,6 @@ export default function LandingPage() {
 }
 
 /* ---------------- Components ---------------- */
-
-function FeatureCard({
-  icon,
-  title,
-  desc,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  desc: string;
-}) {
-  return (
-    <motion.div
-      variants={fadeUp}
-      whileHover={{ y: -6 }}
-      transition={{ type: "spring", stiffness: 300 }}
-    >
-      <Card className="bg-gradient-to-t from-violet-100 to-white hover:shadow-md transition">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {icon}
-            {title}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-muted-foreground">
-          {desc}
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-}
 
 function Step({ number, title }: { number: string; title: string }) {
   return (
