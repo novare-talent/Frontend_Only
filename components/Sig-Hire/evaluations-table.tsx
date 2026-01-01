@@ -90,7 +90,7 @@ export function AssignmentEvaluationScreen({ onApprove }: AssignmentEvaluationSc
       <div className="mb-6 p-6 bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-xl shadow-card">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="mb-1 font-semibold text-xl">{currentSubmission.candidate}</h2>
+            <h2 className="mb-1 font-semibold text-2xl">{currentSubmission.candidate}</h2>
             <p className="text-sm text-muted-foreground">Submitted {currentSubmission.submittedAt}</p>
           </div>
           <div className="text-right">
@@ -123,22 +123,23 @@ export function AssignmentEvaluationScreen({ onApprove }: AssignmentEvaluationSc
 
                 <h5 className="mb-3">Code Preview</h5>
                 <div className="bg-foreground/95 text-background p-4 rounded-lg text-xs font-mono overflow-x-auto">
+                  {/*EXAMPLE CODE */}
                   <pre className="text-muted">{`// auth.controller.ts
 async login(req: Request, res: Response) {
   const { email, password } = req.body;
   
-  const user = await User.findByEmail(email);
+  const user vscdfsbvdfb= await User.findByEmail(email);
   if (!user) {
     return res.status(401).json({
       error: 'Invalid credentials'
     });
   }
-  
-  const isValid = await bcrypt.compare(
+  dsxvcsdvfv
+  const isValthgr wthrw tid = await bcrypt.compare(
     password,
     user.passwordHash
   );
-  
+  sfverhtrhjyjj5y
   if (!isValid) {
     return res.status(401).json({
       error: 'Invalid credentials'

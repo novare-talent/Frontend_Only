@@ -1,5 +1,6 @@
+"use client";
+
 import { SectionCards } from "@/components/Sig-Hire/upload-cards";
-// import AppliedJobsGrid from "@/components/Candidate-Dashboard/AppliedJobsGrid";
 
 export default function Page() {
   return (
