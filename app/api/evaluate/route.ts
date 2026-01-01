@@ -3,6 +3,18 @@ import { createClient } from "@/utils/supabase/server"
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import PDFParser from "pdf2json"
 
+const m = new Map<string,{c:number,t:number}>()
+const R = 5
+const W = 60000
+
+function rl(k:string){
+  const n=Date.now()
+  const e=m.get(k)
+  if(!e||n-e.t>W){m.set(k,{c:1,t:n});return true}
+  if(e.c>=R)return false
+  e.c++;return true
+}
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 export const runtime = "nodejs"
 
@@ -10,6 +22,9 @@ export const runtime = "nodejs"
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get("x-forwarded-for") || "local"
+  if(!rl(ip)) return NextResponse.json({error:"Rate limit exceeded"},{status:429})
+
   try {
     /* ----------------------- 1️⃣ Authenticate ----------------------- */
     const supabase = await createClient()
