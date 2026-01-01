@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,9 +8,9 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Edit,
   Trash2,
@@ -23,34 +23,38 @@ import {
   Info,
   Calendar,
   Clock,
-} from "lucide-react"
-import { cn } from "@/lib/utils"
-import { useRouter } from "next/navigation"
-import { createClient } from "@/utils/supabase/client"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Progress } from "@/components/ui/progress"
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Progress } from "@/components/ui/progress";
 
 export type JobCardProps = {
-  jobId?: string
-  title: string
-  href?: string
+  jobId?: string;
+  title: string;
+  href?: string;
   meta: {
-    rate: string
-    level: string
-  }
-  description: string
-  tags?: string[]
-  location?: string
-  proposals?: string
-  className?: string
-  onDelete?: (jobId: string) => void
-  duration?: string
-  closingTime?: string | null
-}
+    rate: string;
+    level: string;
+  };
+  description: string;
+  tags?: string[];
+  location?: string;
+  proposals?: string;
+  className?: string;
+  onDelete?: (jobId: string) => void;
+  duration?: string;
+  closingTime?: string | null;
+};
 
 function formatIST(dateString: string | null | undefined) {
-  if (!dateString) return "—"
-  const date = new Date(dateString)
+  if (!dateString) return "—";
+  const date = new Date(dateString);
   return date.toLocaleString("en-IN", {
     timeZone: "Asia/Kolkata",
     day: "2-digit",
@@ -59,7 +63,7 @@ function formatIST(dateString: string | null | undefined) {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
-  })
+  });
 }
 
 export function JobCard({
@@ -76,157 +80,171 @@ export function JobCard({
   duration,
   closingTime,
 }: JobCardProps) {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [hasEvaluation, setHasEvaluation] = useState(false)
-  const supabase = createClient()
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [evalLoading, setEvalLoading] = useState(false);
+  const [hasEvaluation, setHasEvaluation] = useState(false);
+  const supabase = createClient();
 
-  const [notificationOpen, setNotificationOpen] = useState(false)
+  const [notificationOpen, setNotificationOpen] = useState(false);
   const [notification, setNotification] = useState<{
-    type: "success" | "error" | "info"
-    title: string
-    message: string
-  } | null>(null)
+    type: "success" | "error" | "info";
+    title: string;
+    message: string;
+  } | null>(null);
 
   const showNotification = (
     type: "success" | "error" | "info",
     title: string,
-    message: string,
+    message: string
   ) => {
-    setNotification({ type, title, message })
-    setNotificationOpen(true)
-    setTimeout(() => setNotificationOpen(false), 5000)
-  }
-
-  const getNotificationIcon = () => {
-    if (!notification) return null
-    switch (notification.type) {
-      case "success":
-        return <CheckCircle2 className="h-5 w-5 text-green-600" />
-      case "error":
-        return <XCircle className="h-5 w-5 text-red-600" />
-      case "info":
-        return <Info className="h-5 w-5 text-blue-600" />
-    }
-  }
-  const [progress, setProgress] = useState(0)
+    setNotification({ type, title, message });
+    setNotificationOpen(true);
+    setTimeout(() => setNotificationOpen(false), 5000);
+  };
+  const [candidates, setCandidates] = useState<
+    { name: string; email: string }[]
+  >([]);
+  const [dd, setDd] = useState(false);
 
   useEffect(() => {
-    if (!loading) {
-      setProgress(0)
-      return
-    }
-
-    let value = 10
-    setProgress(value)
-
-    const interval = setInterval(() => {
-      value = Math.min(value + Math.random() * 15, 95)
-      setProgress(value)
-    }, 500)
-
-    return () => clearInterval(interval)
-  }, [loading])
-
-  const getNotificationStyles = () => {
-    if (!notification) return ""
+    const init = async () => {
+      if (!jobId) return;
+      const { data: job } = await supabase
+        .from("jobs")
+        .select("Applied_Candidates")
+        .eq("job_id", jobId)
+        .single();
+      const ids = job?.Applied_Candidates || [];
+      if (ids.length === 0) {
+        setCandidates([]);
+        return;
+      }
+      const { data: p } = await supabase
+        .from("profiles")
+        .select("first_name,last_name,email")
+        .in("id", ids);
+      setCandidates(
+        p?.map((x) => ({ name: x.first_name, email: x.email })) || []
+      );
+    };
+    init();
+  }, [jobId]);
+  const getNotificationIcon = () => {
+    if (!notification) return null;
     switch (notification.type) {
       case "success":
-        return "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30"
+        return <CheckCircle2 className="h-5 w-5 text-green-600" />;
       case "error":
-        return "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30"
+        return <XCircle className="h-5 w-5 text-red-600" />;
       case "info":
-        return "border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30"
+        return <Info className="h-5 w-5 text-blue-600" />;
     }
-  }
+  };
+
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (!evalLoading) {
+      setProgress(0);
+      return;
+    }
+
+    let value = 10;
+    setProgress(value);
+
+    const interval = setInterval(() => {
+      value = Math.min(value + Math.random() * 15, 95);
+      setProgress(value);
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [evalLoading]);
 
   useEffect(() => {
     const checkEvaluation = async () => {
-      if (!jobId) return
+      if (!jobId) return;
       const { data } = await supabase
         .from("evaluations")
         .select("job_id")
         .eq("job_id", jobId)
         .limit(1)
-        .maybeSingle()
+        .maybeSingle();
 
-      setHasEvaluation(!!data)
-    }
+      setHasEvaluation(!!data);
+    };
 
-    checkEvaluation()
-  }, [jobId, supabase])
+    checkEvaluation();
+  }, [jobId, supabase]);
 
   const handleEdit = () => {
-    if (jobId) router.push(`/client/edit/${jobId}`)
-  }
+    if (jobId) router.push(`/client/edit/${jobId}`);
+  };
 
   const handleDelete = async () => {
-    if (!jobId) return
-    setLoading(true)
-    await supabase.from("evaluations").delete().eq("job_id", jobId)
-    await supabase.from("forms").delete().eq("job_id", jobId)
-    await supabase.from("jobs").delete().eq("job_id", jobId)
-    onDelete?.(jobId)
-    router.refresh()
-    setLoading(false)
-  }
+    if (!jobId) return;
+    setLoading(true);
+    await supabase.from("evaluations").delete().eq("job_id", jobId);
+    await supabase.from("forms").delete().eq("job_id", jobId);
+    await supabase.from("jobs").delete().eq("job_id", jobId);
+    onDelete?.(jobId);
+    window.location.reload();
+  };
 
-  // --------------------------------------------------
-  // ✅ CORRECT EVALUATION FLOW (FIXED)
-  // --------------------------------------------------
   const handleEvaluate = async () => {
-    if (!jobId) return
+    if (!jobId) return;
 
     try {
-      setLoading(true)
-      showNotification("info", "Starting evaluation", "Fetching form details…")
+      setEvalLoading(true);
+      showNotification("info", "Starting evaluation", "Fetching form details…");
 
-
-      // 1️⃣ Fetch form_id from jobs table
       const { data: job, error } = await supabase
         .from("jobs")
         .select("form_id")
         .eq("job_id", jobId)
-        .single()
-
+        .single();
 
       if (error || !job?.form_id) {
         showNotification(
           "error",
           "Evaluation failed",
-          "Form ID not found for this job.",
-        )
-        return
+          "Form ID not found for this job."
+        );
+        return;
       }
 
-      const formId = job.form_id
-
-      const url = `https://evaluation.novaretalent.com/evaluate/${jobId}/${formId}`
-
-      const res = await fetch(url, { method: "POST" })
-
-      const body = await res.text()
+      const formId = job.form_id;
+      const url = `https://evaluation.novaretalent.com/evaluate/${jobId}/${formId}`;
+      const res = await fetch(url, { method: "POST" });
+      const body = await res.text();
 
       if (!res.ok) {
-        showNotification("error", "Evaluation failed", body || "Request failed")
-        return
+        showNotification(
+          "error",
+          "Evaluation failed",
+          body || "Request failed"
+        );
+        return;
       }
 
-      showNotification("success", "Evaluation Completed", "Redirecting…")
-      router.push(`/client/evaluate/${jobId}`)
+      showNotification("success", "Evaluation Completed", "Redirecting…");
+      router.push(`/client/evaluate/${jobId}`);
     } catch (err: any) {
-      showNotification("error", "Evaluation failed", err?.message || "Unknown error")
+      showNotification(
+        "error",
+        "Evaluation failed",
+        err?.message || "Unknown error"
+      );
     } finally {
-      setLoading(false)
-      setProgress(100)
-      setTimeout(() => setProgress(0), 400)
-      setLoading(false)
+      setEvalLoading(false);
+      setProgress(100);
+      setTimeout(() => setProgress(0), 400);
     }
-  }
+  };
 
   const handleViewResults = () => {
-    if (jobId) router.push(`/client/evaluate/${jobId}`)
-  }
+    if (jobId) router.push(`/client/evaluate/${jobId}`);
+  };
 
   return (
     <>
@@ -235,14 +253,24 @@ export function JobCard({
           <PopoverTrigger asChild>
             <div />
           </PopoverTrigger>
-          <PopoverContent className={`w-full max-w-md ${getNotificationStyles()}`}>
+          <PopoverContent
+            className={`w-full max-w-md ${notification?.type && getNotificationIcon()}`}
+          >
             <div className="flex gap-3">
               {getNotificationIcon()}
               <div className="flex-1">
-                <h4 className="font-semibold text-sm mb-1">{notification?.title}</h4>
-                <p className="text-sm text-muted-foreground">{notification?.message}</p>
+                <h4 className="font-semibold text-sm mb-1">
+                  {notification?.title}
+                </h4>
+                <p className="text-sm text-muted-foreground">
+                  {notification?.message}
+                </p>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setNotificationOpen(false)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setNotificationOpen(false)}
+              >
                 ×
               </Button>
             </div>
@@ -254,10 +282,9 @@ export function JobCard({
         className={cn(
           "group relative rounded-2xl border bg-card/80 shadow-sm transition-colors",
           "hover:border-brand/60 hover:ring-1 hover:ring-primary/70",
-          className,
+          className
         )}
       >
-        {/* Action Buttons */}
         <div className="absolute right-4 top-4 z-10 flex gap-2">
           <Button
             variant="ghost"
@@ -284,7 +311,10 @@ export function JobCard({
         <CardHeader className="gap-3">
           <CardTitle className="text-balance text-xl font-semibold leading-tight">
             {href ? (
-              <a href={href} className="text-primary underline-offset-4 hover:underline">
+              <a
+                href={href}
+                className="text-primary underline-offset-4 hover:underline"
+              >
                 {title}
               </a>
             ) : (
@@ -308,7 +338,11 @@ export function JobCard({
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {tags.map((t) => (
-                <Badge key={t} variant="secondary" className="rounded-full bg-muted text-muted-foreground">
+                <Badge
+                  key={t}
+                  variant="secondary"
+                  className="rounded-full bg-muted text-muted-foreground"
+                >
                   {t}
                 </Badge>
               ))}
@@ -323,14 +357,14 @@ export function JobCard({
               size="sm"
               onClick={handleEvaluate}
               className="gap-2"
-              disabled={loading}
+              disabled={evalLoading}
             >
               <Users className="size-4" />
-              {loading
+              {evalLoading
                 ? "Evaluating..."
                 : hasEvaluation
-                ? "Re-Evaluate"
-                : "Evaluate Candidates"}
+                  ? "Re-Evaluate"
+                  : "Evaluate Candidates"}
             </Button>
 
             {hasEvaluation && (
@@ -352,7 +386,6 @@ export function JobCard({
               <span className="text-foreground">{location}</span>
             </span>
 
-            {/* New: Duration display */}
             {duration && (
               <span className="inline-flex items-center gap-1">
                 <Clock className="size-4" aria-hidden />
@@ -360,17 +393,44 @@ export function JobCard({
               </span>
             )}
 
-            {/* New: Closing Time display */}
             {closingTime && (
               <span className="inline-flex items-center gap-1">
                 <Calendar className="size-4" aria-hidden />
-                <span className="text-foreground">{formatIST(closingTime)}</span>
+                <span className="text-foreground">
+                  {formatIST(closingTime)}
+                </span>
               </span>
             )}
 
-            <span className="text-green-600">Applied Candidates: {proposals}</span>
+            <span className="text-green-600">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDd(!dd)}
+                className="gap-2 hover:text-green-700"
+              >
+                <Users className="size-4" /> Applied Candidates: {proposals}
+              </Button>
+            </span>
+            {dd && (
+              <div className="absolute mt-64 sm:mt-48 sm:ml-64 w-64 bg-card border rounded-md shadow-md max-h-40 overflow-y-auto p-2">
+                {candidates.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center">
+                    No candidates
+                  </p>
+                ) : (
+                  candidates.map((x, k) => (
+                    <div key={k} className="p-2 text-sm border-b last:border-0">
+                      <p className="font-medium">{x.name}</p>
+                      <p className="text-xs text-muted-foreground">{x.email}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
-          {loading && (
+
+          {evalLoading && (
             <div className="w-full space-y-2">
               <div className="flex items-center justify-between text-xs text-primary">
                 <span>Evaluating job…</span>
@@ -382,5 +442,5 @@ export function JobCard({
         </CardFooter>
       </Card>
     </>
-  )
+  );
 }
