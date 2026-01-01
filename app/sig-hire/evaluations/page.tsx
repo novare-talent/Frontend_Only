@@ -11,7 +11,7 @@ export default function Page() {
     //     </div>
     //   </div>
     // </div>
-    <div className="px-4 py-4">
+    <div className="px-6 py-4">
           {/* Container that drives responsiveness */}
           <div className="@container/main grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
             {/* LEFT: main content (takes remaining space) */}

@@ -62,7 +62,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
     {
       title: "Try Sig Hire",
-      url: "/sig-hire/uploads",
+      url: "/sig-hire/home",
       icon: IconSparkles,
     },
   ];

@@ -16,7 +16,15 @@ export function SectionCards() {
     <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:h-fit-content *:data-[slot=card]:shadow-s lg:px-6 @xl/main:grid-cols-2 @4xl/main:grid-cols-3">
       
       {/* Card 2: Assignment Upload */}
-<Card className="@container/card">
+<Card className="@container/card relative overflow-hidden rounded-3xl
+  bg-gradient-to-br from-purple-50 via-white to-indigo-50
+  border border-purple-100
+  shadow-[0_20px_40px_-20px_rgba(124,58,237,0.50)]
+  transition-all duration-500
+  dark:bg-gradient-to-br dark:from-neutral-900/90 dark:via-neutral-900/70 dark:to-neutral-950
+  dark:border-white/10
+  dark:shadow-[0_0_80px_-20px_rgba(124,58,237,0.45)]
+">
   <CardHeader>
     <CardTitle className="text-2xl text-primary font-semibold tabular-nums @[250px]/card:text-2xl">
       Assignment
@@ -53,7 +61,7 @@ export function SectionCards() {
         <Button
                 variant="default"
                 size="lg"
-                className="mx-auto block gap-2 transition-all duration-300"
+                className="mx-auto block gap-2 transition-all duration-300 cursor-pointer"
         >Submit</Button>
     </div>   
  </div>
@@ -61,7 +69,15 @@ export function SectionCards() {
 
 
       {/* Card 2: Assignment Preview */}
-      <Card className="@container/card">
+      <Card className="@container/card relative overflow-hidden rounded-3xl
+  bg-gradient-to-br from-purple-50 via-white to-indigo-50
+  border border-purple-100
+  shadow-[0_20px_40px_-20px_rgba(124,58,237,0.50)]
+  transition-all duration-500
+  dark:bg-gradient-to-br dark:from-neutral-900/90 dark:via-neutral-900/70 dark:to-neutral-950
+  dark:border-white/10
+  dark:shadow-[0_0_80px_-20px_rgba(124,58,237,0.45)]
+">
         <CardHeader>
           <CardTitle className="text-2xl text-primary font-semibold tabular-nums @[250px]/card:text-2xl">
             Assignment Preview
@@ -75,7 +91,15 @@ export function SectionCards() {
       </Card>
 
       {/* Card 3: Selected Candidates */}
-      <Card className="@container/card">
+      <Card className="@container/card relative overflow-hidden rounded-3xl
+  bg-gradient-to-br from-purple-50 via-white to-indigo-50
+  border border-purple-100
+  shadow-[0_20px_40px_-20px_rgba(124,58,237,0.50)]
+  transition-all duration-500
+  dark:bg-gradient-to-br dark:from-neutral-900/90 dark:via-neutral-900/70 dark:to-neutral-950
+  dark:border-white/10
+  dark:shadow-[0_0_80px_-20px_rgba(124,58,237,0.45)]
+">
         <CardHeader>
             <CardTitle className="text-2xl text-primary font-semibold tabular-nums @[250px]/card:text-2xl">
             Selected Candidates
@@ -87,12 +111,12 @@ export function SectionCards() {
           <Button
                 variant="ghost"
                 size="lg"
-                className="mx-auto block gap-2 transition-all duration-300"
+                className="mx-auto block gap-2 transition-all duration-300 cursor-pointer"
           >Reselect</Button>
           <Button
                 variant="default"
                 size="lg"
-                className="mx-auto block gap-2 transition-all duration-300"
+                className="mx-auto block gap-2 transition-all duration-300 cursor-pointer"
         >Send Assignment</Button>
         </div>
       </Card>

@@ -19,7 +19,7 @@ type Message = {
   time?: string;
 };
 
-export function ChatbotCard({ className = "" }: { className?: string }) {
+export function RankingBotCard({ className = "" }: { className?: string }) {
   const [messages, setMessages] = useState<Message[]>([
     { id: "1", text: "Hi, how can I help you today?", from: "bot" },
   ]);
@@ -67,13 +67,21 @@ export function ChatbotCard({ className = "" }: { className?: string }) {
 
   return (
     <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:h-fit-content *:data-[slot=card]:shadow-s lg:px-6 @xl/main:grid-cols-2 @4xl/main:grid-cols-3">
-        <Card className="w-full flex flex-rol">
+        <Card className="@container/card relative overflow-hidden rounded-3xl
+  bg-gradient-to-br from-purple-50 via-white to-indigo-50
+  border border-purple-100
+  shadow-[0_20px_40px_-20px_rgba(124,58,237,0.50)]
+  transition-all duration-500
+  dark:bg-gradient-to-br dark:from-neutral-900/90 dark:via-neutral-900/70 dark:to-neutral-950
+  dark:border-white/10
+  dark:shadow-[0_0_80px_-20px_rgba(124,58,237,0.45)]
+w-full flex flex-rol">
           <CardHeader>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-primary">Ranking Bot</CardTitle>
             <CardDescription>Use this to find what candidates you&apos;re looking for!</CardDescription>
           </CardHeader>
           {/* Messages area */}
-          <div className="px-4 pb-0 h-[30vh] overflow-hidden bg-card border border-primary/30 p-1 m-2 rounded-sm">
+          <div className="px-6 pb-0 h-[30vh] overflow-hidden bg-card border border-primary/30 m-2 rounded-sm">
             <div
               className="h-full bg-transparent rounded-md border border-transparent overflow-y-auto p-3 space-y-3"
               role="log"
