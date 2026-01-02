@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import {
-  IconDashboard, IconCreditCard
+  IconDashboard, IconCreditCard, IconSparkles
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/Client-Dashboard/nav-main";
@@ -60,6 +60,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/client/billing",
       icon: IconCreditCard,
     },
+    {
+      title: "Try Sig Hire",
+      url: "/sig-hire/home",
+      icon: IconSparkles,
+    },
   ];
 
   return (
@@ -92,7 +97,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navMain} pathname={pathname} /> {/* Pass pathname */}
+        <NavMain items={navMain} pathname={pathname} />
       </SidebarContent>
       <SidebarFooter>
         {user && <NavUser user={user} />}
