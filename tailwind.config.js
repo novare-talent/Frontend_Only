@@ -12,3 +12,15 @@ module.exports = {
   darkMode: "class",
   plugins: [heroui()],
 };
+
+export default {
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ["var(--font-sans)"],
+        mono: ["var(--font-geist-mono)"],
+        serif: ["Lora", "serif"],
+      },
+    },
+  },
+};
