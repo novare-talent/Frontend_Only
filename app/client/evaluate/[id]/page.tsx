@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { useParams } from "next/navigation";
 import { User, FileText, Mail, Phone } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+import { motion } from "framer-motion";
 
 type Candidate = {
   full_name?: string;
@@ -41,34 +42,27 @@ export default function EvaluationPage() {
       try {
         setLoading(true);
 
-        // 1️⃣ Fetch evaluation
-        const { data: evalRow, error: evalError } = await supabase
+        const { data: evalRow } = await supabase
           .from("evaluations")
           .select("*")
           .eq("job_id", id)
           .maybeSingle();
 
-        console.log("[EvaluationPage] evaluation row:", evalRow);
-
-        if (evalError || !evalRow) {
+        if (!evalRow) {
           setEvaluation(null);
           return;
         }
 
         setEvaluation(evalRow);
 
-        // 2️⃣ Fetch job title
         const { data: job } = await supabase
           .from("jobs")
           .select("Job_Name, Job_Description")
           .eq("job_id", evalRow.job_id)
           .maybeSingle();
 
-        setJobTitle(
-          job?.Job_Name || job?.Job_Description || "Untitled Job"
-        );
+        setJobTitle(job?.Job_Name || job?.Job_Description || "Untitled Job");
 
-        // 3️⃣ Enrich candidates with email & phone
         const baseCandidates: Candidate[] =
           evalRow?.results?.candidates ?? [];
 
@@ -91,8 +85,6 @@ export default function EvaluationPage() {
         );
 
         setCandidates(enriched);
-      } catch (err) {
-        console.error("[EvaluationPage] fetch error:", err);
       } finally {
         setLoading(false);
       }
@@ -112,103 +104,121 @@ export default function EvaluationPage() {
   );
 
   return (
-    <div className="container mx-auto py-10 px-6">
-      <Card className="border border-primary/30 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">
-            Candidate Evaluations
-          </CardTitle>
-          <CardDescription>
-            Job:{" "}
-            <span className="font-semibold text-primary">
-              {jobTitle}
-            </span>
-          </CardDescription>
-        </CardHeader>
+    <div className="container mx-auto px-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="border-0 bg-transparent">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold tracking-tight">
+              Candidate Evaluations
+            </CardTitle>
+            <CardDescription>
+              Job:{" "}
+              <span className="font-semibold text-primary">
+                {jobTitle}
+              </span>
+            </CardDescription>
+          </CardHeader>
 
-        <CardContent className="space-y-8">
-          {sortedCandidates.length === 0 ? (
-            <p className="text-muted-foreground">
-              No candidates evaluated yet.
-            </p>
-          ) : (
-            sortedCandidates.map((c, i) => (
-              <div
-                key={c.profile_id || i}
-                className="rounded-lg border p-4 bg-muted/20"
-              >
-                {/* Candidate Header */}
-                <div className="mb-3 space-y-1">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <User className="size-4 text-primary" />
-                    {c.full_name || "Unnamed Candidate"}
-                    <span className="text-sm text-muted-foreground">
-                      (Rank #{i + 1})
-                    </span>
-                  </h3>
+          <CardContent className="space-y-8">
+            {sortedCandidates.length === 0 ? (
+              <p className="text-muted-foreground">
+                No candidates evaluated yet.
+              </p>
+            ) : (
+              sortedCandidates.map((c, i) => (
+                <motion.div
+                  key={c.profile_id || i}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.08 }}
+                  whileHover={{
+                    y: -4,
+                    scale: 1.01,
+                  }}
+                  className="relative rounded-xl border border-border bg-muted/20 p-5 transition-all
+                             hover:border-primary/40 hover:shadow-[0_0_0_1px_hsl(var(--primary)/0.4),0_12px_40px_-12px_hsl(var(--primary)/0.4)]"
+                >
+                  {/* Candidate Header */}
+                  <div className="mb-3 space-y-1">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <User className="size-4 text-primary" />
+                      {c.full_name || "Unnamed Candidate"}
+                      <span className="text-sm text-muted-foreground">
+                        (Rank #{i + 1})
+                      </span>
+                    </h3>
 
-                  {c.email && (
-                    <p className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Mail className="size-4" /> {c.email}
+                    {c.email && (
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Mail className="size-4" /> {c.email}
+                      </p>
+                    )}
+
+                    {c.phone && (
+                      <p className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Phone className="size-4" /> {c.phone}
+                      </p>
+                    )}
+
+                    {c.resume_url && (
+                      <a
+                        href={c.resume_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm text-primary
+                                   transition hover:gap-2 hover:underline"
+                      >
+                        View Resume <FileText className="size-4" />
+                      </a>
+                    )}
+                  </div>
+
+                  <Separator className="mb-3" />
+
+                  {/* Scores */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <div>Skills Match: {c.skills_match ?? "—"}</div>
+                    <div>
+                      Experience Relevance:{" "}
+                      {c.experience_relevance ?? "—"}
+                    </div>
+                    <div>
+                      Communication Clarity:{" "}
+                      {c.communication_clarity ?? "—"}
+                    </div>
+                  </div>
+
+                  {/* Justification */}
+                  <div className="mt-4">
+                    <p className="font-medium">Justification:</p>
+                    <p className="text-muted-foreground whitespace-pre-wrap">
+                      {c.justification || "—"}
                     </p>
-                  )}
+                  </div>
 
-                  {c.phone && (
-                    <p className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Phone className="size-4" /> {c.phone}
-                    </p>
-                  )}
-
-                  {c.resume_url && (
-                    <a
-                      href={c.resume_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline flex items-center gap-1 text-sm"
+                  {/* Final Score */}
+                  <div className="mt-4">
+                    <Badge
+                      variant="outline"
+                      className="text-base transition hover:bg-primary/10 hover:border-primary"
                     >
-                      View Resume <FileText className="size-4" />
-                    </a>
-                  )}
-                </div>
-
-                <Separator className="mb-3" />
-
-                {/* Scores */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                  <div>Skills Match: {c.skills_match ?? "—"}</div>
-                  <div>
-                    Experience Relevance:{" "}
-                    {c.experience_relevance ?? "—"}
+                      Final Score:
+                      <span className="ml-1 font-semibold">
+                        {c.final_score ?? "N/A"}
+                      </span>
+                      / 100
+                    </Badge>
                   </div>
-                  <div>
-                    Communication Clarity:{" "}
-                    {c.communication_clarity ?? "—"}
-                  </div>
-                </div>
-
-                {/* Justification */}
-                <div className="mt-4">
-                  <p className="font-medium">Justification:</p>
-                  <p className="text-muted-foreground whitespace-pre-wrap">
-                    {c.justification || "—"}
-                  </p>
-                </div>
-
-                {/* Final Score */}
-                <div className="mt-4">
-                  <Badge variant="outline" className="text-base">
-                    Final Score:{" "}
-                    <span className="ml-1 font-semibold">
-                      {c.final_score ?? "N/A"}
-                    </span>{" "}
-                    / 100
-                  </Badge>
-                </div>
-              </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
+                </motion.div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }
