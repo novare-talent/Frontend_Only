@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_RANKING_API_URL || "http://15.206.70.201:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_RANKING_API_URL || "/api/ranking-proxy";
 
 interface InitSessionResponse {
   session_id: string;
