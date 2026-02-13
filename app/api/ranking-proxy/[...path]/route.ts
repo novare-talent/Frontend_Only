@@ -1,19 +1,35 @@
-export async function POST(
+async function proxyRequest(
   request: Request,
-  { params }: { params: Promise<{ path: string[] }> }
+  method: string,
+  backendUrl: string
 ) {
-  const { path } = await params;
-  const pathStr = path.join('/');
-  const backendUrl = `http://15.206.70.201:8000/${pathStr}`;
-
   try {
-    const body = await request.text();
+    const contentType = request.headers.get('content-type');
+    
+    let body: BodyInit | undefined;
+    
+    if (method !== 'GET' && method !== 'DELETE') {
+      // For methods with body (POST, PUT, PATCH)
+      if (contentType?.includes('multipart/form-data')) {
+        // For FormData, pass the body as binary buffer
+        const buffer = await request.arrayBuffer();
+        body = buffer;
+      } else if (contentType?.includes('application/json') || contentType?.includes('application/x-www-form-urlencoded')) {
+        // For JSON and form data, pass as text
+        body = await request.text();
+      } else {
+        // For other content types, read as text
+        body = await request.text();
+      }
+    }
+
     const response = await fetch(backendUrl, {
-      method: 'POST',
+      method,
       headers: {
-        'Content-Type': 'application/json',
+        // Forward original content-type if present
+        ...(contentType && { 'Content-Type': contentType }),
       },
-      body: body ? body : undefined,
+      body: body || undefined,
     });
 
     const responseData = await response.text();
@@ -30,6 +46,16 @@ export async function POST(
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
+}
+
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  const { path } = await params;
+  const pathStr = path.join('/');
+  const backendUrl = `http://15.206.70.201:8000/${pathStr}`;
+  return proxyRequest(request, 'POST', backendUrl);
 }
 
 export async function GET(
@@ -39,24 +65,7 @@ export async function GET(
   const { path } = await params;
   const pathStr = path.join('/');
   const backendUrl = `http://15.206.70.201:8000/${pathStr}`;
-
-  try {
-    const response = await fetch(backendUrl);
-    const responseData = await response.text();
-    
-    return new Response(responseData, {
-      status: response.status,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-  } catch (error) {
-    console.error('Proxy error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Backend request failed', details: error instanceof Error ? error.message : String(error) }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
+  return proxyRequest(request, 'GET', backendUrl);
 }
 
 export async function DELETE(
@@ -66,27 +75,25 @@ export async function DELETE(
   const { path } = await params;
   const pathStr = path.join('/');
   const backendUrl = `http://15.206.70.201:8000/${pathStr}`;
+  return proxyRequest(request, 'DELETE', backendUrl);
+}
 
-  try {
-    const response = await fetch(backendUrl, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+export async function PUT(
+  request: Request,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  const { path } = await params;
+  const pathStr = path.join('/');
+  const backendUrl = `http://15.206.70.201:8000/${pathStr}`;
+  return proxyRequest(request, 'PUT', backendUrl);
+}
 
-    const responseData = await response.text();
-    return new Response(responseData, {
-      status: response.status,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-  } catch (error) {
-    console.error('Proxy error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Backend request failed', details: error instanceof Error ? error.message : String(error) }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  const { path } = await params;
+  const pathStr = path.join('/');
+  const backendUrl = `http://15.206.70.201:8000/${pathStr}`;
+  return proxyRequest(request, 'PATCH', backendUrl);
 }
