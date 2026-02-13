@@ -1,8 +1,14 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { FeatureCard } from "@/components/ui/feature-card"
+import { LoadingOverlay } from "@/components/Sig-Hire/loading-overlay";
+import { useSession } from "@/context/SessionContext";
+import { initializeSession } from "@/lib/ranking-api";
+import { createClient } from "@/utils/supabase/client";
 import {
   IconBrain,
   IconChecklist,
@@ -27,8 +33,58 @@ const stagger = {
 /* ---------------- Page ---------------- */
 
 export default function LandingPage() {
+  const router = useRouter();
+  const { setSessionId, setClientId, isLoading, setIsLoading, error, setError } = useSession();
+  const [loadingMessage, setLoadingMessage] = useState("Initializing session...");
+
+  const handleStartHiring = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      setLoadingMessage("Getting your profile...");
+
+      // Get current user from Supabase
+      const supabase = createClient();
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (authError || !user) {
+        throw new Error("Please sign in to continue");
+      }
+
+      setClientId(user.id);
+      setLoadingMessage(`Profile ID: ${user.id}\nInitializing session...`);
+
+      // Initialize session with the API
+      const sessionResponse = await initializeSession(user.id);
+      
+      if (!sessionResponse.session_id) {
+        throw new Error("Failed to create session");
+      }
+
+      setSessionId(sessionResponse.session_id);
+      setIsLoading(false);
+
+      // Navigate to uploads page with session_id
+      router.push(`/sig-hire/uploads?session_id=${sessionResponse.session_id}`);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to initialize session. Please try again."
+      );
+      setIsLoading(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-background text-foreground">
+      <LoadingOverlay 
+        isVisible={isLoading} 
+        message={loadingMessage}
+        error={error}
+        onRetry={handleStartHiring}
+      />
 
       {/* HERO */}
       <motion.section
@@ -51,10 +107,15 @@ export default function LandingPage() {
           </p>
 
           <div className="flex gap-4">
-            <Button size="lg" className="bg-gradient-to-r from-primary to-indigo-600 hover:bg-primary cursor-pointer">Start Hiring</Button>
-            <Button variant="outline" size="lg">
-              See Demo
+            <Button 
+              size="lg" 
+              className="bg-gradient-to-r from-primary to-indigo-600 hover:bg-primary cursor-pointer"
+              onClick={handleStartHiring}
+              disabled={isLoading}
+            >
+              Start Hiring
             </Button>
+           
           </div>
         </div>
 

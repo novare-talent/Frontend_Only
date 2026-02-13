@@ -3,6 +3,7 @@ import { AlertTriangle, Send, Filter } from 'lucide-react';
 
 export interface CandidateRankingScreenProps {
   onSubmitUploads: (candidates: string[]) => void;
+  sessionId?: string | null;
 }
 
 interface Candidate {
