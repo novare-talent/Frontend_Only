@@ -85,18 +85,18 @@ export function SectionCards() {
         candidatesFile
       );
 
-      setLoadingMessage(`Session ID: ${activeSessionId}\n\nProcessing files (1/5)...`);
+      setLoadingMessage(`Session ID: ${activeSessionId}\n\nProcessing files (1/8)...`);
 
       let checkCount = 1;
       // Wait for session to be ready (max 5 checks with 2 second intervals)
       await waitForSessionReady(
         activeSessionId,
-        5,
+        8,
         2000,
         (status) => {
           checkCount++;
           setLoadingMessage(
-            `Session ID: ${activeSessionId}\n\nProcessing files (${Math.min(checkCount, 5)}/5)...\nStatus: ${status}`
+            `Session ID: ${activeSessionId}\n\nProcessing files (${Math.min(checkCount, 8)}/8)...\nStatus: ${status}`
           );
         }
       );
