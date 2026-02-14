@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/client";
 import { LoadingOverlay } from "./loading-overlay";
 import { uploadSessionData, waitForSessionReady, initializeSession } from "@/lib/ranking-api";
 import { useSession } from "@/context/SessionContext";
+import { createSigHireJob } from "@/app/actions/jobs";
 import {
   Card,
   CardDescription,
@@ -100,6 +101,21 @@ export function SectionCards() {
         }
       );
 
+      // Create job record in jobs table
+      setLoadingMessage(`Session ID: ${activeSessionId}\n\nCreating job record...`);
+      
+      const jobResult = await createSigHireJob({
+        job_name: jobDescription || 'Uploaded Job',
+        job_description: jobDescription || 'Job uploaded via Sigyre',
+        jd_file: jobFile || undefined,
+        form_id: activeSessionId,
+      });
+
+      if (!jobResult.success) {
+        console.warn('Job creation warning:', jobResult.error);
+        // Continue even if job creation fails - the session data is more critical
+      }
+
       setIsLoading(false);
 
       // Navigate to rankings page with session_id
@@ -162,7 +178,7 @@ export function SectionCards() {
       <div
         className="text-5xl text-primary py-2"
       >
-      SigHire
+      SigHyre
       </div>
     </CardTitle>
 

@@ -102,7 +102,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-muted-foreground text-lg">
-            Sighire analyzes resumes, ranks candidates, highlights risks, and
+            Sighyre analyzes resumes, ranks candidates, highlights risks, and
             helps recruiters make confident decisions—faster.
           </p>
 
@@ -161,7 +161,7 @@ export default function LandingPage() {
       {/* HOW IT WORKS */}
       <section className="px-8 py-20 max-w-6xl mx-auto">
         <h2 className="text-3xl font-semibold text-center mb-12">
-          How Sighire works
+          How Sighyre works
         </h2>
 
         <motion.div

@@ -61,7 +61,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: IconCreditCard,
     },
     {
-      title: "Try Sig Hire",
+      title: "Try Sig Hyre",
       url: "/sig-hire/home",
       icon: IconSparkles,
     },

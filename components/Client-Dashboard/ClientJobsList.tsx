@@ -8,14 +8,14 @@ import CreateJobButtonServerChecked from "./CreateJobButton"
 
 type Job = {
   job_id: string
-  Job_Name: string
-  Job_Description: string
-  level: string
-  location: string
-  stipend: string
-  duration: string
-  tags: string[]
-  Applied_Candidates?: string[]
+  Job_Name: string | null
+  Job_Description: string | null
+  level: string | null
+  location: string | null
+  stipend: string | null
+  duration: string | null
+  tags: string[] | null
+  Applied_Candidates?: string[] | null
   status: string
   closingTime?: string | null
 }
@@ -113,19 +113,18 @@ export default function ClientJobs() {
           <JobCard
             key={job.job_id}
             jobId={job.job_id}
-            title={job.Job_Name}
+            title={job.Job_Name || "Untitled Job"}
             meta={{
-              rate: job.stipend,
-              level: job.level,
+              rate: job.stipend || "Not specified",
+              level: job.level || "Not specified",
             }}
-            description={job.Job_Description}
-            tags={job.tags}
-            location={job.location}
-            proposals={job.Applied_Candidates?.length?.toString() || "0"}
+            description={job.Job_Description || "No description provided"}
+            tags={job.tags || []}
+            location={job.location || "Not specified"}
+            proposals={((Array.isArray(job.Applied_Candidates) ? job.Applied_Candidates.length : 0) || 0).toString()}
             className="mb-8"
-            // NEW: pass duration and closingTime so JobCard can display them
-            duration={job.duration}
-            closingTime={job.closingTime}
+            duration={job.duration || undefined}
+            closingTime={job.closingTime || null}
           />
         ))
       )}

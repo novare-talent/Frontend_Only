@@ -10,7 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Check } from 'lucide-react';
 
 interface Candidate {
   cid: string;
@@ -26,11 +26,19 @@ interface Candidate {
 interface RankingsTableProps {
   candidates: Candidate[];
   isLoading?: boolean;
+  selectedCandidates?: Set<string>;
+  onSelectionChange?: (selected: Set<string>) => void;
 }
 
-export function RankingsTable({ candidates, isLoading = false }: RankingsTableProps) {
+export function RankingsTable({ 
+  candidates, 
+  isLoading = false,
+  selectedCandidates = new Set(),
+  onSelectionChange
+}: RankingsTableProps) {
   const [sortedCandidates, setSortedCandidates] = useState<Candidate[]>([]);
   const [expandedIndexes, setExpandedIndexes] = useState<Set<number>>(new Set());
+  const [internalSelected, setInternalSelected] = useState<Set<string>>(selectedCandidates);
 
   const toggleExpanded = (index: number) => {
     const newSet = new Set(expandedIndexes);
@@ -40,6 +48,31 @@ export function RankingsTable({ candidates, isLoading = false }: RankingsTablePr
       newSet.add(index);
     }
     setExpandedIndexes(newSet);
+  };
+
+  const handleSelectCandidate = (candidateId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newSelected = new Set(internalSelected);
+    if (newSelected.has(candidateId)) {
+      newSelected.delete(candidateId);
+    } else {
+      newSelected.add(candidateId);
+    }
+    setInternalSelected(newSelected);
+    onSelectionChange?.(newSelected);
+  };
+
+  const handleSelectAll = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (internalSelected.size === candidates.length && candidates.length > 0) {
+      const newSelected = new Set<string>();
+      setInternalSelected(newSelected);
+      onSelectionChange?.(newSelected);
+    } else {
+      const newSelected = new Set(candidates.map(c => c.cid));
+      setInternalSelected(newSelected);
+      onSelectionChange?.(newSelected);
+    }
   };
 
   useEffect(() => {
@@ -73,6 +106,17 @@ export function RankingsTable({ candidates, isLoading = false }: RankingsTablePr
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50">
+            <TableHead className="w-12">
+              <button
+                onClick={handleSelectAll}
+                className="flex items-center justify-center w-5 h-5 rounded border border-gray-300 hover:border-primary hover:bg-primary/10 transition"
+                title={internalSelected.size === candidates.length ? "Deselect all" : "Select all"}
+              >
+                {internalSelected.size === candidates.length && candidates.length > 0 && (
+                  <Check className="w-4 h-4 text-primary" />
+                )}
+              </button>
+            </TableHead>
             <TableHead className="w-12">Rank</TableHead>
             <TableHead className="w-40">Candidate Name</TableHead>
             <TableHead className="w-32">Email</TableHead>
@@ -91,14 +135,25 @@ export function RankingsTable({ candidates, isLoading = false }: RankingsTablePr
               'bg-red-100 text-red-900';
             
             const isExpanded = expandedIndexes.has(index);
+            const isSelected = internalSelected.has(candidate.cid);
             const evaluationText = candidate.evaluation_reason || candidate.jd_reason || 'No details available';
 
             return [
               <TableRow
                 key={`candidate-${candidate.cid}-${index}`}
-                className="hover:bg-muted/50 transition-colors cursor-pointer"
+                className={`hover:bg-muted/50 transition-colors cursor-pointer ${isSelected ? 'bg-primary/5' : ''}`}
                 onClick={() => toggleExpanded(index)}
               >
+                <TableCell>
+                  <button
+                    onClick={(e) => handleSelectCandidate(candidate.cid, e)}
+                    className="flex items-center justify-center w-5 h-5 rounded border border-gray-300 hover:border-primary hover:bg-primary/10 transition"
+                  >
+                    {isSelected && (
+                      <Check className="w-4 h-4 text-primary" />
+                    )}
+                  </button>
+                </TableCell>
                 <TableCell className="font-semibold text-lg">
                   #{index + 1}
                 </TableCell>
@@ -132,7 +187,7 @@ export function RankingsTable({ candidates, isLoading = false }: RankingsTablePr
                   key={`expanded-${candidate.cid}-${index}`}
                   className="bg-muted/30 hover:bg-muted/30"
                 >
-                  <TableCell colSpan={6} className="py-4">
+                  <TableCell colSpan={7} className="py-4">
                     <div className="space-y-2">
                       <p className="text-sm font-semibold">Evaluation Details:</p>
                       <p className="text-sm text-muted-foreground whitespace-pre-wrap">

@@ -36,19 +36,19 @@ import { Progress } from "@/components/ui/progress";
 
 export type JobCardProps = {
   jobId?: string;
-  title: string;
+  title: string | null;
   href?: string;
   meta: {
-    rate: string;
-    level: string;
+    rate: string | null;
+    level: string | null;
   };
-  description: string;
-  tags?: string[];
-  location?: string;
+  description: string | null;
+  tags?: string[] | null;
+  location?: string | null;
   proposals?: string;
   className?: string;
   onDelete?: (jobId: string) => void;
-  duration?: string;
+  duration?: string | null;
   closingTime?: string | null;
 };
 
@@ -315,27 +315,27 @@ export function JobCard({
                 href={href}
                 className="text-primary underline-offset-4 hover:underline"
               >
-                {title}
+                {title || "Untitled Job"}
               </a>
             ) : (
-              <span className="text-foreground">{title}</span>
+              <span className="text-foreground">{title || "Untitled Job"}</span>
             )}
           </CardTitle>
 
           <CardDescription className="flex flex-wrap items-center gap-2 text-sm">
             <span className="inline-flex items-center gap-1">
               <Wallet className="size-4 text-accent-foreground" aria-hidden />
-              {meta.rate}
+              {meta.rate || "Not specified"}
             </span>
             <span className="text-muted-foreground">•</span>
-            <span>{meta.level}</span>
+            <span>{meta.level || "Not specified"}</span>
           </CardDescription>
         </CardHeader>
 
         <CardContent className="flex flex-col gap-4">
-          <p className="text-pretty leading-relaxed">{description}</p>
+          <p className="text-pretty leading-relaxed">{description || "No description provided"}</p>
 
-          {tags.length > 0 && (
+          {tags && tags.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {tags.map((t) => (
                 <Badge
@@ -383,7 +383,7 @@ export function JobCard({
           <div className="flex flex-wrap items-center gap-4">
             <span className="inline-flex items-center gap-1">
               <MapPin className="size-4 text-accent-foreground" aria-hidden />
-              <span className="text-foreground">{location}</span>
+              <span className="text-foreground">{location || "Not specified"}</span>
             </span>
 
             {duration && (

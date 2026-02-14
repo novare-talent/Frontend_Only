@@ -5,7 +5,7 @@ import { useSession } from '@/context/SessionContext';
 import { RankingsTable } from './rankings-table';
 import { QueriesManagement } from './queries-management';
 import { fetchRankings, type Candidate } from '@/lib/ranking-api';
-import { RotateCw, AlertCircle, X, RotateCcw } from 'lucide-react';
+import { RotateCw, AlertCircle, X, RotateCcw, Send } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface RankingsScreenProps {
@@ -24,6 +24,7 @@ export function RankingsScreen({ sessionId, refreshTrigger = 0 }: RankingsScreen
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showError, setShowError] = useState(false);
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
+  const [selectedCandidates, setSelectedCandidates] = useState<Set<string>>(new Set());
 
   const loadRankings = useCallback(async (isRefresh = false) => {
     if (!sessionId) {
@@ -107,8 +108,19 @@ export function RankingsScreen({ sessionId, refreshTrigger = 0 }: RankingsScreen
     setError(null);
     setHasInitialized(false);
     setShowRestartConfirm(false);
+    setSelectedCandidates(new Set());
     router.push('/sig-hire/uploads');
   }, [clearSession, router]);
+
+  const handleSendAssignments = useCallback(() => {
+    if (selectedCandidates.size === 0) {
+      alert('Please select at least one candidate');
+      return;
+    }
+    // Redirect to assignments page with selected candidate IDs
+    const selectedIds = Array.from(selectedCandidates).join(',');
+    router.push(`/sig-hire/assignments?session_id=${sessionId}&candidates=${selectedIds}`);
+  }, [selectedCandidates, sessionId, router]);
 
   if (!sessionId) {
     return (
@@ -177,6 +189,11 @@ export function RankingsScreen({ sessionId, refreshTrigger = 0 }: RankingsScreen
           <h2 className="text-2xl font-bold text-primary mb-2">Candidate Rankings</h2>
           <p className="text-muted-foreground">
             {candidates.length} candidates ranked by job description match and query scores
+            {selectedCandidates.size > 0 && (
+              <span className="ml-2 text-primary font-semibold">
+                • {selectedCandidates.size} selected
+              </span>
+            )}
           </p>
         </div>
         <div className="flex gap-2">
@@ -189,6 +206,17 @@ export function RankingsScreen({ sessionId, refreshTrigger = 0 }: RankingsScreen
             <RotateCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </button>
+          
+          {selectedCandidates.size > 0 && (
+            <button
+              onClick={handleSendAssignments}
+              className="flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-white hover:bg-primary/90 transition font-medium text-sm"
+              aria-label="Send assignments"
+            >
+              <Send className="w-4 h-4" />
+              Send Assignment ({selectedCandidates.size})
+            </button>
+          )}
           
           <button
             onClick={() => setShowRestartConfirm(true)}
@@ -238,7 +266,12 @@ export function RankingsScreen({ sessionId, refreshTrigger = 0 }: RankingsScreen
       
       {/* Always show table if we have data, even if there's an error */}
       {candidates.length > 0 ? (
-        <RankingsTable candidates={candidates} isLoading={isRefreshing} />
+        <RankingsTable 
+          candidates={candidates} 
+          isLoading={isRefreshing}
+          selectedCandidates={selectedCandidates}
+          onSelectionChange={setSelectedCandidates}
+        />
       ) : (
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-12 text-center">
           <h3 className="text-gray-700 font-semibold mb-2">No Rankings Yet</h3>
