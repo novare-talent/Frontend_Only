@@ -198,6 +198,36 @@ export function JobCard({
       setEvalLoading(true);
       showNotification("info", "Starting evaluation", "Fetching form details…");
 
+      // Get access token for consuming evaluation
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session?.access_token) {
+        showNotification(
+          "error",
+          "Authentication Error",
+          "Unable to authenticate. Please log in again."
+        );
+        return;
+      }
+
+      // Consume one evaluation
+      const consumeResponse = await fetch('/api/consume-evaluation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!consumeResponse.ok) {
+        const consumeError = await consumeResponse.json();
+        showNotification(
+          "error",
+          "Insufficient Evaluations",
+          consumeError.error || "Failed to consume evaluation credit"
+        );
+        return;
+      }
+
       const { data: job, error } = await supabase
         .from("jobs")
         .select("form_id")

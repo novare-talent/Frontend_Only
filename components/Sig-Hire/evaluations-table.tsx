@@ -118,6 +118,29 @@ export function AssignmentEvaluationScreen({ jobId }: EvaluationTableProps) {
 
     try {
       setEvaluatingId(candidateId);
+      const supabase = createClient();
+
+      // Get access token for consuming evaluation
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session?.access_token) {
+        throw new Error('Unable to authenticate. Please log in again.');
+      }
+
+      // Consume one evaluation
+      const consumeResponse = await fetch('/api/consume-evaluation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!consumeResponse.ok) {
+        const consumeError = await consumeResponse.json();
+        throw new Error(consumeError.error || 'Failed to consume evaluation');
+      }
+
+      // Proceed with evaluation
       const response = await fetch(`/api/evaluate/${jobId}/${candidateId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
