@@ -173,7 +173,7 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
 
     try {
       // Call the Python API to create assignment
-      const response = await fetch(`http://3.110.106.253:8000/assignment/create/${jobId}`, {
+      const response = await fetch(`http://65.2.178.85:8000/assignment/create/${jobId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });

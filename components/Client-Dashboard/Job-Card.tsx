@@ -244,7 +244,7 @@ export function JobCard({
       }
 
       const formId = job.form_id;
-      const url = `https://evaluation.novaretalent.com/evaluate/${jobId}/${formId}`;
+      const url = `/api/evaluate-proxy/evaluate/${jobId}/${formId}`;
       const res = await fetch(url, { method: "POST" });
       const body = await res.text();
 
