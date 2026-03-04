@@ -34,6 +34,7 @@ export function RankingBotCard({ className = "", sessionId, onQuerySubmitted }: 
   const [isProcessing, setIsProcessing] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messageIdCounterRef = useRef<number>(2);
 
   // auto-scroll to bottom whenever messages change
   useEffect(() => {
@@ -45,7 +46,7 @@ export function RankingBotCard({ className = "", sessionId, onQuerySubmitted }: 
     if (!trimmed) return;
     if (!sessionId) {
       const errorMsg: Message = {
-        id: Date.now().toString(),
+        id: (messageIdCounterRef.current++).toString(),
         text: "⚠️ No active session. Please start by uploading your candidates and job description.",
         from: "bot",
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -55,7 +56,7 @@ export function RankingBotCard({ className = "", sessionId, onQuerySubmitted }: 
     }
 
     const userMsg: Message = {
-      id: Date.now().toString(),
+      id: (messageIdCounterRef.current++).toString(),
       text: trimmed,
       from: "user",
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -65,7 +66,7 @@ export function RankingBotCard({ className = "", sessionId, onQuerySubmitted }: 
     setInput("");
 
     // Show processing message
-    const processingMsgId = Date.now().toString();
+    const processingMsgId = (messageIdCounterRef.current++).toString();
     const processingMsg: Message = {
       id: processingMsgId,
       text: "Processing...",

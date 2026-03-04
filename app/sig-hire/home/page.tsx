@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { FeatureCard } from "@/components/ui/feature-card"
 import { LoadingOverlay } from "@/components/Sig-Hire/loading-overlay";
 import { useSession } from "@/context/SessionContext";
+import { useMultiSession } from "@/context/MultiSessionContext";
 import { initializeSession } from "@/lib/ranking-api";
 import { createClient } from "@/utils/supabase/client";
 import {
@@ -32,10 +33,22 @@ const stagger = {
 
 /* ---------------- Page ---------------- */
 
-export default function LandingPage() {
+function HomePageContent() {
   const router = useRouter();
   const { setSessionId, setClientId, isLoading, setIsLoading, error, setError } = useSession();
+  const { addSession, loadSessions, sessions } = useMultiSession();
   const [loadingMessage, setLoadingMessage] = useState("Initializing session...");
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await loadSessions(user.id);
+      }
+    };
+    loadUser();
+  }, [loadSessions]);
 
   const handleStartHiring = async () => {
     try {
@@ -64,6 +77,15 @@ export default function LandingPage() {
         throw new Error("Failed to create session");
       }
 
+      // Save session to database
+      await addSession({
+        session_id: sessionResponse.session_id,
+        client_id: user.id,
+        status: "initialized",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+
       setSessionId(sessionResponse.session_id);
       setIsLoading(false);
 
@@ -75,6 +97,10 @@ export default function LandingPage() {
       );
       setIsLoading(false);
     }
+  };
+
+  const handleViewSessions = () => {
+    router.push("/sig-hire/sessions");
   };
 
   return (
@@ -115,7 +141,15 @@ export default function LandingPage() {
             >
               Start Hiring
             </Button>
-           
+            {sessions && sessions.length > 0 && (
+              <Button 
+                size="lg" 
+                variant="outline"
+                onClick={handleViewSessions}
+              >
+                View Sessions ({sessions.length})
+              </Button>
+            )}
           </div>
         </div>
 
@@ -219,5 +253,13 @@ function Step({ number, title }: { number: string; title: string }) {
       </div>
       <p className="font-medium">{title}</p>
     </motion.div>
+  );
+}
+
+export default function LandingPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <HomePageContent />
+    </Suspense>
   );
 }

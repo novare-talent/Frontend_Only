@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/client";
 import { LoadingOverlay } from "./loading-overlay";
 import { uploadSessionData, waitForSessionReady, initializeSession } from "@/lib/ranking-api";
 import { useSession } from "@/context/SessionContext";
+import { useMultiSession } from "@/context/MultiSessionContext";
 import { createSigHireJob } from "@/app/actions/jobs";
 import {
   Card,
@@ -17,6 +18,7 @@ export function SectionCards() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { sessionId: contextSessionId, setSessionId } = useSession();
+  const { sessions } = useMultiSession();
   
   const urlSessionId = searchParams.get('session_id');
   // Use URL sessionId if provided, otherwise fallback to context (localStorage)
@@ -106,7 +108,7 @@ export function SectionCards() {
       
       const jobResult = await createSigHireJob({
         job_name: jobDescription || 'Uploaded Job',
-        job_description: jobDescription || 'Job uploaded via Sigyre',
+        job_description: jobDescription || 'Job uploaded via Sighyre',
         jd_file: jobFile || undefined,
         form_id: activeSessionId,
       });
@@ -115,6 +117,8 @@ export function SectionCards() {
         console.warn('Job creation warning:', jobResult.error);
         // Continue even if job creation fails - the session data is more critical
       }
+
+      // Session is now ready - backend has updated it
 
       setIsLoading(false);
 

@@ -22,8 +22,21 @@ interface SectionCardsProps {
   candidateIds?: string[];
 }
 
+interface PreviousAssignment {
+  job_id: string;
+  candidate_id: string;
+  assignment_json: any;
+  assignment_pdf_url: string;
+  submission_file_url?: string;
+  evaluation_report?: string;
+  created_at?: string;
+  candidate_name?: string;
+  candidate_email?: string;
+}
+
 export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
   const router = useRouter();
+  const supabase = createClient();
   const [assignmentFile, setAssignmentFile] = useState<File | null>(null);
   const [assignmentPrompt, setAssignmentPrompt] = useState("");
   const [candidates, setCandidates] = useState<any[]>([]);
@@ -37,14 +50,15 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
   const [assignmentData, setAssignmentData] = useState<any>(null);
   const [showSentOverlay, setShowSentOverlay] = useState(false);
   const [submissionLinks, setSubmissionLinks] = useState<Array<{candidateId: string; name: string; email: string; link: string}>>([]);
+  const [previousAssignments, setPreviousAssignments] = useState<PreviousAssignment[]>([]);
+  const [isLoadingPrevious, setIsLoadingPrevious] = useState(false);
 
-  // Fetch job and candidate details
+  // Fetch job_id from sessionId (always, regardless of candidateIds)
   useEffect(() => {
-    const fetchDetails = async () => {
-      if (!sessionId || !candidateIds || candidateIds.length === 0) return;
+    const fetchJobId = async () => {
+      if (!sessionId) return;
 
       try {
-        const supabase = createClient();
 
         // Get job_id from the jobs table using form_id = sessionId
         const { data: jobData, error: jobError } = await supabase
@@ -64,6 +78,21 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
         }
 
         setJobId(jobData.job_id);
+      } catch (err) {
+        console.error('Error fetching job ID:', err);
+      }
+    };
+
+    fetchJobId();
+  }, [sessionId]);
+
+  // Fetch candidate details only when candidateIds are provided
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      if (!sessionId || !candidateIds || candidateIds.length === 0) return;
+
+      try {
+        const supabase = createClient();
 
         // Fetch candidates from rankings using the same method as rankings display
         const rankingsResponse = await fetchRankings(sessionId);
@@ -102,7 +131,7 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
           );
         }
       } catch (err) {
-        console.error('Error fetching details:', err);
+        console.error('Error fetching candidates:', err);
         // Fallback: create basic candidate data with IDs
         if (candidateIds) {
           setCandidates(
@@ -118,7 +147,7 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
       }
     };
 
-    fetchDetails();
+    fetchCandidates();
   }, [sessionId, candidateIds]);
 
   // Fetch assignment template from Supabase if it exists
@@ -155,6 +184,41 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
     };
 
     fetchAssignment();
+  }, [jobId]);
+
+  // Fetch previous assignments for any session viewing the assignments page
+  useEffect(() => {
+    const fetchPreviousAssignments = async () => {
+      if (!jobId) return;
+
+      setIsLoadingPrevious(true);
+      try {
+        const supabase = createClient();
+
+        // Fetch all assignments for this job except the template
+        const { data, error } = await supabase
+          .from('assignments')
+          .select('*')
+          .eq('job_id', jobId)
+          .neq('candidate_id', '00000000-0000-0000-0000-000000000000')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching previous assignments:', error);
+          setPreviousAssignments([]);
+          return;
+        }
+
+        setPreviousAssignments(data || []);
+      } catch (err) {
+        console.error('Error loading previous assignments:', err);
+        setPreviousAssignments([]);
+      } finally {
+        setIsLoadingPrevious(false);
+      }
+    };
+
+    fetchPreviousAssignments();
   }, [jobId]);
 
   const handleCreateAssignment = async () => {
@@ -324,7 +388,7 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
           </CardHeader>
         </Card>
       )}
-      
+
       {/* Card 1: Assignment Creation */}
 <Card className="@container/card relative overflow-hidden rounded-3xl
   bg-gradient-to-br from-purple-50 via-white to-indigo-50
@@ -334,6 +398,7 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
   dark:bg-gradient-to-br dark:from-neutral-900/90 dark:via-neutral-900/70 dark:to-neutral-950
   dark:border-white/10
   dark:shadow-[0_0_80px_-20px_rgba(124,58,237,0.45)]
+  col-span-1
 ">
   <CardHeader>
     <CardTitle className="text-2xl text-primary font-semibold tabular-nums @[250px]/card:text-2xl">
@@ -424,9 +489,8 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
  </div>
 </Card>
 
-      {/* Card 3: Selected Candidates */}
       {candidates.length > 0 && (
-        <Card className="@container/card relative overflow-hidden rounded-3xl
+        <Card className="@container/card relative overflow-hidden rounded-3xl col-span-1
   bg-gradient-to-br from-purple-50 via-white to-indigo-50
   border border-purple-100
   shadow-[0_20px_40px_-20px_rgba(124,58,237,0.50)]
@@ -464,8 +528,8 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
       </Card>
       )}
 
-      {/* Card 2: Assignment Preview - Full Width at Bottom */}
-      <Card className="@container/card relative overflow-hidden rounded-3xl col-span-full
+      {/* Assignment Preview - Full Width */}
+<Card className="@container/card relative overflow-hidden rounded-3xl col-span-full
   bg-gradient-to-br from-purple-50 via-white to-indigo-50
   border border-purple-100
   shadow-[0_20px_40px_-20px_rgba(124,58,237,0.50)]
@@ -474,148 +538,233 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
   dark:border-white/10
   dark:shadow-[0_0_80px_-20px_rgba(124,58,237,0.45)]
 ">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl text-primary font-semibold">
-                Assignment Preview
-              </CardTitle>
-              <CardDescription className="text-sm mt-2">{assignmentData ? 'Generated & Ready' : 'Pending Generation'}</CardDescription>
-            </div>
-            {assignmentData?.assignment_pdf_url && (
-              <a
-                href={assignmentData.assignment_pdf_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-              >
-                Download PDF
-              </a>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-6">
-          {assignmentData ? (
-            <>
-              {/* Assignment Metadata */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase">Title</label>
-                  <p className="text-sm font-semibold text-foreground truncate">{assignmentData.title}</p>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-2xl text-primary font-semibold">
+                    Assignment Preview
+                  </CardTitle>
+                  <CardDescription className="text-sm mt-2">{assignmentData ? 'Generated & Ready' : 'Pending Generation'}</CardDescription>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase">Difficulty</label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-foreground">{assignmentData.difficulty}/10</span>
-                    <div className="flex gap-0.5">
-                      {[...Array(10)].map((_, i) => (
-                        <div
-                          key={i}
-                          className={`h-2 w-2 rounded-full ${i < assignmentData.difficulty ? 'bg-primary' : 'bg-muted'}`}
-                        />
-                      ))}
+                {assignmentData?.assignment_pdf_url && (
+                  <a
+                    href={assignmentData.assignment_pdf_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+                  >
+                    Download PDF
+                  </a>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-6">
+              {assignmentData ? (
+                <>
+                  {/* Assignment Metadata */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase">Title</label>
+                      <p className="text-sm font-semibold text-foreground truncate">{assignmentData.title}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase">Difficulty</label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-foreground">{assignmentData.difficulty}/10</span>
+                        <div className="flex gap-0.5">
+                          {[...Array(10)].map((_, i) => (
+                            <div
+                              key={i}
+                              className={`h-2 w-2 rounded-full ${i < assignmentData.difficulty ? 'bg-primary' : 'bg-muted'}`}
+                            />
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Required Skills */}
-              {assignmentData.required_skills && assignmentData.required_skills.length > 0 && (
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase">Required Skills</label>
-                  <div className="flex flex-wrap gap-2">
-                    {assignmentData.required_skills.map((skill: string) => (
-                      <span
-                        key={skill}
-                        className="px-3 py-1 bg-primary/15 text-primary text-xs font-medium rounded-full border border-primary/30"
-                      >
-                        {skill}
-                      </span>
-                    ))}
+                  {/* Required Skills */}
+                  {assignmentData.required_skills && assignmentData.required_skills.length > 0 && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase">Required Skills</label>
+                      <div className="flex flex-wrap gap-2">
+                        {assignmentData.required_skills.map((skill: string) => (
+                          <span
+                            key={skill}
+                            className="px-3 py-1 bg-primary/15 text-primary text-xs font-medium rounded-full border border-primary/30"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Problem Statement */}
+                  {assignmentData.problem_statement && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase">Problem Statement</label>
+                      <p className="text-sm text-foreground leading-relaxed line-clamp-4">
+                        {assignmentData.problem_statement}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Requirements */}
+                  {assignmentData.requirements && assignmentData.requirements.length > 0 && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase">Requirements</label>
+                      <ul className="list-disc list-inside space-y-1">
+                        {assignmentData.requirements.slice(0, 3).map((req: string, idx: number) => (
+                          <li key={idx} className="text-sm text-foreground">
+                            {req}
+                          </li>
+                        ))}
+                        {assignmentData.requirements.length > 3 && (
+                          <li className="text-sm text-muted-foreground italic">
+                            +{assignmentData.requirements.length - 3} more requirements
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Evaluation Criteria */}
+                  {assignmentData.evaluation_criteria && assignmentData.evaluation_criteria.length > 0 && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase">Evaluation Criteria</label>
+                      <ul className="list-disc list-inside space-y-1">
+                        {assignmentData.evaluation_criteria.map((criteria: string, idx: number) => (
+                          <li key={idx} className="text-sm text-foreground">
+                            {criteria}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Input/Output */}
+                  {assignmentData.input_output && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase">Input / Output</label>
+                      <div className="bg-muted/50 p-3 rounded-lg text-xs font-mono text-foreground overflow-auto max-h-20">
+                        {assignmentData.input_output}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* PDF Preview */}
+                  {assignmentData.assignment_pdf_url && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-semibold text-muted-foreground uppercase">PDF Preview</label>
+                      <div className="border border-muted rounded-lg overflow-hidden bg-white">
+                        <iframe
+                          src={assignmentData.assignment_pdf_url}
+                          className="w-full h-96 border-0"
+                          title="Assignment PDF"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-sm text-muted-foreground">No assignment created yet. Create or generate one below.</p>
+                </div>
+              )}
+            </CardContent>
+            {assignmentId && (
+              <CardFooter className="border-t bg-muted/30 text-xs text-muted-foreground">
+                <p>Assignment ID: <span className="font-mono font-semibold text-foreground">{assignmentId}</span></p>
+              </CardFooter>
+            )}
+          </Card>
+
+      {/* Previous Assignments Section */}
+      {previousAssignments.length > 0 && (
+        <Card className="@container/card relative overflow-hidden rounded-3xl col-span-full
+  bg-gradient-to-br from-blue-50 via-white to-cyan-50
+  border border-blue-100
+  shadow-[0_20px_40px_-20px_rgba(59,130,246,0.50)]
+  transition-all duration-500
+  dark:bg-gradient-to-br dark:from-neutral-900/90 dark:via-neutral-900/70 dark:to-neutral-950
+  dark:border-white/10
+  dark:shadow-[0_0_80px_-20px_rgba(59,130,246,0.45)]
+">
+              <CardHeader>
+                <CardTitle className="text-2xl text-blue-600 font-semibold">
+                  Previous Assignments ({previousAssignments.length})
+                </CardTitle>
+                <CardDescription>View and manage assignments sent to candidates</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoadingPrevious ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader className="w-5 h-5 animate-spin text-blue-600 mr-2" />
+                    <p className="text-muted-foreground">Loading assignments...</p>
                   </div>
-                </div>
-              )}
-
-              {/* Problem Statement */}
-              {assignmentData.problem_statement && (
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase">Problem Statement</label>
-                  <p className="text-sm text-foreground leading-relaxed line-clamp-4">
-                    {assignmentData.problem_statement}
-                  </p>
-                </div>
-              )}
-
-              {/* Requirements */}
-              {assignmentData.requirements && assignmentData.requirements.length > 0 && (
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase">Requirements</label>
-                  <ul className="list-disc list-inside space-y-1">
-                    {assignmentData.requirements.slice(0, 3).map((req: string, idx: number) => (
-                      <li key={idx} className="text-sm text-foreground">
-                        {req}
-                      </li>
-                    ))}
-                    {assignmentData.requirements.length > 3 && (
-                      <li className="text-sm text-muted-foreground italic">
-                        +{assignmentData.requirements.length - 3} more requirements
-                      </li>
-                    )}
-                  </ul>
-                </div>
-              )}
-
-              {/* Evaluation Criteria */}
-              {assignmentData.evaluation_criteria && assignmentData.evaluation_criteria.length > 0 && (
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase">Evaluation Criteria</label>
-                  <ul className="list-disc list-inside space-y-1">
-                    {assignmentData.evaluation_criteria.map((criteria: string, idx: number) => (
-                      <li key={idx} className="text-sm text-foreground">
-                        {criteria}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Input/Output */}
-              {assignmentData.input_output && (
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase">Input / Output</label>
-                  <div className="bg-muted/50 p-3 rounded-lg text-xs font-mono text-foreground overflow-auto max-h-20">
-                    {assignmentData.input_output}
+                ) : (
+                  <div className="space-y-3">
+                    {previousAssignments.map((assignment, idx) => {
+                      const hasSubmission = !!assignment.submission_file_url;
+                      const hasEvaluation = !!assignment.evaluation_report;
+                      
+                      return (
+                        <div
+                          key={`${assignment.candidate_id}-${idx}`}
+                          className="p-4 border border-blue-100 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-sm text-foreground">Assignment #{idx + 1}</h4>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Candidate ID: <span className="font-mono text-xs">{assignment.candidate_id.substring(0, 12)}...</span>
+                              </p>
+                              {assignment.created_at && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Sent: {new Date(assignment.created_at).toLocaleDateString()}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                              <div className="flex gap-2">
+                                {hasSubmission && (
+                                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
+                                    ✓ Submitted
+                                  </span>
+                                )}
+                                {hasEvaluation && (
+                                  <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full font-medium">
+                                    ✓ Evaluated
+                                  </span>
+                                )}
+                                {!hasSubmission && (
+                                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">
+                                    ⏳ Pending
+                                  </span>
+                                )}
+                              </div>
+                              {assignment.assignment_pdf_url && (
+                                <a
+                                  href={assignment.assignment_pdf_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded transition-colors"
+                                >
+                                  View PDF
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                </div>
-              )}
-
-              {/* PDF Preview */}
-              {assignmentData.assignment_pdf_url && (
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase">PDF Preview</label>
-                  <div className="border border-muted rounded-lg overflow-hidden bg-white">
-                    <iframe
-                      src={assignmentData.assignment_pdf_url}
-                      className="w-full h-96 border-0"
-                      title="Assignment PDF"
-                    />
-                  </div>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-sm text-muted-foreground">Click &quot;Generate Assignment&quot; to create an assignment from your job description</p>
-            </div>
+                )}
+              </CardContent>
+            </Card>
           )}
-        </CardContent>
-        {assignmentId && (
-          <CardFooter className="border-t bg-muted/30 text-xs text-muted-foreground">
-            <p>Assignment ID: <span className="font-mono font-semibold text-foreground">{assignmentId}</span></p>
-          </CardFooter>
-        )}
-      </Card>
-
+      
       {/* Assignment Sent Overlay */}
       {showSentOverlay && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

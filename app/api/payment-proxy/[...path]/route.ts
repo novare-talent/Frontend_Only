@@ -54,7 +54,7 @@ export async function POST(
 ) {
   const { path } = await params;
   const pathStr = path.join('/');
-  const backendUrl = `http://65.1.65.200:8001/${pathStr}`;
+  const backendUrl = `http://3.111.67.86:8001/${pathStr}`;
   return proxyRequest(request, 'POST', backendUrl);
 }
 
@@ -64,7 +64,7 @@ export async function GET(
 ) {
   const { path } = await params;
   const pathStr = path.join('/');
-  const backendUrl = `http://65.1.65.200:8001/${pathStr}`;
+  const backendUrl = `http://3.111.67.86:8001/${pathStr}`;
   return proxyRequest(request, 'GET', backendUrl);
 }
 
@@ -74,7 +74,7 @@ export async function DELETE(
 ) {
   const { path } = await params;
   const pathStr = path.join('/');
-  const backendUrl = `http://65.1.65.200:8001/${pathStr}`;
+  const backendUrl = `http://3.111.67.86:8001/${pathStr}`;
   return proxyRequest(request, 'DELETE', backendUrl);
 }
 
@@ -84,7 +84,7 @@ export async function PUT(
 ) {
   const { path } = await params;
   const pathStr = path.join('/');
-  const backendUrl = `http://65.1.65.200:8001/${pathStr}`;
+  const backendUrl = `http://3.111.67.86:8001/${pathStr}`;
   return proxyRequest(request, 'PUT', backendUrl);
 }
 
@@ -94,6 +94,6 @@ export async function PATCH(
 ) {
   const { path } = await params;
   const pathStr = path.join('/');
-  const backendUrl = `http://65.1.65.200:8001/${pathStr}`;
+  const backendUrl = `http://3.111.67.86:8001/${pathStr}`;
   return proxyRequest(request, 'PATCH', backendUrl);
 }

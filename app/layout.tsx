@@ -45,7 +45,7 @@
 // }
 
 import type { Metadata } from "next";
-import { Poppins, Lora, Lato } from "next/font/google";
+import { Lora, Lato } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SessionProvider } from "@/context/SessionContext";
 import "./globals.css";

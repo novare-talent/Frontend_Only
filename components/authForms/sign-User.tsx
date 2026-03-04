@@ -13,10 +13,9 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useState, useRef } from "react";
-import { Mail, Camera, Phone, EyeOff, Eye } from "lucide-react";
+import { useState } from "react";
+import { Mail, Phone, EyeOff, Eye } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 
@@ -51,7 +50,6 @@ export function SignUpForm({
   });
 
   const [profileImage, setProfileImage] = useState<File | null>(null);
-  const profileImageInputRef = useRef<HTMLInputElement>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const supabase = createClient();
@@ -204,7 +202,7 @@ export function SignUpForm({
 
             profileImageUrl = publicUrlData.publicUrl;
           }
-        } catch (uploadErr) {
+        } catch {
           // Silent failure for non-critical image upload errors
         }
       }
@@ -412,14 +410,6 @@ export function SignUpForm({
   const handleClientChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setClientFormData({ ...clientFormData, [id]: value });
-  };
-
-  const handleProfileImageChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    if (event.target.files && event.target.files[0]) {
-      setProfileImage(event.target.files[0]);
-    }
   };
 
   return (

@@ -3,13 +3,15 @@
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AssignmentEvaluationScreen } from "@/components/Sig-Hire/evaluations-table";
+import { useMultiSession } from "@/context/MultiSessionContext";
 import { Loader, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 export function EvaluationsContent() {
   const searchParams = useSearchParams();
   const urlJobId = searchParams.get("job_id");
-  const urlAssignmentId = searchParams.get("assignment_id");
+  const urlSessionId = searchParams.get("session_id");
+  const { sessions, currentSessionId, setCurrentSessionId } = useMultiSession();
   const [isLoading, setIsLoading] = useState(true);
   const [jobId, setJobId] = useState<string | null>(null);
 
@@ -17,20 +19,32 @@ export function EvaluationsContent() {
     // 1. Check URL params first (job_id or assignment_id)
     if (urlJobId) {
       setJobId(urlJobId);
+      // If we have a session_id in URL, set it as active
+      if (urlSessionId) {
+        setCurrentSessionId(urlSessionId);
+      }
       localStorage.setItem("lastEvaluationJobId", urlJobId);
       setIsLoading(false);
       return;
     }
 
-    if (urlAssignmentId) {
-      // If assignment_id is provided, treat it as job_id
-      setJobId(urlAssignmentId);
-      localStorage.setItem("lastEvaluationJobId", urlAssignmentId);
-      setIsLoading(false);
-      return;
+    // 2. Check URL session_id or active session
+    const activeSessionId = urlSessionId || currentSessionId;
+    if (activeSessionId) {
+      // Set this as the active session
+      setCurrentSessionId(activeSessionId);
+      
+      // Find the session and get its job_id
+      const activeSession = sessions.find(s => s.session_id === activeSessionId);
+      if (activeSession?.job_id) {
+        setJobId(activeSession.job_id);
+        localStorage.setItem("lastEvaluationJobId", activeSession.job_id);
+        setIsLoading(false);
+        return;
+      }
     }
 
-    // 2. Check localStorage for previously stored job_id
+    // 3. Check localStorage for previously stored job_id
     const storedJobId = localStorage.getItem("lastEvaluationJobId");
     if (storedJobId) {
       setJobId(storedJobId);
@@ -38,9 +52,9 @@ export function EvaluationsContent() {
       return;
     }
 
-    // 3. No job_id available
+    // 4. No job_id available
     setIsLoading(false);
-  }, [urlJobId, urlAssignmentId]);
+  }, [urlJobId, urlSessionId, currentSessionId, sessions, setCurrentSessionId]);
 
   if (isLoading) {
     return (
@@ -60,8 +74,11 @@ export function EvaluationsContent() {
           <CardContent className="pt-6 flex gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
             <div>
-              <p className="font-semibold text-red-900">Parameters Missing</p>
-              <p className="text-sm text-red-800">No assignment ID found. Please go to the assignments page and select a job to evaluate candidates.</p>
+              <p className="font-semibold text-red-900">No Evaluations Available</p>
+              <p className="text-sm text-red-800">
+                No job ID found for {currentSessionId ? `session ${currentSessionId.substring(0, 8)}...` : 'active session'}. 
+                Please go to Sessions, select a session, and create assignments first.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -72,9 +89,16 @@ export function EvaluationsContent() {
   return (
     <div className="px-6 py-4">
       <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-900">
-          <strong>Assignment ID:</strong> <span className="font-mono text-xs">{jobId}</span>
-        </p>
+        <div className="space-y-2">
+          {currentSessionId && (
+            <p className="text-sm text-blue-900">
+              <strong>Session:</strong> <span className="font-mono text-xs">{currentSessionId}</span>
+            </p>
+          )}
+          <p className="text-sm text-blue-900">
+            <strong>Job ID:</strong> <span className="font-mono text-xs">{jobId}</span>
+          </p>
+        </div>
       </div>
 
       <AssignmentEvaluationScreen jobId={jobId} />

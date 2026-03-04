@@ -6,9 +6,9 @@ interface InitSessionResponse {
 }
 
 interface UploadResponse {
-  success: boolean;
-  message?: string;
-  session_id?: string;
+  session_id: string;
+  status: string;
+  message: string;
   [key: string]: any;
 }
 
@@ -307,25 +307,16 @@ export async function fetchRankings(sessionId: string): Promise<RankingsResponse
     const data = await response.json();
     let candidates: Candidate[] = [];
 
-    if (!Array.isArray(data.rankings) || data.rankings.length === 0) {
-      return { candidates: [], queries: data.queries || [], ...data };
-    }
-
-    let lastQueryResults = null;
-    for (let i = data.rankings.length - 1; i >= 0; i--) {
-      if (data.rankings[i]?.results && Array.isArray(data.rankings[i].results)) {
-        lastQueryResults = data.rankings[i];
-        break;
-      }
-    }
-    if (lastQueryResults) {
-      candidates = extractCandidatesFromResults(lastQueryResults.results);
-    } else if (data.rankings[0] && typeof data.rankings[0] === 'object' && 'cid' in data.rankings[0]) {
+    // Backend returns { "rankings": [...] } where rankings is an array of candidate objects
+    if (Array.isArray(data.rankings) && data.rankings.length > 0) {
+      // Each item in rankings is a candidate object, NOT a query result with .results array
       candidates = extractCandidatesFromResults(data.rankings);
     }
+    
     if (candidates.length > 0) {
       candidates.sort((a, b) => (Number(b.total_score) || 0) - (Number(a.total_score) || 0));
     }
+    
     return {
       candidates,
       queries: data.queries || [],
@@ -365,14 +356,16 @@ export async function removeQuery(sessionId: string, queryId: string): Promise<R
         const supabaseData = await fetchRankingsFromSupabase(sessionId);
         console.log('✅ Query removed. Fresh rankings fetched from Supabase');
         return supabaseData;
-      } catch (supabaseErr) {
+      } catch {
         console.warn('⚠️ Could not fetch from Supabase, using API response');
       }
     }
     
     // Fallback to API response
     const data = await response.json();
-    const candidates = extractCandidatesFromResults(data.results || []);
+    // Backend returns { "message": "...", "updated_rankings": [...] }
+    const rankings = data.updated_rankings || [];
+    const candidates = extractCandidatesFromResults(rankings);
     return {
       candidates,
       queries: data.queries || [],
@@ -409,26 +402,20 @@ export async function submitQuery(sessionId: string, queryText: string): Promise
       throw new Error(errorMessage);
     }
 
-    // After API succeeds, fetch fresh data from Supabase instead of using API response
+    // Query submitted successfully. Fetch complete rankings from Supabase or API
     if (typeof window !== 'undefined') {
       try {
         const { fetchRankingsFromSupabase } = await import('./supabase-rankings');
         const supabaseData = await fetchRankingsFromSupabase(sessionId);
         console.log('✅ Query submitted. Fresh rankings fetched from Supabase');
         return supabaseData;
-      } catch (supabaseErr) {
-        console.warn('⚠️ Could not fetch from Supabase, using API response');
+      } catch {
+        console.warn('⚠️ Could not fetch from Supabase, fetching from API');
       }
     }
     
-    // Fallback to API response
-    const data = await response.json();
-    const candidates = extractCandidatesFromResults(data.results || []);
-    return {
-      candidates,
-      queries: data.queries || [],
-      ...data
-    };
+    // Fallback: fetch rankings from API
+    return await fetchRankings(sessionId);
   } catch (error) {
     if (error instanceof Error) {
       throw error;

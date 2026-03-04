@@ -55,7 +55,9 @@
 
 // export default Layout;
 
+import { MultiSessionProvider } from "@/context/MultiSessionContext";
 import { Navbar } from "@/components/Sig-Hire/navbar";
+import { Suspense } from "react";
 
 export default function SigHireLayout({
   children,
@@ -63,9 +65,11 @@ export default function SigHireLayout({
   children: React.ReactNode;
 }) {
   return (
-    <>
-      <Navbar />
+    <MultiSessionProvider>
+      <Suspense fallback={<div className="h-14 bg-muted">Loading...</div>}>
+        <Navbar />
+      </Suspense>
       <main>{children}</main>
-    </>
+    </MultiSessionProvider>
   );
 }
