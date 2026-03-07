@@ -346,6 +346,7 @@ export function BillingPage() {
                 )}
               </Button>
               <Button
+                id="add-credits-btn"
                 className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-6"
                 onClick={() => setIsDialogOpen(true)}
               >
@@ -357,7 +358,7 @@ export function BillingPage() {
           {/* Credit Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Credits Card */}
-            <Card className="border-2 border-purple-500 from-purple-50/50 to-purple-100/30 dark:from-purple-950/30 dark:to-purple-900/20 shadow-lg hover:shadow-xl transition-shadow">
+            <Card id="jobs-remaining-card" className="border-2 border-purple-500 from-purple-50/50 to-purple-100/30 dark:from-purple-950/30 dark:to-purple-900/20 shadow-lg hover:shadow-xl transition-shadow">
               <CardContent className="px-6 py-2">
                 <div className="flex items-start justify-between mb-4">
                   <div>

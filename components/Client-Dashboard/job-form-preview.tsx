@@ -7,7 +7,8 @@ import type { Question } from "./question-builder"
 
 export function JobFormPreview({ questions }: { questions: Question[] }) {
   return (
-    <Card className="rounded-2xl border bg-card/60 backdrop-blur-md">
+    <Card id="tour-form-preview" className="rounded-2xl border bg-card/60 backdrop-blur-md">
+      {/* ADDED ID: #tour-form-preview is now correctly placed inside the Card component */}
       <CardHeader className="pb-2">
         <CardTitle className="text-lg text-primary">Form Preview</CardTitle>
       </CardHeader>
