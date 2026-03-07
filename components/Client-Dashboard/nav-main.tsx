@@ -20,8 +20,9 @@ export function NavMain({
     title: string;
     url: string;
     icon?: Icon;
+    id?: string; // 1. ADDED: Tell TypeScript to expect an optional id
   }[];
-  pathname: string; // Add pathname prop
+  pathname: string; 
 }) {
   return (
     <SidebarGroup>
@@ -33,11 +34,12 @@ export function NavMain({
         </SidebarMenu>
         <SidebarMenu>
           {items.map((item) => {
-            const isActive = pathname === item.url; // Check if current route
+            const isActive = pathname === item.url; 
             return (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton tooltip={item.title} asChild isActive={isActive}>
-                  <Link href={item.url}>
+                  {/* 2. ADDED: Pass the id to the Link element */}
+                  <Link href={item.url} id={item.id}> 
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
                   </Link>
