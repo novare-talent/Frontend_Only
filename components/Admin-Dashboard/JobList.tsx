@@ -33,7 +33,7 @@ export default function JobList() {
     const { data, error } = await supabase
       .from("jobs")
       .select("job_id, Job_Name, Job_Description, JD_pdf, Shortlisted_Candidates, status")
-      .order("job_id", { ascending: false });
+      .order("created_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching jobs:", error.message);
@@ -88,7 +88,7 @@ export default function JobList() {
 
       // Redirect to evaluation results page
       if (result.evaluation_id) {
-        router.push(`/admin/${result.evaluation_id}`);
+        router.push(`/admin/evaluate/${jobId}`);
       }
     } catch (err: any) {
       toast.error("Error", { description: "Failed to evaluate candidates. Check console for details." });
@@ -97,20 +97,8 @@ export default function JobList() {
     }
   };
 
-  const handleViewSelected = async (jobId: string) => {
-    const { data, error } = await supabase
-      .from("evaluations")
-      .select("evaluation_id")
-      .eq("job_id", jobId)
-      .limit(1)
-      .single();
-
-    if (error || !data) {
-      toast.error("Error", { description: "No evaluation found for this job." });
-      return;
-    }
-
-    router.push(`/admin/${data.evaluation_id}`);
+  const handleViewEvaluations = (jobId: string) => {
+    router.push(`/admin/evaluate/${jobId}`);
   };
 
   const JobCard = ({ job, isDraft = false }: { job: Job; isDraft?: boolean }) => (
@@ -184,9 +172,9 @@ export default function JobList() {
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => handleViewSelected(job.job_id)}
+              onClick={() => handleViewEvaluations(job.job_id)}
             >
-              View Selected
+              View Evaluations
             </Button>
           </>
         )}

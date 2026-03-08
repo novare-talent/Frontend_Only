@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import {
-  IconDashboard
+  IconDashboard,
+  IconClipboardCheck
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/Admin-Dashboard/nav-main";
@@ -51,6 +52,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Dashboard",
       url: "/admin",
       icon: IconDashboard,
+    },
+    {
+      title: "Evaluations",
+      url: "/admin/evaluate",
+      icon: IconClipboardCheck,
     },
     // {
     //   title: "Users",
