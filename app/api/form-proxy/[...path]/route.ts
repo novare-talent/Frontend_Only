@@ -40,7 +40,7 @@ async function proxyRequest(
       },
     });
   } catch (error) {
-    console.error('Proxy error:', error);
+    console.error('Form Proxy error:', error);
     return new Response(
       JSON.stringify({ error: 'Backend request failed', details: error instanceof Error ? error.message : String(error) }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
@@ -54,7 +54,7 @@ export async function POST(
 ) {
   const { path } = await params;
   const pathStr = path.join('/');
-  const backendUrl = `https://payments.novaretalent.com/${pathStr}`;
+  const backendUrl = `https://form.novaretalent.com/${pathStr}`;
   return proxyRequest(request, 'POST', backendUrl);
 }
 
@@ -64,7 +64,7 @@ export async function GET(
 ) {
   const { path } = await params;
   const pathStr = path.join('/');
-  const backendUrl = `https://payments.novaretalent.com/${pathStr}`;
+  const backendUrl = `https://form.novaretalent.com/${pathStr}`;
   return proxyRequest(request, 'GET', backendUrl);
 }
 
@@ -74,7 +74,7 @@ export async function DELETE(
 ) {
   const { path } = await params;
   const pathStr = path.join('/');
-  const backendUrl = `https://payments.novaretalent.com/${pathStr}`;
+  const backendUrl = `https://form.novaretalent.com/${pathStr}`;
   return proxyRequest(request, 'DELETE', backendUrl);
 }
 
@@ -84,7 +84,7 @@ export async function PUT(
 ) {
   const { path } = await params;
   const pathStr = path.join('/');
-  const backendUrl = `https://payments.novaretalent.com/${pathStr}`;
+  const backendUrl = `https://form.novaretalent.com/${pathStr}`;
   return proxyRequest(request, 'PUT', backendUrl);
 }
 
@@ -94,6 +94,6 @@ export async function PATCH(
 ) {
   const { path } = await params;
   const pathStr = path.join('/');
-  const backendUrl = `https://payments.novaretalent.com/${pathStr}`;
+  const backendUrl = `https://form.novaretalent.com/${pathStr}`;
   return proxyRequest(request, 'PATCH', backendUrl);
 }

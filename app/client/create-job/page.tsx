@@ -226,7 +226,7 @@ export default function NewJobPage() {
         duration: meta.duration,
         closingTime: meta.closingTime,
         tags: meta.tags,
-        status: "active",
+        status: "draft",
         employer_id: userId,
         created_at: new Date().toISOString(),
         form_link: questions.length > 0 ? `/Jobs/${formId}` : null,
