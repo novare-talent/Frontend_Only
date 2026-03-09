@@ -69,7 +69,7 @@ export default function JobList() {
       setEvaluatingJob(jobId);
       console.log("Evaluating candidates for job:", jobId);
 
-      const response = await fetch(`http://127.0.0.1:8000/evaluate/${jobId}`, {
+      const response = await fetch(`http://127.0.0.0:8000/evaluate/${jobId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
