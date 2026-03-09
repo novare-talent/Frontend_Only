@@ -5,6 +5,7 @@ import { Loader, AlertCircle, CheckCircle, AlertTriangle, X } from 'lucide-react
 import { createClient } from '@/utils/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 
 interface EvaluationTableProps {
   jobId?: string;
@@ -53,6 +54,10 @@ export function AssignmentEvaluationScreen({ jobId }: EvaluationTableProps) {
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedReport, setSelectedReport] = useState<any>(null);
   const [reportModalTitle, setReportModalTitle] = useState('Report');
+  const [progress, setProgress] = useState(0);
+  const [evaluatingAllCandidates, setEvaluatingAllCandidates] = useState(false);
+  const [allEvaluated, setAllEvaluated] = useState(false);
+  const [evaluatedCount, setEvaluatedCount] = useState(0);
 
   const loadCandidatesAndSubmissions = useCallback(async () => {
     if (!jobId) return;
@@ -113,6 +118,17 @@ export function AssignmentEvaluationScreen({ jobId }: EvaluationTableProps) {
     }
   }, [candidates, selectedCandidate]);
 
+  useEffect(() => {
+    // Check if all candidates have been evaluated
+    if (candidates.length > 0 && submissions.size > 0) {
+      const evaluatedCandidates = candidates.filter(
+        candidate => submissions.get(candidate.candidate_id)?.evaluation_report
+      );
+      setEvaluatedCount(evaluatedCandidates.length);
+      setAllEvaluated(evaluatedCandidates.length === candidates.length);
+    }
+  }, [candidates, submissions]);
+
   const handleEvaluate = async (candidateId: string) => {
     if (!jobId) return;
 
@@ -160,6 +176,79 @@ export function AssignmentEvaluationScreen({ jobId }: EvaluationTableProps) {
     }
   };
 
+  const handleEvaluateAll = async () => {
+    if (!jobId) return;
+
+    try {
+      setEvaluatingAllCandidates(true);
+      setError(null);
+
+      const supabase = createClient();
+
+      // Get access token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session?.access_token) {
+        throw new Error('Unable to authenticate. Please log in again.');
+      }
+
+      // Start progress animation
+      let progressValue = 10;
+      setProgress(progressValue);
+
+      const progressInterval = setInterval(() => {
+        progressValue = Math.min(progressValue + Math.random() * 15, 95);
+        setProgress(progressValue);
+      }, 500);
+
+      // Consume one evaluation credit
+      const consumeResponse = await fetch('/api/consume-evaluation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!consumeResponse.ok) {
+        const consumeError = await consumeResponse.json();
+        throw new Error(consumeError.error || 'Failed to consume evaluation credit');
+      }
+
+      // Fetch the job's form_id
+      const { data: job, error: jobError } = await supabase
+        .from("jobs")
+        .select("form_id")
+        .eq("job_id", jobId)
+        .single();
+
+      if (jobError || !job?.form_id) {
+        throw new Error('Form ID not found for this job.');
+      }
+
+      // Call the evaluate-proxy endpoint (same as client)
+      const formId = job.form_id;
+      const url = `/api/evaluate-proxy/evaluate/${jobId}/${formId}`;
+      const res = await fetch(url, { method: "POST" });
+      const body = await res.text();
+
+      clearInterval(progressInterval);
+      setProgress(100);
+
+      if (!res.ok) {
+        throw new Error(body || 'Evaluation failed');
+      }
+
+      // Refresh submissions data
+      await loadCandidatesAndSubmissions();
+      setAllEvaluated(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Evaluation failed');
+      setProgress(0);
+    } finally {
+      setEvaluatingAllCandidates(false);
+    }
+  };
+
   const selectedSubmission = selectedCandidate ? submissions.get(selectedCandidate) : null;
   const selectedCandidateData = candidates.find(c => c.candidate_id === selectedCandidate);
 
@@ -198,16 +287,62 @@ export function AssignmentEvaluationScreen({ jobId }: EvaluationTableProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6">
-      {/* LEFT: Candidates List */}
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-2xl font-semibold text-primary mb-1">Submissions</h2>
-          <p className="text-muted-foreground text-sm">
-            {candidates.length} candidate{candidates.length !== 1 ? 's' : ''} total | 
-            {submissions.size > 0 ? ` ${submissions.size} submitted` : ' No submissions yet'}
-          </p>
+    <div className="space-y-6">
+      {/* Job Evaluation Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-semibold text-primary">Job Evaluations</h1>
+          {allEvaluated && (
+            <span className="bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-full">
+              ✓ ALL EVALUATED ({evaluatedCount}/{candidates.length})
+            </span>
+          )}
+          {!allEvaluated && evaluatedCount > 0 && (
+            <span className="bg-yellow-100 text-yellow-800 text-sm font-semibold px-3 py-1 rounded-full">
+              In Progress ({evaluatedCount}/{candidates.length})
+            </span>
+          )}
         </div>
+        <Button
+          onClick={handleEvaluateAll}
+          disabled={evaluatingAllCandidates}
+          className="gap-2"
+          variant={allEvaluated ? "outline" : "default"}
+        >
+          {evaluatingAllCandidates ? (
+            <>
+              <Loader className="w-4 h-4 animate-spin" />
+              Evaluating...
+            </>
+          ) : (
+            allEvaluated ? "Re-Evaluate All" : "Evaluate All Candidates"
+          )}
+        </Button>
+      </div>
+
+      {/* Progress bar during evaluation */}
+      {evaluatingAllCandidates && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs text-primary">
+            <span>Evaluating all candidates…</span>
+            <span>{Math.round(progress)}%</span>
+          </div>
+          <Progress value={progress} className="h-2" />
+        </div>
+      )}
+
+      {/* Grid Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6">
+        {/* LEFT: Candidates List */}
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-2xl font-semibold text-primary mb-1">Submissions</h2>
+            <p className="text-muted-foreground text-sm">
+              {candidates.length} candidate{candidates.length !== 1 ? 's' : ''} total | 
+              {submissions.size > 0 ? ` ${submissions.size} submitted` : ' No submissions yet'} | 
+              {evaluatedCount > 0 ? ` ${evaluatedCount} evaluated` : ' Not evaluated yet'}
+            </p>
+          </div>
 
         {error && (
           <Card className="border-red-200 bg-red-50">
@@ -225,6 +360,7 @@ export function AssignmentEvaluationScreen({ jobId }: EvaluationTableProps) {
           {candidates.map(candidate => {
             const submission = submissions.get(candidate.candidate_id);
             const hasSubmission = !!submission?.submission_file_url;
+            const hasEvaluation = !!submission?.evaluation_report;
             const isSelected = selectedCandidate === candidate.candidate_id;
 
             return (
@@ -235,7 +371,7 @@ export function AssignmentEvaluationScreen({ jobId }: EvaluationTableProps) {
                   isSelected
                     ? 'border-primary bg-primary/5'
                     : 'border-border hover:border-primary/50'
-                } ${hasSubmission ? 'bg-green-50/50' : 'bg-yellow-50/50'}`}
+                } ${hasEvaluation ? 'bg-green-50/50' : hasSubmission ? 'bg-blue-50/50' : 'bg-yellow-50/50'}`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -243,9 +379,14 @@ export function AssignmentEvaluationScreen({ jobId }: EvaluationTableProps) {
                     {candidate.email && candidate.email !== 'unknown@example.com' && (
                       <p className="text-xs text-muted-foreground">{candidate.email}</p>
                     )}
+                    {hasEvaluation && (
+                      <p className="text-xs text-green-600 font-medium mt-1">✓ Evaluated</p>
+                    )}
                   </div>
-                  {hasSubmission ? (
-                    <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  {hasEvaluation ? (
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                  ) : hasSubmission ? (
+                    <div className="w-5 h-5 rounded-full border-2 border-blue-600 flex-shrink-0" />
                   ) : (
                     <AlertTriangle className="w-4 h-4 text-yellow-600 flex-shrink-0" />
                   )}
@@ -402,8 +543,10 @@ export function AssignmentEvaluationScreen({ jobId }: EvaluationTableProps) {
                         <Loader className="w-4 h-4 mr-2 animate-spin" />
                         Evaluating...
                       </>
+                    ) : selectedSubmission?.evaluation_report ? (
+                      "Re-Evaluate"
                     ) : (
-                      'Evaluate Submission'
+                      "Evaluate Submission"
                     )}
                   </Button>
                 )
@@ -417,6 +560,7 @@ export function AssignmentEvaluationScreen({ jobId }: EvaluationTableProps) {
             </CardContent>
           </Card>
         )}
+      </div>
       </div>
 
       {/* Report Modal */}

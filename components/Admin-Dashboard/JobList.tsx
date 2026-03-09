@@ -4,8 +4,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Loader2, Check } from "lucide-react";
+import { Loader2, Check, Eye } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Progress } from "@/components/ui/progress";
+import { CheckCircle2, XCircle, Info } from "lucide-react";
 
 const supabase = createClient();
 
@@ -23,7 +30,37 @@ export default function JobList() {
   const [activeJobs, setActiveJobs] = useState<Job[]>([]);
   const [evaluatingJob, setEvaluatingJob] = useState<string | null>(null);
   const [activatingJob, setActivatingJob] = useState<string | null>(null);
+  const [hasEvaluation, setHasEvaluation] = useState<Record<string, boolean>>({});
+  const [progress, setProgress] = useState<Record<string, number>>({});
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [notification, setNotification] = useState<{
+    type: "success" | "error" | "info";
+    title: string;
+    message: string;
+  } | null>(null);
   const router = useRouter();
+
+  const showNotification = (
+    type: "success" | "error" | "info",
+    title: string,
+    message: string
+  ) => {
+    setNotification({ type, title, message });
+    setNotificationOpen(true);
+    setTimeout(() => setNotificationOpen(false), 5000);
+  };
+
+  const getNotificationIcon = () => {
+    if (!notification) return null;
+    switch (notification.type) {
+      case "success":
+        return <CheckCircle2 className="h-5 w-5 text-green-600" />;
+      case "error":
+        return <XCircle className="h-5 w-5 text-red-600" />;
+      case "info":
+        return <Info className="h-5 w-5 text-blue-600" />;
+    }
+  };
 
   useEffect(() => {
     fetchJobs();
@@ -41,7 +78,26 @@ export default function JobList() {
       const jobs = data || [];
       setDraftJobs(jobs.filter(j => j.status === "draft"));
       setActiveJobs(jobs.filter(j => j.status === "active" || j.status === "sighyre" || j.status === "mailed"));
+      
+      // Check evaluation status for active jobs
+      jobs.forEach(job => {
+        checkEvaluationStatus(job.job_id);
+      });
     }
+  };
+
+  const checkEvaluationStatus = async (jobId: string) => {
+    const { data } = await supabase
+      .from("evaluations")
+      .select("job_id")
+      .eq("job_id", jobId)
+      .limit(1)
+      .maybeSingle();
+
+    setHasEvaluation(prev => ({
+      ...prev,
+      [jobId]: !!data
+    }));
   };
 
   const handleActivateJob = async (jobId: string) => {
@@ -54,10 +110,10 @@ export default function JobList() {
 
       if (error) throw error;
 
-      toast.success("Success", { description: "Job activated successfully!" });
+      showNotification("success", "Job Activated", "Job activated successfully!");
       await fetchJobs();
     } catch (err: any) {
-      toast.error("Error", { description: "Failed to activate job." });
+      showNotification("error", "Activation Failed", "Failed to activate job.");
       console.error("Activation error:", err);
     } finally {
       setActivatingJob(null);
@@ -67,31 +123,92 @@ export default function JobList() {
   const handleEvaluate = async (jobId: string) => {
     try {
       setEvaluatingJob(jobId);
-      console.log("Evaluating candidates for job:", jobId);
+      showNotification("info", "Starting evaluation", "Fetching form details…");
 
-      const response = await fetch(`http://127.0.0.0:8000/evaluate/${jobId}`, {
-        method: "POST",
+      // Get access token for consuming evaluation
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session?.access_token) {
+        showNotification(
+          "error",
+          "Authentication Error",
+          "Unable to authenticate. Please log in again."
+        );
+        return;
+      }
+
+      // Consume one evaluation credit
+      const consumeResponse = await fetch('/api/consume-evaluation', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
       });
 
-      if (!response.ok) {
-        throw new Error(`API error: ${response.statusText}`);
+      if (!consumeResponse.ok) {
+        const consumeError = await consumeResponse.json();
+        showNotification(
+          "error",
+          "Insufficient Evaluations",
+          consumeError.error || "Failed to consume evaluation credit"
+        );
+        return;
       }
 
-      const result = await response.json();
-      console.log("API Response:", result);
+      // Fetch the job's form_id
+      const { data: job, error: jobError } = await supabase
+        .from("jobs")
+        .select("form_id")
+        .eq("job_id", jobId)
+        .single();
+
+      if (jobError || !job?.form_id) {
+        showNotification(
+          "error",
+          "Evaluation failed",
+          "Form ID not found for this job."
+        );
+        return;
+      }
+
+      // Start progress animation
+      let progressValue = 10;
+      setProgress(prev => ({ ...prev, [jobId]: progressValue }));
+
+      const progressInterval = setInterval(() => {
+        progressValue = Math.min(progressValue + Math.random() * 15, 95);
+        setProgress(prev => ({ ...prev, [jobId]: progressValue }));
+      }, 500);
+
+      // Call the evaluate-proxy endpoint (same as client)
+      const formId = job.form_id;
+      const url = `/api/evaluate-proxy/evaluate/${jobId}/${formId}`;
+      const res = await fetch(url, { method: "POST" });
+      const body = await res.text();
+
+      clearInterval(progressInterval);
+      setProgress(prev => ({ ...prev, [jobId]: 100 }));
+
+      if (!res.ok) {
+        throw new Error(body || "Evaluation failed");
+      }
+
+      showNotification("success", "Evaluation Completed", "Redirecting to results…");
+
+      // Check evaluation status
+      await checkEvaluationStatus(jobId);
 
       // Refresh job list
       await fetchJobs();
 
       // Redirect to evaluation results page
-      if (result.evaluation_id) {
+      setTimeout(() => {
         router.push(`/admin/evaluate/${jobId}`);
-      }
+      }, 1000);
     } catch (err: any) {
-      toast.error("Error", { description: "Failed to evaluate candidates. Check console for details." });
+      setProgress(prev => ({ ...prev, [jobId]: 0 }));
+      showNotification("error", "Evaluation Failed", err.message || "Failed to evaluate candidates.");
+      console.error("Evaluation error:", err);
     } finally {
       setEvaluatingJob(null);
     }
@@ -101,126 +218,192 @@ export default function JobList() {
     router.push(`/admin/evaluate/${jobId}`);
   };
 
-  const JobCard = ({ job, isDraft = false }: { job: Job; isDraft?: boolean }) => (
-    <div
-      className="border rounded-lg p-4 shadow-sm flex justify-between items-start hover:shadow-md transition-shadow"
-    >
-      <div className="flex-1">
-        <div className="flex items-center gap-3 mb-2">
-          <h2 className="text-lg font-medium">{job.Job_Name}</h2>
-          {isDraft && (
-            <span className="bg-yellow-100 text-yellow-800 text-xs font-semibold px-3 py-1 rounded-full">
-              DRAFT
-            </span>
+  const JobCard = ({ job, isDraft = false }: { job: Job; isDraft?: boolean }) => {
+    const isEvaluating = evaluatingJob === job.job_id;
+    const currentProgress = progress[job.job_id] || 0;
+    const jobHasEvaluation = hasEvaluation[job.job_id];
+
+    return (
+      <div className="border rounded-lg p-4 shadow-sm flex justify-between items-start hover:shadow-md transition-shadow">
+        <div className="flex-1">
+          <div className="flex items-center gap-3 mb-2">
+            <h2 className="text-lg font-medium">{job.Job_Name}</h2>
+            {isDraft && (
+              <span className="bg-yellow-100 text-yellow-800 text-xs font-semibold px-3 py-1 rounded-full">
+                DRAFT
+              </span>
+            )}
+            {!isDraft && jobHasEvaluation && (
+              <span className="bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">
+                ✓ EVALUATED
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-gray-600 mb-2">{job.Job_Description}</p>
+          {job.JD_pdf && (
+            <a
+              href={job.JD_pdf}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline text-sm hover:no-underline"
+            >
+              View Job PDF
+            </a>
           )}
         </div>
-        <p className="text-sm text-gray-600 mb-2">{job.Job_Description}</p>
-        {job.JD_pdf && (
-          <a
-            href={job.JD_pdf}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary underline text-sm hover:no-underline"
-          >
-            View Job PDF
-          </a>
+
+        {/* Right side buttons */}
+        <div className="flex flex-col gap-2 ml-4">
+          {isDraft ? (
+            <>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => handleActivateJob(job.job_id)}
+                disabled={activatingJob === job.job_id}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {activatingJob === job.job_id ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Activating...
+                  </>
+                ) : (
+                  <>
+                    <Check className="mr-2 h-4 w-4" />
+                    Activate
+                  </>
+                )}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => handleEvaluate(job.job_id)}
+                disabled={isEvaluating}
+              >
+                {isEvaluating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Evaluating...
+                  </>
+                ) : (
+                  jobHasEvaluation ? "Re-Evaluate" : "Evaluate Candidates"
+                )}
+              </Button>
+
+              {jobHasEvaluation && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleViewEvaluations(job.job_id)}
+                  className="gap-2"
+                >
+                  <Eye className="size-4" />
+                  View Results
+                </Button>
+              )}
+
+              {!jobHasEvaluation && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleViewEvaluations(job.job_id)}
+                  disabled
+                  className="text-xs"
+                >
+                  No Results Yet
+                </Button>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Progress bar when evaluating */}
+        {isEvaluating && (
+          <div className="absolute left-0 right-0 bottom-0 p-4">
+            <div className="flex items-center justify-between text-xs text-primary mb-2">
+              <span>Evaluating job…</span>
+              <span>{Math.round(currentProgress)}%</span>
+            </div>
+            <Progress value={currentProgress} className="h-2" />
+          </div>
         )}
       </div>
-
-      {/* Right side buttons */}
-      <div className="flex flex-col gap-2 ml-4">
-        {isDraft ? (
-          <>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => handleActivateJob(job.job_id)}
-              disabled={activatingJob === job.job_id}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              {activatingJob === job.job_id ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Activating...
-                </>
-              ) : (
-                <>
-                  <Check className="mr-2 h-4 w-4" />
-                  Activate
-                </>
-              )}
-            </Button>
-          </>
-        ) : (
-          <>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => handleEvaluate(job.job_id)}
-              disabled={evaluatingJob === job.job_id}
-            >
-              {evaluatingJob === job.job_id ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Evaluating...
-                </>
-              ) : (
-                "Evaluate Candidates"
-              )}
-            </Button>
-
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => handleViewEvaluations(job.job_id)}
-            >
-              View Evaluations
-            </Button>
-          </>
-        )}
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
-    <div className="p-6 space-y-8">
-      {/* Draft Section */}
-      {draftJobs.length > 0 && (
-        <div>
-          <h2 className="text-xl font-semibold text-amber-600 mb-4">
-            📋 Draft Jobs ({draftJobs.length})
-          </h2>
-          <div className="space-y-4 bg-amber-50 dark:bg-amber-900/10 rounded-lg p-4">
-            {draftJobs.map((job) => (
-              <JobCard key={job.job_id} job={job} isDraft={true} />
-            ))}
-          </div>
-        </div>
-      )}
+    <>
+      <div className="fixed top-4 right-4 z-50">
+        <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
+          <PopoverTrigger asChild>
+            <div />
+          </PopoverTrigger>
+          <PopoverContent className="w-full max-w-md">
+            <div className="flex gap-3">
+              {getNotificationIcon()}
+              <div className="flex-1">
+                <h4 className="font-semibold text-sm mb-1">
+                  {notification?.title}
+                </h4>
+                <p className="text-sm text-muted-foreground">
+                  {notification?.message}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setNotificationOpen(false)}
+              >
+                ×
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
 
-      {/* Active Section */}
-      {activeJobs.length > 0 ? (
-        <div>
-          <h2 className="text-xl font-semibold text-primary mb-4">
-            ✨ Active Jobs ({activeJobs.length})
-          </h2>
-          <div className="space-y-4">
-            {activeJobs.map((job) => (
-              <JobCard key={job.job_id} job={job} isDraft={false} />
-            ))}
+      <div className="p-6 space-y-8">
+        {/* Draft Section */}
+        {draftJobs.length > 0 && (
+          <div>
+            <h2 className="text-xl font-semibold text-amber-600 mb-4">
+              📋 Draft Jobs ({draftJobs.length})
+            </h2>
+            <div className="space-y-4 bg-amber-50 dark:bg-amber-900/10 rounded-lg p-4">
+              {draftJobs.map((job) => (
+                <JobCard key={job.job_id} job={job} isDraft={true} />
+              ))}
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="text-center py-8">
-          <p className="text-gray-500">No active jobs yet. Create and activate a draft job to get started.</p>
-        </div>
-      )}
+        )}
 
-      {draftJobs.length === 0 && activeJobs.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">No jobs found.</p>
-        </div>
-      )}
-    </div>
+        {/* Active Section */}
+        {activeJobs.length > 0 ? (
+          <div>
+            <h2 className="text-xl font-semibold text-primary mb-4">
+              ✨ Active Jobs ({activeJobs.length})
+            </h2>
+            <div className="space-y-4">
+              {activeJobs.map((job) => (
+                <JobCard key={job.job_id} job={job} isDraft={false} />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No active jobs yet. Create and activate a draft job to get started.</p>
+          </div>
+        )}
+
+        {draftJobs.length === 0 && activeJobs.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">No jobs found.</p>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
