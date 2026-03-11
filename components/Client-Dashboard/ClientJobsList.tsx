@@ -38,7 +38,6 @@ export default function ClientJobs() {
         smoothScroll: true,
         overlayColor: 'rgba(0, 0, 0, 0.5)',
         stagePadding: 0,
-        excludeFromSelectors: ['.swiper-button-prev', '.swiper-button-next'],
         steps: [
           { 
             element: '#create-job-btn', 
