@@ -120,9 +120,9 @@ export default function CreateJobButtonServerChecked({
     <Button
     onClick={handleCreateJob}
     disabled={loading}
-    className={`w-full flex ${className || ""}`}
+    className={`${!className ? 'w-full' : 'w-auto'} flex ${className || ""}`}
   >
-    <div className="flex flex-row mr-36 pr-3 items-center gap-2">
+    <div className={`flex flex-row items-center gap-2 ${!className ? 'mr-36 pr-3' : ''}`}>
     <IconPlus className="w-5 h-5" />
     <span>{loading ? "Checking..." : text}</span>
     </div>

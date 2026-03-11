@@ -244,8 +244,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <div className="h-8">
-              <Link href="/">
+            <div className="h-8 w-full flex items-center">
+              <Link href="/" className="w-full">
                 <Image
                   src="/LogoDark.png"
                   alt="Logo"

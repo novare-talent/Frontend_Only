@@ -38,7 +38,7 @@ export default function NotFound() {
             alt="404 Robot"
             width={520}
             height={420}
-            priority
+            unoptimized
             className="select-none"
           />
         </div>

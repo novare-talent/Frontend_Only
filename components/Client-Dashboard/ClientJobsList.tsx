@@ -34,6 +34,11 @@ export default function ClientJobs() {
     if (!loading && jobs.length === 0) {
       const driverObj = driver({
         showProgress: true,
+        allowClose: true,
+        smoothScroll: true,
+        overlayColor: 'rgba(0, 0, 0, 0.5)',
+        stagePadding: 0,
+        excludeFromSelectors: ['.swiper-button-prev', '.swiper-button-next'],
         steps: [
           { 
             element: '#create-job-btn', 
@@ -104,8 +109,8 @@ export default function ClientJobs() {
         </div>
         
         {/* The ID matches the driver.js step element */}
-        <div className="gap-0.5 mr-2" id="create-job-btn">
-          <CreateJobButtonServerChecked className="max-w-20 pl-4"/>
+        <div className="gap-0.5" id="create-job-btn">
+          <CreateJobButtonServerChecked className="w-auto px-4 py-2 h-10" />
         </div>
       </header>
 
@@ -128,7 +133,7 @@ export default function ClientJobs() {
           </div>
           <h3 className="mb-2 text-xl font-semibold">Ready to hire?</h3>
           <p className="mb-6 text-muted-foreground max-w-md">
-            You haven't posted any jobs yet. Use the button in the top right to get started.
+            You haven&apos;t posted any jobs yet. Use the button in the top right to get started.
           </p>
         </div>
       ) : (
