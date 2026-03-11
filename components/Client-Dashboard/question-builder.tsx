@@ -87,7 +87,7 @@ export function QuestionBuilder({ value, onChange, className, onGenerateAI, isGe
   const active = useMemo(() => value.find((q) => q.id === activeId) || null, [value, activeId])
 
   return (
-    <div className={cn("grid gap-4", className)}>
+    <div id="tour-question-builder" className={cn("grid gap-4", className)}>
       <Card className="rounded-2xl border bg-card/60 backdrop-blur-sm">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg text-primary">Create Form</CardTitle>

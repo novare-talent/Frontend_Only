@@ -2,10 +2,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 function normalizeProfileName(row: any) {
   // priority: full_name, display_name, name, first_name+last_name, email local-part, fallback to id
@@ -37,6 +39,7 @@ export async function GET(request: NextRequest) {
     }
 
     // select many possible name fields to maximize chances of finding the correct one
+    const supabase = getSupabase()
     const { data, error } = await supabase
       .from("profiles")
       .select("id, full_name, fullname, display_name, displayName, name, first_name, firstName, last_name, lastName, email")
