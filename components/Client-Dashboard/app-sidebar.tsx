@@ -180,15 +180,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             align: 'start' 
           }
         },
-        {
-          element: '#tour-try-sighyre', 
-          popover: { 
-            title: 'Try SigHyre AI', 
-            description: 'Test out our powerful AI candidate ranking system before applying it to your live jobs.',
-            side: "right",
-            align: 'start' 
-          }
-        },
+        // {
+        //   element: '#tour-try-sighyre', 
+        //   popover: { 
+        //     title: 'Try SigHyre AI', 
+        //     description: 'Test out our powerful AI candidate ranking system before applying it to your live jobs.',
+        //     side: "right",
+        //     align: 'start' 
+        //   }
+        // },
         {
           element: '#create-job-btn', 
           popover: { 
@@ -231,12 +231,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: IconCreditCard,
       id: "tour-billing", 
     },
-    {
-      title: "Try Sig Hyre",
-      url: "/sig-hire/home",
-      icon: IconSparkles,
-      id: "tour-try-sighyre", 
-    },
+    // {
+    //   title: "Try Sig Hyre",
+    //   url: "/sig-hire/home",
+    //   icon: IconSparkles,
+    //   id: "tour-try-sighyre", 
+    // },
   ];
 
   return (

@@ -47,6 +47,7 @@
     "clsx": "^2.1.1",
     "driver.js": "^1.4.0",
     "framer-motion": "^12.23.25",
+    "i": "^0.3.7",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.528.0",
     "motion": "^12.23.12",
