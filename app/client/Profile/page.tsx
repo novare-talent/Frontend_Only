@@ -225,11 +225,12 @@ export default function ProfilePage() {
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
+                      key={profile?.email || user?.email}
                       id="companyEmail"
                       name="companyEmail"
                       type="email"
                       className="pl-10"
-                      defaultValue={profile?.company_email || ""}
+                      defaultValue={profile?.email || user?.email || ""}
                       placeholder="your@email.com"
                     />
                   </div>

@@ -187,6 +187,12 @@ body {
     @apply font-sans;
   }
 }
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
 /* --- DRIVER.JS CUSTOM THEME OVERRIDES --- */
 .driver-popover {
   @apply !bg-background !border !border-border !rounded-xl !shadow-xl !p-4;
