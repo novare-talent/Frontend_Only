@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { CreditCard, Package, ArrowUpRight, ArrowDownLeft, Loader2, CheckCircle2, XCircle, Info, RefreshCw } from "lucide-react"
 import { useState, useEffect } from "react"
+import { motion } from "framer-motion"
 import { createClient } from "@/utils/supabase/client"
 
 interface PaymentTransaction {
@@ -361,46 +363,70 @@ export function BillingPage() {
           {/* Credit Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Credits Card */}
-            <Card id="jobs-remaining-card" className="border-2 border-purple-500 from-purple-50/50 to-purple-100/30 dark:from-purple-950/30 dark:to-purple-900/20 shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="px-6 py-2">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <p className="text-md text-muted-foreground mb-1">Job Creation Remaining</p>
-                    {isLoading ? (
-                      <div className="h-10 w-24 bg-purple-200 dark:bg-purple-800 rounded-md animate-pulse mt-1" />
-                    ) : (
-                      <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">
-                        {creditsRemaining.toLocaleString()}
-                      </p>
-                    )}
-                  </div>
-                  <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
-                    <CreditCard className="w-8 h-8 text-purple-600 dark:text-purple-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+            >
+              <Card id="jobs-remaining-card" className="border-2 border-purple-500 from-purple-50/50 to-purple-100/30 dark:from-purple-950/30 dark:to-purple-900/20 shadow-lg hover:shadow-xl transition-shadow">
+                <CardContent className="px-6 py-2">
+                  {isLoading ? (
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="space-y-2 mt-1">
+                        <Skeleton className="h-4 w-40" />
+                        <Skeleton className="h-10 w-24" />
+                      </div>
+                      <Skeleton className="h-14 w-14 rounded-lg" />
+                    </div>
+                  ) : (
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <p className="text-md text-muted-foreground mb-1">Job Creation Remaining</p>
+                        <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">
+                          {creditsRemaining.toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
+                        <CreditCard className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
 
             {/* Evaluations Card */}
-            <Card className="border-2 border-purple-500 from-purple-50/50 to-purple-100/30 dark:from-purple-950/30 dark:to-purple-900/20 shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="px-6 py-2">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <p className="text-md text-muted-foreground mb-1">Evaluations Remaining</p>
-                    {isLoading ? (
-                      <div className="h-10 w-24 bg-purple-200 dark:bg-purple-800 rounded-md animate-pulse mt-1" />
-                    ) : (
-                      <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">
-                        {evaluationsRemaining}
-                      </p>
-                    )}
-                  </div>
-                  <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
-                    <Package className="w-8 h-8 text-purple-600 dark:text-purple-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut", delay: 0.1 }}
+            >
+              <Card className="border-2 border-purple-500 from-purple-50/50 to-purple-100/30 dark:from-purple-950/30 dark:to-purple-900/20 shadow-lg hover:shadow-xl transition-shadow">
+                <CardContent className="px-6 py-2">
+                  {isLoading ? (
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="space-y-2 mt-1">
+                        <Skeleton className="h-4 w-40" />
+                        <Skeleton className="h-10 w-24" />
+                      </div>
+                      <Skeleton className="h-14 w-14 rounded-lg" />
+                    </div>
+                  ) : (
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <p className="text-md text-muted-foreground mb-1">Evaluations Remaining</p>
+                        <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">
+                          {evaluationsRemaining}
+                        </p>
+                      </div>
+                      <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
+                        <Package className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
         </div>
 

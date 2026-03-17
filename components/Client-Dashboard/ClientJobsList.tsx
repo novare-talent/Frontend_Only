@@ -9,6 +9,7 @@ import "driver.js/dist/driver.css" // Ensure this is installed via npm install d
 import { motion, AnimatePresence } from "framer-motion"
 import { JobCard } from "./Job-Card"
 import CreateJobButtonServerChecked from "./CreateJobButton"
+import { DotLottieReact } from "@lottiefiles/dotlottie-react"
 
 type Job = {
   job_id: string
@@ -93,20 +94,39 @@ export default function ClientJobs() {
     fetchJobs()
   }, [])
 
+  // if (loading) {
+  //   return (
+  //     <main className="mx-auto max-w-6xl px-5 py-10">
+  //       <motion.div
+  //         initial={{ opacity: 0 }}
+  //         animate={{ opacity: [0.4, 1, 0.4] }}
+  //         transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+  //         className="text-center text-muted-foreground"
+  //       >
+  //         Loading your dashboard...
+  //       </motion.div>
+  //     </main>
+  //   )
+  // }
+
+
   if (loading) {
-    return (
-      <main className="mx-auto max-w-6xl px-5 py-10">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-          className="text-center text-muted-foreground"
-        >
-          Loading your dashboard...
-        </motion.div>
-      </main>
-    )
-  }
+return (
+<div className="flex flex-col items-center justify-center">
+<DotLottieReact
+src="/assets/dashboards.lottie"
+loop
+autoplay
+className="w-64 h-64"
+/>
+<p className="mt-4 text-lg"> Loading your dashboard...
+</p>
+</div>
+);
+} 
+
+
+
 
   return (
     <main className="max-w-7xl px-5 pl-6 py-2">

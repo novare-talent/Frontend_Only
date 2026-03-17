@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const supabase = createClient();
 
@@ -298,6 +299,7 @@ const IntegrationCard = ({
 export default function JobsGrid() {
   const [jobs, setJobs] = useState<JobWithFormStatus[]>([]);
   const [visible, setVisible] = useState(106);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchJobsWithFormStatus();
@@ -313,11 +315,13 @@ export default function JobsGrid() {
 
     if (jobsError) {
       console.error("Error fetching jobs:", jobsError.message);
+      setLoading(false);
       return;
     }
 
     if (!jobsData) {
       setJobs([]);
+      setLoading(false);
       return;
     }
 
@@ -326,6 +330,7 @@ export default function JobsGrid() {
     } = await supabase.auth.getUser();
     if (!user) {
       setJobs(jobsData.map((job) => ({ ...job, alreadySubmitted: false })));
+      setLoading(false);
       return;
     }
 
@@ -337,6 +342,7 @@ export default function JobsGrid() {
 
     if (!profileRow) {
       setJobs(jobsData.map((job) => ({ ...job, alreadySubmitted: false })));
+      setLoading(false);
       return;
     }
 
@@ -371,7 +377,22 @@ export default function JobsGrid() {
     );
 
     setJobs(jobsWithStatus);
+    setLoading(false);
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center">
+        <DotLottieReact
+          src="/assets/dashboards.lottie"
+          loop
+          autoplay
+          className="w-64 h-64"
+        />
+        <p className="mt-4 text-lg">Loading jobs...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 pt-0 space-y-6" suppressHydrationWarning>

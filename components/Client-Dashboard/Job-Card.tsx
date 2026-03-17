@@ -278,6 +278,20 @@ export function JobCard({
     if (jobId) router.push(`/client/evaluate/${jobId}`);
   };
 
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center">
+        <DotLottieReact
+          src="/assets/dashboards.lottie"
+          loop
+          autoplay
+          className="w-64 h-64"
+        />
+        <p className="mt-4 text-lg">Loading jobs...</p>
+      </div>
+    );
+  }
+
   return (
     <>
       <Dialog open={evalLoading}>

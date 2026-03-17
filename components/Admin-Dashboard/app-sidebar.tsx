@@ -76,7 +76,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <Link href="/">
                 <Image
-                  src="/LogoDark.png"
+                  src="/logoDark.svg"
                   alt="Logo"
                   width={160}
                   height={40}
@@ -84,7 +84,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 />
                 {/* Dark Mode Logo */}
                 <Image
-                  src="/Logo.png"
+                  src="/logo.svg"
                   alt="Logo Dark"
                   width={160}
                   height={40}
