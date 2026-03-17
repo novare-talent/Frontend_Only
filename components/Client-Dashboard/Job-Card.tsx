@@ -33,6 +33,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 export type JobCardProps = {
   jobId?: string;
@@ -278,6 +280,25 @@ export function JobCard({
 
   return (
     <>
+      <Dialog open={evalLoading}>
+        <DialogContent
+          className="flex flex-col items-center gap-4 py-10 px-8 max-w-sm rounded-2xl [&>button]:hidden"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DotLottieReact
+            src="/assets/evaluation.lottie"
+            loop
+            autoplay
+            style={{ width: 180, height: 180 }}
+          />
+          <div className="w-full space-y-2 text-center">
+            <p className="text-sm font-medium text-foreground">Evaluating candidates…</p>
+            {/* <Progress value={progress} className="h-2" /> */}
+            <p className="text-xs text-muted-foreground">{Math.round(progress)}% complete</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="fixed top-4 right-4 z-50">
         <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
           <PopoverTrigger asChild>
@@ -460,15 +481,6 @@ export function JobCard({
             )}
           </div>
 
-          {evalLoading && (
-            <div className="w-full space-y-2">
-              <div className="flex items-center justify-between text-xs text-primary">
-                <span>Evaluating job…</span>
-                <span>{Math.round(progress)}%</span>
-              </div>
-              <Progress value={progress} className="h-2 text-primary" />
-            </div>
-          )}
         </CardFooter>
       </Card>
     </>

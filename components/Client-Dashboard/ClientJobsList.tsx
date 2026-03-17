@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/client"
 import { driver } from "driver.js"
 import "driver.js/dist/driver.css" // Ensure this is installed via npm install driver.js
 
+import { motion, AnimatePresence } from "framer-motion"
 import { JobCard } from "./Job-Card"
 import CreateJobButtonServerChecked from "./CreateJobButton"
 
@@ -95,14 +96,26 @@ export default function ClientJobs() {
   if (loading) {
     return (
       <main className="mx-auto max-w-6xl px-5 py-10">
-        <div className="text-center animate-pulse text-muted-foreground">Loading your dashboard...</div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0.4, 1, 0.4] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          className="text-center text-muted-foreground"
+        >
+          Loading your dashboard...
+        </motion.div>
       </main>
     )
   }
 
   return (
     <main className="max-w-7xl px-5 pl-6 py-2">
-      <header className="mb-6 flex items-center justify-between">
+      <motion.header
+        className="mb-6 flex items-center justify-between"
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
         <div className="flex items-center gap-4">
           <h1 className="text-balance text-2xl font-semibold text-brand">Created Jobs</h1>
         </div>
@@ -111,10 +124,18 @@ export default function ClientJobs() {
         <div className="gap-0.5" id="create-job-btn">
           <CreateJobButtonServerChecked className="w-auto px-4 py-2 h-10" />
         </div>
-      </header>
+      </motion.header>
 
+      <AnimatePresence mode="wait">
       {jobs.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center mt-20 border-2 border-dashed rounded-xl border-muted">
+        <motion.div
+          key="empty"
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.97 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+          className="flex flex-col items-center justify-center py-16 text-center mt-20 border-2 border-dashed rounded-xl border-muted"
+        >
           <div className="mb-4 rounded-full bg-muted p-6">
             <svg 
               className="h-12 w-12 text-muted-foreground" 
@@ -134,10 +155,23 @@ export default function ClientJobs() {
           <p className="mb-6 text-muted-foreground max-w-md">
             You haven&apos;t posted any jobs yet. Use the button in the top right to get started.
           </p>
-        </div>
+        </motion.div>
       ) : (
-        <div className="space-y-6">
+        <motion.div
+          key="list"
+          className="space-y-6"
+          initial="hidden"
+          animate="visible"
+          variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
+        >
           {jobs.map((job) => (
+            <motion.div
+              key={job.job_id}
+              variants={{
+                hidden: { opacity: 0, y: 16 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+              }}
+            >
             <JobCard
               key={job.job_id}
               jobId={job.job_id}
@@ -154,9 +188,11 @@ export default function ClientJobs() {
               duration={job.duration || undefined}
               closingTime={job.closingTime || null}
             />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </main>
   )
 }

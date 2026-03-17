@@ -38,6 +38,7 @@ export function BillingPage() {
   const [jobsCount, setJobsCount] = useState(1)
   const [isProcessing, setIsProcessing] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
   const [profileId, setProfileId] = useState<string | null>(null)
   const [notificationOpen, setNotificationOpen] = useState(false)
@@ -117,6 +118,8 @@ export function BillingPage() {
         }
       } catch (err) {
         showNotification('error', 'Error', 'Failed to load user data')
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -363,9 +366,13 @@ export function BillingPage() {
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <p className="text-md text-muted-foreground mb-1">Job Creation Remaining</p>
-                    <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">
-                      {creditsRemaining.toLocaleString()}
-                    </p>
+                    {isLoading ? (
+                      <div className="h-10 w-24 bg-purple-200 dark:bg-purple-800 rounded-md animate-pulse mt-1" />
+                    ) : (
+                      <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">
+                        {creditsRemaining.toLocaleString()}
+                      </p>
+                    )}
                   </div>
                   <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
                     <CreditCard className="w-8 h-8 text-purple-600 dark:text-purple-400" />
@@ -380,9 +387,13 @@ export function BillingPage() {
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <p className="text-md text-muted-foreground mb-1">Evaluations Remaining</p>
-                    <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">
-                      {evaluationsRemaining}
-                    </p>
+                    {isLoading ? (
+                      <div className="h-10 w-24 bg-purple-200 dark:bg-purple-800 rounded-md animate-pulse mt-1" />
+                    ) : (
+                      <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">
+                        {evaluationsRemaining}
+                      </p>
+                    )}
                   </div>
                   <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
                     <Package className="w-8 h-8 text-purple-600 dark:text-purple-400" />

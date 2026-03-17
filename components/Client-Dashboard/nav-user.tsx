@@ -121,7 +121,7 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link href="/client/profile" className="flex items-center gap-2">
+                <Link href="/client/profile" className="flex items-center gap-2 cursor-pointer">
                   <IconUserCircle />
                   <span>Profile</span>
                 </Link>
