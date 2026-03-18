@@ -22,6 +22,10 @@ interface Job {
   Job_Description: string;
   JD_pdf: string | null;
   Shortlisted_Candidates: string[] | null;
+  stipend: string | null;
+  duration: string | null;
+  employer_id: string | null;
+  client_first_name?: string;
   status: "draft" | "active" | "sighyre" | "mailed";
 }
 
@@ -69,18 +73,49 @@ export default function JobList() {
   const fetchJobs = async () => {
     const { data, error } = await supabase
       .from("jobs")
-      .select("job_id, Job_Name, Job_Description, JD_pdf, Shortlisted_Candidates, status")
+      .select("job_id, Job_Name, Job_Description, JD_pdf, Shortlisted_Candidates, stipend, duration, employer_id, status")
       .order("created_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching jobs:", error.message);
     } else {
       const jobs = data || [];
-      setDraftJobs(jobs.filter(j => j.status === "draft"));
-      setActiveJobs(jobs.filter(j => j.status === "active" || j.status === "sighyre" || j.status === "mailed"));
+      const employerIds = Array.from(
+        new Set(jobs.map((job) => job.employer_id).filter((id): id is string => Boolean(id)))
+      );
+
+      const clientFirstNameMap: Record<string, string> = {};
+      if (employerIds.length > 0) {
+        try {
+          const { data: profiles, error: profilesError } = await supabase
+            .from("profiles")
+            .select("id, first_name")
+            .in("id", employerIds);
+
+          if (profilesError) {
+            throw profilesError;
+          }
+
+          (profiles || []).forEach((profile: { id: string; first_name: string | null }) => {
+            if (profile?.id) {
+              clientFirstNameMap[profile.id] = profile.first_name || "Unknown";
+            }
+          });
+        } catch (profileError) {
+          console.error("Error fetching client first names:", profileError);
+        }
+      }
+
+      const jobsWithClientFirstNames: Job[] = jobs.map((job) => ({
+        ...job,
+        client_first_name: job.employer_id ? clientFirstNameMap[job.employer_id] || "Unknown" : "Unknown",
+      }));
+
+      setDraftJobs(jobsWithClientFirstNames.filter((j) => j.status === "draft"));
+      setActiveJobs(jobsWithClientFirstNames.filter((j) => j.status === "active" || j.status === "sighyre" || j.status === "mailed"));
       
       // Check evaluation status for active jobs
-      jobs.forEach(job => {
+      jobsWithClientFirstNames.forEach(job => {
         checkEvaluationStatus(job.job_id);
       });
     }
@@ -240,6 +275,22 @@ export default function JobList() {
             )}
           </div>
           <p className="text-sm text-gray-600 mb-2">{job.Job_Description}</p>
+          {isDraft && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              <span className="text-sm font-semibold text-slate-900 bg-amber-100 border border-amber-300 px-2 py-1 rounded-md">
+                Client: {job.client_first_name || "Unknown"}
+              </span>
+              <span className="text-sm font-semibold text-slate-900 bg-blue-100 border border-blue-300 px-2 py-1 rounded-md">
+                Job: {job.Job_Name || "Untitled Job"}
+              </span>
+              <span className="text-sm font-semibold text-slate-900 bg-emerald-100 border border-emerald-300 px-2 py-1 rounded-md">
+                Stipend: {job.stipend || "Not specified"}
+              </span>
+              <span className="text-sm font-semibold text-slate-900 bg-violet-100 border border-violet-300 px-2 py-1 rounded-md">
+                Duration: {job.duration || "Not specified"}
+              </span>
+            </div>
+          )}
           {job.JD_pdf && (
             <a
               href={job.JD_pdf}
