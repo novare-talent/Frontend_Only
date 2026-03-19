@@ -54,6 +54,7 @@ interface Job {
   stipend?: string | null;
   location?: string | null;
   tags?: string[] | string | null;
+  created_at?: string | null;
 }
 
 interface JobWithFormStatus extends Job {
@@ -311,9 +312,10 @@ export default function JobsGrid() {
     const { data: jobsData, error: jobsError } = await supabase
       .from("jobs")
       .select(
-        "job_id, Job_Name, Job_Description, JD_pdf, Applied_Candidates, closingTime, duration, level, stipend, location, tags, status, closingTime"
+        "job_id, Job_Name, Job_Description, JD_pdf, Applied_Candidates, closingTime, duration, level, stipend, location, tags, status, created_at"
       )
-      .eq("status", "active").order("closingTime", { ascending: false, nullsFirst: false });
+      .eq("status", "active")
+      .order("created_at", { ascending: false });
 
     if (jobsError) {
       console.error("Error fetching jobs:", jobsError.message);
@@ -415,6 +417,16 @@ export default function JobsGrid() {
       }
     });
 
+    // Sort both arrays by created_at to maintain order
+    const sortByCreatedAt = (a: JobWithFormStatus, b: JobWithFormStatus) => {
+      const dateA = new Date(a.created_at || 0).getTime();
+      const dateB = new Date(b.created_at || 0).getTime();
+      return dateB - dateA; // Descending order (newest first)
+    };
+
+    jobs.sort(sortByCreatedAt);
+    internships.sort(sortByCreatedAt);
+
     return { jobs, internships };
   };
 
@@ -426,7 +438,13 @@ export default function JobsGrid() {
       case "internships":
         return internships;
       default:
-        return [...jobs, ...internships];
+        // For "all" tab, combine and sort by created_at
+        const combined = [...jobs, ...internships];
+        return combined.sort((a, b) => {
+          const dateA = new Date(a.created_at || 0).getTime();
+          const dateB = new Date(b.created_at || 0).getTime();
+          return dateB - dateA; // Descending order (newest first)
+        });
     }
   };
 

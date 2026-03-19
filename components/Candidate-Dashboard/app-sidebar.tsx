@@ -31,7 +31,7 @@ const data = {
       icon: IconDashboard,
     },
     {
-      title: "Applied Jobs",
+      title: "My Applications",
       url: "/Dashboard/Jobs",
       icon: IconFileDescription,
     },

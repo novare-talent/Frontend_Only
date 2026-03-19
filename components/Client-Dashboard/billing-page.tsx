@@ -22,6 +22,8 @@ import { CreditCard, Package, ArrowUpRight, ArrowDownLeft, Loader2, CheckCircle2
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { createClient } from "@/utils/supabase/client"
+import { driver } from "driver.js"
+import "driver.js/dist/driver.css"
 
 interface PaymentTransaction {
   id: string
@@ -49,6 +51,7 @@ export function BillingPage() {
     title: string
     message: string
   } | null>(null)
+  const [hasSeenTour, setHasSeenTour] = useState(false)
   
   const supabase = createClient()
 
@@ -104,6 +107,10 @@ export function BillingPage() {
         if (user) {
           setUserId(user.id)
           
+          // Check if user has seen the modal tour
+          const tourSeen = localStorage.getItem(`billing-modal-tour-seen-${user.id}`)
+          setHasSeenTour(!!tourSeen)
+          
           // Fetch profile_id from profiles table
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
@@ -144,6 +151,57 @@ export function BillingPage() {
     }
     
     setIsRefreshing(false)
+  }
+
+  const startTour = () => {
+    const driverObj = driver({
+      showProgress: true,
+      steps: [
+        {
+          element: '#jobs-input',
+          popover: {
+            title: 'Number of Jobs',
+            description: 'Enter how many job posting credits you want to purchase (1-10 jobs).',
+            side: "right",
+            align: 'start'
+          }
+        },
+        {
+          element: '#total-amount-card',
+          popover: {
+            title: 'Total Amount',
+            description: 'This shows the breakdown of your purchase and total amount to pay.',
+            side: "left",
+            align: 'start'
+          }
+        },
+        {
+          element: '#where-money-goes',
+          popover: {
+            title: 'Where Your Money Goes',
+            description: 'See exactly how your payment is used to maintain and improve our platform.',
+            side: "top",
+            align: 'center'
+          }
+        },
+        {
+          element: '#proceed-payment-btn',
+          popover: {
+            title: 'Complete Purchase',
+            description: 'Click here to proceed to secure payment gateway and complete your purchase.',
+            side: "top",
+            align: 'center'
+          }
+        }
+      ],
+      onDestroyed: () => {
+        if (userId) {
+          localStorage.setItem(`billing-modal-tour-seen-${userId}`, 'true')
+          setHasSeenTour(true)
+        }
+      }
+    })
+    driverObj.drive()
   }
 
   const handleAddCredits = async () => {
@@ -508,7 +566,12 @@ export function BillingPage() {
 
       {/* Add Credits Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md" onOpenAutoFocus={(e) => {
+          if (!hasSeenTour && userId) {
+            e.preventDefault()
+            setTimeout(() => startTour(), 100)
+          }
+        }}>
           <DialogHeader>
             <DialogTitle>Add Job Credits</DialogTitle>
             <DialogDescription>
@@ -520,7 +583,7 @@ export function BillingPage() {
             <div className="grid gap-2">
               <Label htmlFor="jobs">Number of Jobs</Label>
               <Input
-                id="jobs"
+                id="jobs-input"
                 type="number"
                 min="1"
                 max="10"
@@ -534,7 +597,7 @@ export function BillingPage() {
               </p>
             </div>
 
-            <Card className="bg-muted/50 border-purple-200 dark:border-purple-800">
+            <Card id="total-amount-card" className="bg-muted/50 border-purple-200 dark:border-purple-800">
               <CardContent className="pt-6">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
@@ -557,38 +620,68 @@ export function BillingPage() {
               </CardContent>
             </Card>
 
-            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-              <div className="flex gap-2">
-                <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                <p className="text-xs text-blue-900 dark:text-blue-300">
-                  You will be redirected to Cashfree payment gateway. Your credits will be updated automatically after successful payment.
-                </p>
+            <div className="space-y-3">
+              {/* <div id="where-money-goes" className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                <div className="flex gap-2">
+                  <Info className="h-4 w-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                  <div className="text-xs text-green-900 dark:text-green-300">
+                    <p className="font-medium mb-1">Where your ₹{AMOUNT_PER_JOB} goes:</p>
+                    <p>• Platform maintenance & hosting</p>
+                    <p>• Job posting & distribution</p>
+                    <p>• Candidate matching algorithms</p>
+                    <p>• Customer support & services</p>
+                  </div>
+                </div>
+              </div>
+               */}
+              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <div className="flex gap-2">
+                  <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-blue-900 dark:text-blue-300">
+                    You will be redirected to Cashfree payment gateway. Your credits will be updated automatically after successful payment.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsDialogOpen(false)}
-              disabled={isProcessing}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAddCredits}
-              disabled={isProcessing || jobsCount < 1 || jobsCount > 10}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating Link...
-                </>
-              ) : (
-                `Proceed to Payment`
+          <DialogFooter className="flex justify-between items-center">
+            <div className="flex-1">
+              {hasSeenTour && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={startTour}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Show Guide Again
+                </Button>
               )}
-            </Button>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+                disabled={isProcessing}
+              >
+                Cancel
+              </Button>
+              <Button
+                id="proceed-payment-btn"
+                onClick={handleAddCredits}
+                disabled={isProcessing || jobsCount < 1 || jobsCount > 10}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating Link...
+                  </>
+                ) : (
+                  `Proceed to Payment`
+                )}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

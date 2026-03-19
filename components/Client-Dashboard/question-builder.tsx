@@ -142,45 +142,88 @@ export function QuestionBuilder({ value, onChange, className, onGenerateAI, isGe
                 {value.map((q) => (
                   <li
                     key={q.id}
-                    draggable
+                    draggable={activeId !== q.id}
                     onDragStart={() => onDragStartQuestion(q.id)}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={() => onDropQuestionOver(q.id)}
                     onClick={() => setActiveId(q.id)}
                     className={cn(
-                      "rounded-lg border bg-card p-3 cursor-move",
-                      activeId === q.id && "ring-2 ring-primary",
+                      "rounded-lg border bg-card p-4 cursor-pointer transition-all",
+                      activeId === q.id && "ring-2 ring-primary shadow-md",
                     )}
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="text-sm font-medium">
-                        {q.title}{" "}
-                        <span className="text-xs text-muted-foreground">
-                          {q.type === "text" ? "(Text)" : q.type === "radio" ? "(Radio)" : "(Multiple)"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-xs text-muted-foreground flex items-center gap-1">
-                          <input
-                            type="checkbox"
-                            checked={!!q.required}
-                            onChange={(e) => update(q.id, { required: e.target.checked })}
+                    {activeId === q.id ? (
+                      <div className="grid gap-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <Input
+                            value={q.title}
+                            onChange={(e) => update(q.id, { title: e.target.value })}
+                            onClick={(e) => e.stopPropagation()}
+                            className="font-medium"
+                            placeholder="Question title"
                           />
-                          Required
-                        </label>
-                        <Button variant="ghost" size="sm" onClick={() => remove(q.id)}>
-                          Remove
-                        </Button>
-                      </div>
-                    </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-xs text-muted-foreground px-2 py-1 rounded bg-muted">
+                              {q.type === "text" ? "Text" : q.type === "radio" ? "Radio" : "Multiple"}
+                            </span>
+                            <label className="text-xs text-muted-foreground flex items-center gap-1 whitespace-nowrap">
+                              <input
+                                type="checkbox"
+                                checked={!!q.required}
+                                onChange={(e) => update(q.id, { required: e.target.checked })}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              Required
+                            </label>
+                            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); remove(q.id); }}>
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
 
-                    {q.type !== "text" && q.options && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {q.options.map((o, idx) => (
-                          <span key={idx} className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
-                            {o}
-                          </span>
-                        ))}
+                        {q.type !== "text" && (
+                          <OptionEditor
+                            options={q.options || []}
+                            onChange={(opts) => update(q.id, { options: opts })}
+                          />
+                        )}
+                      </div>
+                    ) : (
+                      <div className="grid gap-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-medium text-sm">
+                              {q.title}
+                              {q.required && <span className="text-red-500 ml-1">*</span>}
+                            </p>
+                          </div>
+                        </div>
+
+                        {q.type === "text" && (
+                          <Input placeholder="Your answer" disabled className="bg-muted/30" />
+                        )}
+
+                        {q.type === "radio" && q.options && (
+                          <div className="grid gap-2">
+                            {q.options.map((o, idx) => (
+                              <label key={idx} className="flex items-center gap-2 text-sm">
+                                <input type="radio" disabled className="cursor-not-allowed" />
+                                {o}
+                              </label>
+                            ))}
+                          </div>
+                        )}
+
+                        {q.type === "multi" && q.options && (
+                          <div className="grid gap-2">
+                            {q.options.map((o, idx) => (
+                              <label key={idx} className="flex items-center gap-2 text-sm">
+                                <input type="checkbox" disabled className="cursor-not-allowed" />
+                                {o}
+                              </label>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </li>
@@ -189,42 +232,7 @@ export function QuestionBuilder({ value, onChange, className, onGenerateAI, isGe
             )}
           </div>
 
-          {active && (
-            <>
-              <Separator />
-              <div className="grid gap-3">
-                <h4 className="text-sm font-medium text-primary">Edit Selected Question</h4>
-                <div className="grid md:grid-cols-2 gap-3">
-                  <div className="grid gap-2">
-                    <Label htmlFor="qtitle">Question</Label>
-                    <Input
-                      id="qtitle"
-                      value={active.title}
-                      onChange={(e) =>
-                        onChange(value.map((q) => (q.id === active.id ? { ...q, title: e.target.value } : q)))
-                      }
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Type</Label>
-                    <Input value={active.type} disabled />
-                  </div>
-                </div>
 
-                {active.type !== "text" && (
-                  <div className="grid gap-2">
-                    <Label>Options</Label>
-                    <OptionEditor
-                      options={active.options || []}
-                      onChange={(opts) =>
-                        onChange(value.map((q) => (q.id === active.id ? { ...q, options: opts } : q)))
-                      }
-                    />
-                  </div>
-                )}
-              </div>
-            </>
-          )}
         </CardContent>
       </Card>
     </div>
@@ -234,33 +242,53 @@ export function QuestionBuilder({ value, onChange, className, onGenerateAI, isGe
 function OptionEditor({ options, onChange }: { options: string[]; onChange: (opts: string[]) => void }) {
   const [input, setInput] = useState("")
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-2" onClick={(e) => e.stopPropagation()}>
+      <div className="flex flex-wrap gap-2">
+        {options.map((o, idx) => (
+          <div key={idx} className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-muted text-sm">
+            <Input
+              value={o}
+              onChange={(e) => onChange(options.map((opt, i) => (i === idx ? e.target.value : opt)))}
+              className="h-6 px-2 py-0 border-0 bg-transparent"
+            />
+            <button
+              onClick={() => onChange(options.filter((_, i) => i !== idx))}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+      </div>
       <div className="flex items-center gap-2">
-        <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Add an option" />
+        <Input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              const t = input.trim()
+              if (t && !options.includes(t)) {
+                onChange([...options, t])
+                setInput("")
+              }
+            }
+          }}
+          placeholder="Add option"
+          className="h-8"
+        />
         <Button
           variant="secondary"
+          size="sm"
           onClick={() => {
             const t = input.trim()
-            if (!t) return
-            if (!options.includes(t)) onChange([...options, t])
-            setInput("")
+            if (t && !options.includes(t)) {
+              onChange([...options, t])
+              setInput("")
+            }
           }}
         >
           Add
         </Button>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {options.map((o) => (
-          <button
-            key={o}
-            className="px-2.5 py-1 rounded-full text-xs bg-muted hover:bg-muted/80"
-            onClick={() => onChange(options.filter((x) => x !== o))}
-            type="button"
-            aria-label={`Remove ${o}`}
-          >
-            {o} ×
-          </button>
-        ))}
       </div>
     </div>
   )
