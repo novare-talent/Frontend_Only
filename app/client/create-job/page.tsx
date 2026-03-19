@@ -183,6 +183,12 @@ export default function NewJobPage() {
       return;
     }
 
+    // Validate that JD file is provided
+    if (!uploadedJdUrl && !meta.jdFile) {
+      toast.error("Missing Required Field", { description: "Please upload a Job Description PDF file before creating the job." });
+      return;
+    }
+
     // re-check before create to avoid race condition
     const okBefore = await ensureHasJobsRemaining();
     if (!okBefore) return;

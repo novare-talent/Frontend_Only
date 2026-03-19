@@ -148,7 +148,7 @@ export default function EditJobPage() {
       const jobUpdateData: any = {
         Job_Name: meta.title,
         Job_Description: meta.description,
-        level: meta.level,
+        level: meta.experience,
         stipend: meta.stipend,
         location: meta.location,
         duration: meta.duration,

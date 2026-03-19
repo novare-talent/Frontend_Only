@@ -179,7 +179,7 @@ export function BillingPage() {
           element: '#where-money-goes',
           popover: {
             title: 'Where Your Money Goes',
-            description: 'See exactly how your payment is used to maintain and improve our platform.',
+            description: 'Paying 5K INR gives you:\n\n1) A credit to create and publish your job/internship opening\n\n2) Evaluate candidates once whenever you feel you have sufficient applied candidates',
             side: "top",
             align: 'center'
           }
@@ -598,7 +598,7 @@ export function BillingPage() {
             </div>
 
             <Card id="total-amount-card" className="bg-muted/50 border-purple-200 dark:border-purple-800">
-              <CardContent className="pt-6">
+              <CardContent className="pt-2">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Jobs:</span>
@@ -621,19 +621,16 @@ export function BillingPage() {
             </Card>
 
             <div className="space-y-3">
-              {/* <div id="where-money-goes" className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-3">
+              <div id="where-money-goes" className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-3">
                 <div className="flex gap-2">
                   <Info className="h-4 w-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
                   <div className="text-xs text-green-900 dark:text-green-300">
-                    <p className="font-medium mb-1">Where your ₹{AMOUNT_PER_JOB} goes:</p>
-                    <p>• Platform maintenance & hosting</p>
-                    <p>• Job posting & distribution</p>
-                    <p>• Candidate matching algorithms</p>
-                    <p>• Customer support & services</p>
+                    <p className="font-medium mb-1">Paying ₹{AMOUNT_PER_JOB} INR gives you:</p>
+                    <p>1) A credit to create and publish your job/internship opening</p>
+                    <p>2) Evaluate candidates once whenever you feel you have sufficient candidates</p>
                   </div>
                 </div>
               </div>
-               */}
               <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                 <div className="flex gap-2">
                   <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />

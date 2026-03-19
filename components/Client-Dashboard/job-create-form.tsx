@@ -336,7 +336,7 @@ export function JobCreateForm({
         {/* JD Upload */}
         <div className="space-y-2">
           <Label htmlFor="jd-file" className="text-sm font-medium">
-            Upload Your Job Description (PDF Only)
+            Upload Your Job Description (PDF Only) <span className="text-destructive">*</span>
           </Label>
           <p className="text-xs text-muted-foreground">Upload a detailed job description document (Max 5MB)</p>
           <div className="relative">
@@ -404,6 +404,7 @@ export function JobCreateForm({
               }}
             />
           </div>
+          {errors.jdFile && <p className="text-sm text-destructive">{errors.jdFile}</p>}
         </div>
 
         <Separator className="my-2" />
