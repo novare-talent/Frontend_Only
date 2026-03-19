@@ -217,7 +217,9 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen w-full bg-muted/40 p-4 lg:px-8">
       {user ? (
-        <p className="mb-2">Welcome, {user.email}</p>
+
+        <p className="mb-2">Welcome {profile?.first_name || user.email}</p>
+      
       ) : (
         <p className="mb-4">Loading user...</p>
       )}

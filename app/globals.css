@@ -187,42 +187,8 @@ body {
     @apply font-sans;
   }
 }
-/* --- DRIVER.JS CUSTOM THEME OVERRIDES --- */
-.driver-popover {
-  @apply !bg-background !border !border-border !rounded-xl !shadow-xl !p-4;
-  max-width: 350px !important;
-}
-
-.driver-popover-title {
-  @apply !text-foreground !font-semibold !text-lg !mb-2;
-}
-
-.driver-popover-description {
-  @apply !text-muted-foreground !text-sm !leading-relaxed;
-}
-
-/* FIXED: Added 'before:!content-none' and 'after:!content-none' to stop double text */
-.driver-popover-next-btn {
-  @apply !bg-primary !text-primary-foreground hover:!bg-primary/90 !px-4 !py-2 !rounded-md !font-medium !transition-colors;
-  @apply before:!content-none after:!content-none; 
-  text-shadow: none !important;
-}
-
-/* FIXED: Added 'before:!content-none' and 'after:!content-none' here too */
-.driver-popover-prev-btn {
-  @apply !bg-muted !text-muted-foreground hover:!bg-muted/80 hover:!text-foreground !px-4 !py-2 !rounded-md !font-medium !transition-colors !border-none;
-  @apply before:!content-none after:!content-none;
-  text-shadow: none !important;
-}
-
-.driver-popover-progress-text {
-  @apply !text-muted-foreground !text-xs !font-medium;
-}
-
-.driver-popover-close-btn {
-  @apply !text-muted-foreground hover:!text-foreground !transition-colors !top-4 !right-4;
-}
-
-.driver-popover-arrow {
-  @apply !border-background;
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }

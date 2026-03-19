@@ -1490,7 +1490,7 @@ export default function NovareTalentLanding() {
             <div className="intro__grid">
               <article className="card card--left">
                 <h4 className="card__title">Looking to expand your team?</h4>
-                <a href="/sign-up" className="chip">
+                <a href="/sign-up?role=recruiter" className="chip">
                   Sign up as recruiter
                 </a>
                 <ul className="card__bullets">

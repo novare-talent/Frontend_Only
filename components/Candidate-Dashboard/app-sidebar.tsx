@@ -31,7 +31,7 @@ const data = {
       icon: IconDashboard,
     },
     {
-      title: "Applied Jobs",
+      title: "My Applications",
       url: "/Dashboard/Jobs",
       icon: IconFileDescription,
     },
@@ -88,31 +88,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
+       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
-              <Link href="/">
+            <div className="h-8 w-full flex items-center">
+              <Link href="/" className="w-full">
                 <Image
-                  src="/LogoDark.png"
+                  src="/logoDark.svg"
                   alt="Logo"
-                  width={160}
-                  height={40}
-                  className="block dark:hidden"
+                  width={140}
+                  height={32}
+                  className="block dark:hidden ml-2 mt-2"
                 />
-                {/* Dark Mode Logo */}
                 <Image
-                  src="/Logo.png"
+                  src="/logo.svg"
                   alt="Logo Dark"
-                  width={160}
-                  height={40}
-                  className="hidden dark:block"
+                  width={140}
+                  height={32}
+                  className="hidden dark:block ml-2 mt-2"
                 />
               </Link>
-            </SidebarMenuButton>
+            </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

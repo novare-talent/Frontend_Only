@@ -4,13 +4,6 @@ import type React from "react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -18,12 +11,17 @@ import { useState } from "react";
 import { Mail, Phone, EyeOff, Eye } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
+import Image from "next/image";
+import Link from "next/link";
 
 export function SignUpForm({
   className,
+  defaultTab = "user",
   ...props
-}: React.ComponentPropsWithoutRef<"div">) {
-  const [signupType, setSignupType] = useState<"user" | "client">("user");
+}: React.ComponentPropsWithoutRef<"div"> & {
+  defaultTab?: "user" | "client";
+}) {
+  const [signupType, setSignupType] = useState<"user" | "client">(defaultTab);
 
   const [userFormData, setUserFormData] = useState({
     firstName: "",
@@ -47,6 +45,11 @@ export function SignUpForm({
   const [userErrors, setUserErrors] = useState({
     githubLink: "",
     linkedinLink: "",
+    email: "",
+  });
+
+  const [clientErrors, setClientErrors] = useState({
+    email: "",
   });
 
   const [profileImage, setProfileImage] = useState<File | null>(null);
@@ -58,7 +61,16 @@ export function SignUpForm({
     const newErrors = {
       githubLink: "",
       linkedinLink: "",
+      email: "",
     };
+
+    // Email validation for users (IIT domains)
+    const emailRegex =
+      /^[a-zA-Z0-9._%+-]+@(ds\.study\.iitm\.ac\.in|smail\.iitm\.ac\.in|kgpian\.iitkgp\.ac\.in|iitkgp\.ac\.in|iitb\.ac\.in|iitm\.ac\.in|iitk\.ac\.in|iitd\.ac\.in|iitg\.ac\.in|iitr\.ac\.in|iitbhu\.ac\.in|iitrpr\.ac\.in|iitbbs\.ac\.in|iitgn\.ac\.in|iith\.ac\.in|iiti\.ac\.in|iitj\.ac\.in|iitp\.ac\.in|iitmandi\.ac\.in|iitpkd\.ac\.in|iittp\.ac\.in|iitism\.ac\.in|iitbhilai\.ac\.in|iitgoa\.ac\.in|iitdh\.ac\.in|ce\.iitr\.ac\.in|me\.iitr\.ac\.in|mfs\.iitr\.ac\.in|ee\.iitr\.ac\.in|ece\.iitr\.ac\.in|cy\.iitr\.ac\.in|cs\.iitr\.ac\.in|mt\.iitr\.ac\.in|ph\.iitr\.ac\.in|pt\.iitr\.ac\.in|ma\.iitr\.ac\.in|hy\.iitr\.ac\.in|es\.iitr\.ac\.in|eq\.iitr\.ac\.in|ch\.iitr\.ac\.in|iitism\.ac\.in)$/;
+
+    if (!emailRegex.test(userFormData.email)) {
+      newErrors.email = "Only IIT institutional emails are allowed";
+    }
 
     if (
       userFormData.githubLink &&
@@ -77,7 +89,28 @@ export function SignUpForm({
     }
 
     setUserErrors(newErrors);
-    return !newErrors.githubLink && !newErrors.linkedinLink;
+    return !newErrors.email && !newErrors.githubLink && !newErrors.linkedinLink;
+  };
+
+  const validateClientEmail = () => {
+    const newErrors = {
+      email: "",
+    };
+
+    // Basic email validation
+    const basicEmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!basicEmailRegex.test(clientFormData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    // Block personal and IIT emails for clients
+    const blockedEmailRegex = /@(gmail\.com|iit[a-z]*\.ac\.in|ce\.iitr\.ac\.in|me\.iitr\.ac\.in|mfs\.iitr\.ac\.in|ee\.iitr\.ac\.in|ece\.iitr\.ac\.in|cy\.iitr\.ac\.in|cs\.iitr\.ac\.in|mt\.iitr\.ac\.in|ph\.iitr\.ac\.in|pt\.iitr\.ac\.in|ma\.iitr\.ac\.in|hy\.iitr\.ac\.in|es\.iitr\.ac\.in|eq\.iitr\.ac\.in|ch\.iitr\.ac\.in|iitism\.ac\.in)$/i;
+    if (blockedEmailRegex.test(clientFormData.email)) {
+      newErrors.email = "Please use your official company email";
+    }
+
+    setClientErrors(newErrors);
+    return !newErrors.email;
   };
 
   const handleUserSubmit = async (e: React.FormEvent) => {
@@ -399,37 +432,86 @@ export function SignUpForm({
     const { id, value } = e.target;
     setUserFormData({ ...userFormData, [id]: value });
 
+    // Clear errors when user starts typing
     if (userErrors.githubLink && id === "githubLink") {
       setUserErrors({ ...userErrors, githubLink: "" });
     }
     if (userErrors.linkedinLink && id === "linkedinLink") {
       setUserErrors({ ...userErrors, linkedinLink: "" });
     }
+    if (userErrors.email && id === "email") {
+      setUserErrors({ ...userErrors, email: "" });
+    }
   };
 
   const handleClientChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setClientFormData({ ...clientFormData, [id]: value });
+
+    // Clear email error when user starts typing
+    if (clientErrors.email && id === "email") {
+      setClientErrors({ ...clientErrors, email: "" });
+    }
+  };
+
+  // Check if user form is valid
+  const isUserFormValid = () => {
+    return (
+      userFormData.firstName &&
+      userFormData.lastName &&
+      userFormData.email &&
+      userFormData.phone &&
+      userFormData.linkedinLink &&
+      userFormData.password &&
+      validateUserUrls() &&
+      userFormData.password.length >= 6
+    );
+  };
+
+  // Check if client form is valid
+  const isClientFormValid = () => {
+    return (
+      clientFormData.firstName &&
+      clientFormData.lastName &&
+      clientFormData.email &&
+      clientFormData.phone &&
+      clientFormData.companyName &&
+      clientFormData.password &&
+      validateClientEmail() &&
+      clientFormData.password.length >= 6
+    );
   };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className="mx-auto max-w-7xl p-4 py-6 shadow-lg w-96">
-        <CardHeader className="text-center">
-          <CardTitle className="font-ibm-plex-sans text-xl">
-            Welcome Aboard
-          </CardTitle>
-          <CardDescription>
-            Create an Account to build your professional profile.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="bg-muted overflow-hidden rounded-[calc(var(--radius)+.125rem)] border shadow-md shadow-zinc-950/5 dark:[--color-muted:var(--color-zinc-900)] mx-auto max-w-md w-full">
+        <div className="bg-card -m-px rounded-[calc(var(--radius)+.125rem)] border p-8 pb-6">
+          <div>
+            <Link href="/" aria-label="go home">
+              <Image
+                src="/logoDark.svg"
+                alt="Logo"
+                width={160}
+                height={40}
+                className="block dark:hidden"
+              />
+              <Image
+                src="/logo.svg"
+                alt="Logo Dark"
+                width={160}
+                height={40}
+                className="hidden dark:block"
+              />
+            </Link>
+            <h1 className="mb-1 mt-4 text-xl font-semibold">Welcome Aboard</h1>
+            <p className="text-sm">Create an Account to build your professional profile.</p>
+          </div>
           <Tabs
             value={signupType}
             onValueChange={(value) => setSignupType(value as "user" | "client")}
-            className="w-full"
+            className="w-full mt-6"
           >
-            <TabsList className="grid w-full grid-cols-2 mb-0">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="user">Candidate Sign Up</TabsTrigger>
               <TabsTrigger value="client">Client Sign Up</TabsTrigger>
             </TabsList>
@@ -497,12 +579,17 @@ export function SignUpForm({
                       id="email"
                       type="email"
                       required
-                      className="pl-10"
+                      className={`pl-10 ${userErrors.email ? "border-red-500" : ""}`}
                       placeholder="@iit.ac.in or work@company.com"
                       value={userFormData.email}
                       onChange={handleUserChange}
                     />
                   </div>
+                  {userErrors.email && (
+                    <p className="text-sm text-red-500">
+                      {userErrors.email}
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid gap-2 mt-3">
@@ -585,7 +672,7 @@ export function SignUpForm({
                 <Button
                   type="submit"
                   className="w-full mt-4"
-                  disabled={isLoading}
+                  disabled={isLoading || !isUserFormValid()}
                 >
                   {isLoading ? "Creating Account..." : "Sign Up"}
                 </Button>
@@ -637,7 +724,7 @@ export function SignUpForm({
                       id="clientEmail"
                       type="email"
                       required
-                      className="pl-10"
+                      className={`pl-10 ${clientErrors.email ? "border-red-500" : ""}`}
                       placeholder="your@email.com"
                       value={clientFormData.email}
                       onChange={(e) =>
@@ -648,6 +735,11 @@ export function SignUpForm({
                       }
                     />
                   </div>
+                  {clientErrors.email && (
+                    <p className="text-sm text-red-500">
+                      {clientErrors.email}
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid gap-2 mt-3">
@@ -722,39 +814,41 @@ export function SignUpForm({
                 <Button
                   type="submit"
                   className="w-full mt-4"
-                  disabled={isLoading}
+                  disabled={isLoading || !isClientFormValid()}
                 >
                   {isLoading ? "Creating Account..." : "Sign Up as Client"}
                 </Button>
               </form>
             </TabsContent>
           </Tabs>
+        </div>
 
-          <div className="text-center text-md mt-5">
+        <div className="p-3">
+          <p className="text-accent-foreground text-center text-sm">
             Already have an account?{" "}
-            <a href="/sign-in" className="underline underline-offset-4">
-              Sign In
-            </a>
-          </div>
-          <div className="px-6 text-center mt-4 text-sm text-muted-foreground">
+            <Button asChild variant="link" className="px-2">
+              <Link href="/sign-in">Sign In</Link>
+            </Button>
+          </p>
+          <div className="text-center mt-2 text-sm text-muted-foreground">
             By clicking continue, you agree to our{" "}
-            <a
+            <Link
               href="/Terms&Conditions.pdf"
               className="underline underline-offset-4"
             >
               Terms of Service
-            </a>{" "}
+            </Link>{" "}
             and{" "}
-            <a
+            <Link
               href="/Refund&CreditPolicy.pdf"
               className="underline underline-offset-4"
             >
               Refund Policy
-            </a>
+            </Link>
             .
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

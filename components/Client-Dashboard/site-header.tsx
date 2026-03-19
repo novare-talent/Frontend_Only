@@ -10,7 +10,7 @@ const pageTitles: { [key: string]: string } = {
   '/client/': 'Dashboard',
   '/client/create-job': 'Create Job',
   '/client/billing': 'Billing',
-  '/client/Profile': 'My Account',
+  '/client/profile': 'My Account',
 };
 
 export function SiteHeader() {

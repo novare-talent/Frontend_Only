@@ -71,7 +71,7 @@ export default function FooterSection() {
                             href="/"
                             aria-label="go home"
                             className="block size-fit">
-                            <Image src="/Logo.png" alt="Tailark Logo" width={200} height={40} />
+                            <Image src="/logo.svg" alt="Tailark Logo" width={200} height={40} />
                         </Link>
                     </div>
 

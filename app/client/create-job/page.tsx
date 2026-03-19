@@ -11,15 +11,15 @@ import { toast } from "sonner";
 
 export default function NewJobPage() {
   const [meta, setMeta] = useState<JobMeta>({
-    title: "Front-End Developer",
-    level: "Entry level",
-    stipend: "$800/month",
-    location: "Remote",
-    duration: "6 months",
+    title: "",
+    type: "Internship",
+    experience: "",
+    stipend: "",
+    location: "",
+    duration: "",
     closingTime: "",
-    tags: ["React", "Next.js", "TypeScript"],
-    description:
-      "Build a high-performance recipe blog frontend with dashboards, image galleries, personalization, offline saves, and monetization.",
+    tags: [],
+    description: "",
     jdFile: null,
     jdFileName: undefined,
   });
@@ -183,6 +183,12 @@ export default function NewJobPage() {
       return;
     }
 
+    // Validate that JD file is provided
+    if (!uploadedJdUrl && !meta.jdFile) {
+      toast.error("Missing Required Field", { description: "Please upload a Job Description PDF file before creating the job." });
+      return;
+    }
+
     // re-check before create to avoid race condition
     const okBefore = await ensureHasJobsRemaining();
     if (!okBefore) return;
@@ -215,12 +221,21 @@ export default function NewJobPage() {
       const jobId = crypto.randomUUID();
       const formId = crypto.randomUUID();
 
+      // Transform level field based on type and experience
+      let transformedLevel: string;
+      if (meta.type === "Internship") {
+        transformedLevel = "Internship";
+      } else {
+        // For Job type, combine with experience
+        transformedLevel = meta.experience ? `Job - ${meta.experience}` : "Job";
+      }
+
       const jobData = {
         job_id: jobId,
         Job_Name: meta.title,
         Job_Description: meta.description,
         JD_pdf: jdUrl,
-        level: meta.level,
+        level: transformedLevel,
         stipend: meta.stipend,
         location: meta.location,
         duration: meta.duration,
@@ -288,7 +303,8 @@ export default function NewJobPage() {
       // Reset form state
       setMeta({
         title: "",
-        level: "",
+        type: "Internship",
+        experience: "",
         stipend: "",
         location: "",
         duration: "",
@@ -383,12 +399,9 @@ export default function NewJobPage() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
+    <main className=" px-6 py-10">
       <JobCreateForm value={meta} onChange={setMeta} className="mb-6" />
-      <section className="grid gap-6 md:grid-cols-2">
-        <QuestionBuilder value={questions} onChange={setQuestions} onGenerateAI={generateFormWithAI} isGenerating={isGeneratingForm} />
-        <JobFormPreview questions={questions} />
-      </section>
+      <QuestionBuilder value={questions} onChange={setQuestions} onGenerateAI={generateFormWithAI} isGenerating={isGeneratingForm} />
       <div className="mt-6 flex justify-end">
         <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleCreate} disabled={isCreating || !meta.title || !meta.description}>
           {isCreating ? "Creating..." : "Create Job"}

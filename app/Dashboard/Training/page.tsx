@@ -213,7 +213,7 @@ export default function TrainingPage() {
             <Select value={sortBy} onValueChange={(v) => setSortBy(v)}>
               <SelectTrigger
                 aria-label="Sort by"
-                className="rounded-full bg-card/80 border px-3 py-1 h-10 text-sm shadow-sm min-w-[140px]"
+                className="rounded-full bg-card/80 border px-3 py-1 h-10 text-sm shadow-sm min-w-[140px] cursor-pointer"
               >
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>

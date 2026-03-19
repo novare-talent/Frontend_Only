@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ChevronRight, FileText } from "lucide-react";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const supabase = createClient();
 
@@ -67,6 +68,7 @@ const IntegrationCard = ({
 export default function AppliedJobsGrid() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [visible, setVisible] = useState(9);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchAppliedJobs();
@@ -78,7 +80,10 @@ export default function AppliedJobsGrid() {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     // 2. Fetch all jobs
     const { data, error } = await supabase
@@ -90,6 +95,7 @@ export default function AppliedJobsGrid() {
 
     if (error) {
       console.error("Error fetching jobs:", error.message);
+      setLoading(false);
       return;
     }
 
@@ -104,7 +110,22 @@ export default function AppliedJobsGrid() {
       }) || [];
 
     setJobs(appliedJobs);
+    setLoading(false);
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center">
+        <DotLottieReact
+          src="/assets/dashboards.lottie"
+          loop
+          autoplay
+          className="w-64 h-64"
+        />
+        <p className="mt-4 text-lg">Loading your applied jobs...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="px-6 space-y-6" suppressHydrationWarning>

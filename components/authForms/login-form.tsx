@@ -8,6 +8,8 @@ import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Image from "next/image";
+import Link from "next/link";
 
 export function LoginForm({
   className,
@@ -15,11 +17,22 @@ export function LoginForm({
 }: React.ComponentPropsWithoutRef<"form">) {
   const [userInput, setUserInput] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [isEmailValid, setIsEmailValid] = useState(false);
   const supabase = createClient();
   const router = useRouter();
 
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    return emailRegex.test(email)
+  }
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUserInput({ ...userInput, [e.target.name]: e.target.value });
+    const { name, value } = e.target
+    setUserInput({ ...userInput, [name]: value })
+    
+    if (name === 'email') {
+      setIsEmailValid(validateEmail(value))
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -37,7 +50,7 @@ export function LoginForm({
       return;
     }
 
-    // ✅ Get the user’s role after login
+    // ✅ Get the user's role after login
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -74,22 +87,36 @@ export function LoginForm({
   };
 
   return (
-    <div className="border-2 bg-white border-primary p-8 rounded-2xl shadow-2xl dark:bg-[#222327]">
-      <form
-        onSubmit={handleSubmit}
-        className={cn("flex flex-col gap-6", className)}
-        {...props}
-      >
-        <div className="flex flex-col items-start gap-2 text-center">
-          <h1 className="text-2xl font-bold">Login to your account</h1>
-          <p className="text-balance text-sm text-muted-foreground">
-            Enter your email below to login to your account
-          </p>
+    <form
+      onSubmit={handleSubmit}
+      className={cn("bg-muted overflow-hidden rounded-[calc(var(--radius)+.125rem)] border shadow-md shadow-zinc-950/5 dark:[--color-muted:var(--color-zinc-900)]", className)}
+      {...props}
+    >
+      <div className="bg-card -m-px rounded-[calc(var(--radius)+.125rem)] border p-8 pb-6">
+        <div>
+          <Link href="/" aria-label="go home">
+            <Image
+              src="/logoDark.svg"
+              alt="Logo"
+              width={160}
+              height={40}
+              className="block dark:hidden"
+            />
+            <Image
+              src="/logo.svg"
+              alt="Logo Dark"
+              width={160}
+              height={40}
+              className="hidden dark:block"
+            />
+          </Link>
+          <h1 className="mb-1 mt-4 text-xl font-semibold">Login to your account</h1>
+          <p className="text-sm">Enter your email below to login to your account</p>
         </div>
 
-        <div className="grid gap-6">
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
+        <div className="mt-6 space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="email" className="block text-sm">Email</Label>
             <Input
               id="email"
               type="email"
@@ -101,8 +128,8 @@ export function LoginForm({
             />
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
+          <div className="space-y-2">
+            <Label htmlFor="password" className="block text-sm">Password</Label>
             <Input
               id="password"
               type="password"
@@ -114,35 +141,37 @@ export function LoginForm({
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full" disabled={loading || !isEmailValid || !userInput.password}>
             {loading ? "Logging in..." : "Login"}
           </Button>
 
           <div className="text-center text-sm">
             Forgot Your Password?{" "}
-            <a href="/forgot-password" className="underline underline-offset-4">
+            <Link href="/forgot-password" className="underline underline-offset-4">
               Reset
-            </a>
+            </Link>
           </div>
 
-          <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
+          {/* <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
             <span className="bg-background text-muted-foreground relative z-10 px-2">
               Or continue with
             </span>
-          </div>
+          </div> */}
         </div>
-      </form>
+      </div>
 
-      <div className="text-center text-sm mt-2">
-        Don&apos;t have an account?{" "}
-        <a href="/sign-up" className="underline underline-offset-4">
-          Sign up
-        </a>
+      <div className="p-3">
+        <p className="text-accent-foreground text-center text-sm">
+          Don&apos;t have an account?{" "}
+          <Button asChild variant="link" className="px-2">
+            <Link href="/sign-up">Sign up</Link>
+          </Button>
+        </p>
+        <div className="text-center mt-2 text-sm text-muted-foreground">
+          By clicking continue, you agree to our <Link href="/Terms&Conditions.pdf" className="underline underline-offset-4">Terms of Service</Link>{" "}
+          and <Link href="/Refund&CreditPolicy.pdf" className="underline underline-offset-4">Refund Policy</Link>.
+        </div>
       </div>
-      <div className="px-6 text-center mt-4 text-sm text-muted-foreground">
-        By clicking continue, you agree to our <a href="/Terms&Conditions.pdf" className="underline underline-offset-4">Terms of Service</a>{" "}
-        and <a href="/Refund&CreditPolicy.pdf" className="underline underline-offset-4">Refund Policy</a>.
-      </div>
-    </div>
+    </form>
   );
 }

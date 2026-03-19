@@ -120,7 +120,7 @@ export default function CreateJobButtonServerChecked({
     <Button
     onClick={handleCreateJob}
     disabled={loading}
-    className={`${!className ? 'w-full' : 'w-auto'} flex ${className || ""}`}
+    className={`${!className ? 'w-full' : 'w-auto'} flex ${className || ""}  cursor-pointer`}
   >
     <div className={`flex flex-row items-center gap-2 ${!className ? 'mr-36 pr-3' : ''}`}>
     <IconPlus className="w-5 h-5" />

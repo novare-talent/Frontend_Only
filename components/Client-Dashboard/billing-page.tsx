@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Dialog,
   DialogContent,
@@ -19,7 +20,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { CreditCard, Package, ArrowUpRight, ArrowDownLeft, Loader2, CheckCircle2, XCircle, Info, RefreshCw } from "lucide-react"
 import { useState, useEffect } from "react"
+import { motion } from "framer-motion"
 import { createClient } from "@/utils/supabase/client"
+import { driver } from "driver.js"
+import "driver.js/dist/driver.css"
 
 interface PaymentTransaction {
   id: string
@@ -38,6 +42,7 @@ export function BillingPage() {
   const [jobsCount, setJobsCount] = useState(1)
   const [isProcessing, setIsProcessing] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
   const [profileId, setProfileId] = useState<string | null>(null)
   const [notificationOpen, setNotificationOpen] = useState(false)
@@ -46,6 +51,7 @@ export function BillingPage() {
     title: string
     message: string
   } | null>(null)
+  const [hasSeenTour, setHasSeenTour] = useState(false)
   
   const supabase = createClient()
 
@@ -101,6 +107,10 @@ export function BillingPage() {
         if (user) {
           setUserId(user.id)
           
+          // Check if user has seen the modal tour
+          const tourSeen = localStorage.getItem(`billing-modal-tour-seen-${user.id}`)
+          setHasSeenTour(!!tourSeen)
+          
           // Fetch profile_id from profiles table
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
@@ -117,6 +127,8 @@ export function BillingPage() {
         }
       } catch (err) {
         showNotification('error', 'Error', 'Failed to load user data')
+      } finally {
+        setIsLoading(false)
       }
     }
 
@@ -139,6 +151,57 @@ export function BillingPage() {
     }
     
     setIsRefreshing(false)
+  }
+
+  const startTour = () => {
+    const driverObj = driver({
+      showProgress: true,
+      steps: [
+        {
+          element: '#jobs-input',
+          popover: {
+            title: 'Number of Jobs',
+            description: 'Enter how many job posting credits you want to purchase (1-10 jobs).',
+            side: "right",
+            align: 'start'
+          }
+        },
+        {
+          element: '#total-amount-card',
+          popover: {
+            title: 'Total Amount',
+            description: 'This shows the breakdown of your purchase and total amount to pay.',
+            side: "left",
+            align: 'start'
+          }
+        },
+        {
+          element: '#where-money-goes',
+          popover: {
+            title: 'Where Your Money Goes',
+            description: 'Paying 5K INR gives you:\n\n1) A credit to create and publish your job/internship opening\n\n2) Evaluate candidates once whenever you feel you have sufficient applied candidates',
+            side: "top",
+            align: 'center'
+          }
+        },
+        {
+          element: '#proceed-payment-btn',
+          popover: {
+            title: 'Complete Purchase',
+            description: 'Click here to proceed to secure payment gateway and complete your purchase.',
+            side: "top",
+            align: 'center'
+          }
+        }
+      ],
+      onDestroyed: () => {
+        if (userId) {
+          localStorage.setItem(`billing-modal-tour-seen-${userId}`, 'true')
+          setHasSeenTour(true)
+        }
+      }
+    })
+    driverObj.drive()
   }
 
   const handleAddCredits = async () => {
@@ -358,38 +421,70 @@ export function BillingPage() {
           {/* Credit Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Credits Card */}
-            <Card id="jobs-remaining-card" className="border-2 border-purple-500 from-purple-50/50 to-purple-100/30 dark:from-purple-950/30 dark:to-purple-900/20 shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="px-6 py-2">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <p className="text-md text-muted-foreground mb-1">Job Creation Remaining</p>
-                    <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">
-                      {creditsRemaining.toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
-                    <CreditCard className="w-8 h-8 text-purple-600 dark:text-purple-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+            >
+              <Card id="jobs-remaining-card" className="border-2 border-purple-500 from-purple-50/50 to-purple-100/30 dark:from-purple-950/30 dark:to-purple-900/20 shadow-lg hover:shadow-xl transition-shadow">
+                <CardContent className="px-6 py-2">
+                  {isLoading ? (
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="space-y-2 mt-1">
+                        <Skeleton className="h-4 w-40" />
+                        <Skeleton className="h-10 w-24" />
+                      </div>
+                      <Skeleton className="h-14 w-14 rounded-lg" />
+                    </div>
+                  ) : (
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <p className="text-md text-muted-foreground mb-1">Job Creation Remaining</p>
+                        <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">
+                          {creditsRemaining.toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
+                        <CreditCard className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
 
             {/* Evaluations Card */}
-            <Card className="border-2 border-purple-500 from-purple-50/50 to-purple-100/30 dark:from-purple-950/30 dark:to-purple-900/20 shadow-lg hover:shadow-xl transition-shadow">
-              <CardContent className="px-6 py-2">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <p className="text-md text-muted-foreground mb-1">Evaluations Remaining</p>
-                    <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">
-                      {evaluationsRemaining}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
-                    <Package className="w-8 h-8 text-purple-600 dark:text-purple-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: "easeOut", delay: 0.1 }}
+            >
+              <Card className="border-2 border-purple-500 from-purple-50/50 to-purple-100/30 dark:from-purple-950/30 dark:to-purple-900/20 shadow-lg hover:shadow-xl transition-shadow">
+                <CardContent className="px-6 py-2">
+                  {isLoading ? (
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="space-y-2 mt-1">
+                        <Skeleton className="h-4 w-40" />
+                        <Skeleton className="h-10 w-24" />
+                      </div>
+                      <Skeleton className="h-14 w-14 rounded-lg" />
+                    </div>
+                  ) : (
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <p className="text-md text-muted-foreground mb-1">Evaluations Remaining</p>
+                        <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">
+                          {evaluationsRemaining}
+                        </p>
+                      </div>
+                      <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
+                        <Package className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
         </div>
 
@@ -471,7 +566,12 @@ export function BillingPage() {
 
       {/* Add Credits Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md" onOpenAutoFocus={(e) => {
+          if (!hasSeenTour && userId) {
+            e.preventDefault()
+            setTimeout(() => startTour(), 100)
+          }
+        }}>
           <DialogHeader>
             <DialogTitle>Add Job Credits</DialogTitle>
             <DialogDescription>
@@ -483,7 +583,7 @@ export function BillingPage() {
             <div className="grid gap-2">
               <Label htmlFor="jobs">Number of Jobs</Label>
               <Input
-                id="jobs"
+                id="jobs-input"
                 type="number"
                 min="1"
                 max="10"
@@ -497,8 +597,8 @@ export function BillingPage() {
               </p>
             </div>
 
-            <Card className="bg-muted/50 border-purple-200 dark:border-purple-800">
-              <CardContent className="pt-6">
+            <Card id="total-amount-card" className="bg-muted/50 border-purple-200 dark:border-purple-800">
+              <CardContent className="pt-2">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Jobs:</span>
@@ -520,38 +620,65 @@ export function BillingPage() {
               </CardContent>
             </Card>
 
-            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-              <div className="flex gap-2">
-                <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                <p className="text-xs text-blue-900 dark:text-blue-300">
-                  You will be redirected to Cashfree payment gateway. Your credits will be updated automatically after successful payment.
-                </p>
+            <div className="space-y-3">
+              <div id="where-money-goes" className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                <div className="flex gap-2">
+                  <Info className="h-4 w-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                  <div className="text-xs text-green-900 dark:text-green-300">
+                    <p className="font-medium mb-1">Paying ₹{AMOUNT_PER_JOB} INR gives you:</p>
+                    <p>1) A credit to create and publish your job/internship opening</p>
+                    <p>2) Evaluate candidates once whenever you feel you have sufficient candidates</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <div className="flex gap-2">
+                  <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-blue-900 dark:text-blue-300">
+                    You will be redirected to Cashfree payment gateway. Your credits will be updated automatically after successful payment.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsDialogOpen(false)}
-              disabled={isProcessing}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAddCredits}
-              disabled={isProcessing || jobsCount < 1 || jobsCount > 10}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating Link...
-                </>
-              ) : (
-                `Proceed to Payment`
+          <DialogFooter className="flex justify-between items-center">
+            <div className="flex-1">
+              {hasSeenTour && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={startTour}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Show Guide Again
+                </Button>
               )}
-            </Button>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+                disabled={isProcessing}
+              >
+                Cancel
+              </Button>
+              <Button
+                id="proceed-payment-btn"
+                onClick={handleAddCredits}
+                disabled={isProcessing || jobsCount < 1 || jobsCount > 10}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating Link...
+                  </>
+                ) : (
+                  `Proceed to Payment`
+                )}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
