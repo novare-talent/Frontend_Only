@@ -12,7 +12,8 @@ import { toast } from "sonner";
 export default function NewJobPage() {
   const [meta, setMeta] = useState<JobMeta>({
     title: "Front-End Developer",
-    level: "Entry level",
+    type: "Internship",
+    experience: "",
     stipend: "$800/month",
     location: "Remote",
     duration: "6 months",
@@ -215,12 +216,21 @@ export default function NewJobPage() {
       const jobId = crypto.randomUUID();
       const formId = crypto.randomUUID();
 
+      // Transform level field based on type and experience
+      let transformedLevel: string;
+      if (meta.type === "Internship") {
+        transformedLevel = "Internship";
+      } else {
+        // For Job type, combine with experience
+        transformedLevel = meta.experience ? `Job - ${meta.experience}` : "Job";
+      }
+
       const jobData = {
         job_id: jobId,
         Job_Name: meta.title,
         Job_Description: meta.description,
         JD_pdf: jdUrl,
-        level: meta.level,
+        level: transformedLevel,
         stipend: meta.stipend,
         location: meta.location,
         duration: meta.duration,
@@ -288,7 +298,8 @@ export default function NewJobPage() {
       // Reset form state
       setMeta({
         title: "",
-        level: "",
+        type: "Internship",
+        experience: "",
         stipend: "",
         location: "",
         duration: "",

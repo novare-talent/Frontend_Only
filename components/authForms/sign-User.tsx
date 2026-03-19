@@ -16,9 +16,12 @@ import Link from "next/link";
 
 export function SignUpForm({
   className,
+  defaultTab = "user",
   ...props
-}: React.ComponentPropsWithoutRef<"div">) {
-  const [signupType, setSignupType] = useState<"user" | "client">("user");
+}: React.ComponentPropsWithoutRef<"div"> & {
+  defaultTab?: "user" | "client";
+}) {
+  const [signupType, setSignupType] = useState<"user" | "client">(defaultTab);
 
   const [userFormData, setUserFormData] = useState({
     firstName: "",

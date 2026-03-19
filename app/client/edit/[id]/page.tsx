@@ -16,7 +16,8 @@ export default function EditJobPage() {
 
   const [meta, setMeta] = useState<JobMeta>({
     title: "",
-    level: "",
+    type: "Internship",
+    experience: "",
     stipend: "",
     location: "",
     duration: "",
@@ -80,9 +81,29 @@ export default function EditJobPage() {
           }
         }
 
+        // Parse the level field to extract type and experience
+        const parseLevel = (level: string) => {
+          if (!level) return { type: "Internship" as const, experience: "" };
+          
+          const lowerLevel = level.toLowerCase();
+          if (lowerLevel === "internship" || lowerLevel.includes("intern")) {
+            return { type: "Internship" as const, experience: "" };
+          } else if (lowerLevel.startsWith("job")) {
+            // Extract experience from "Job - X experience" format
+            const experiencePart = level.replace(/^job\s*-\s*/i, "").trim();
+            return { type: "Job" as const, experience: experiencePart };
+          } else {
+            // Default to internship if parsing fails
+            return { type: "Internship" as const, experience: "" };
+          }
+        };
+
+        const { type, experience } = parseLevel(job.level || "");
+
         setMeta({
           title: job.Job_Name || "",
-          level: job.level || "",
+          type,
+          experience,
           stipend: job.stipend || "",
           location: job.location || "",
           duration: job.duration || "",
@@ -136,6 +157,16 @@ export default function EditJobPage() {
       }
 
       if (jdUrl) jobUpdateData.JD_pdf = jdUrl
+
+      // Transform level field based on type and experience
+      let transformedLevel: string;
+      if (meta.type === "Internship") {
+        transformedLevel = "Internship";
+      } else {
+        // For Job type, combine with experience
+        transformedLevel = meta.experience ? `Job - ${meta.experience}` : "Job";
+      }
+      jobUpdateData.level = transformedLevel;
 
       const { data: job, error: jobError } = await supabase
         .from('jobs')

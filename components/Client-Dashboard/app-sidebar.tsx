@@ -240,8 +240,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarContent className="flex flex-col h-full">
         <NavMain items={navMain} pathname={pathname} />
+        
 
-        <div className="mt-auto px-4 pb-4">
+        <div className="mt-auto px-2 pb-4">
           <button
             onClick={handleStartTour}
             className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors cursor-pointer"
@@ -250,6 +251,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <span>Guided Tour</span>
           </button>
         </div>
+        
       </SidebarContent>
 
       <SidebarFooter>

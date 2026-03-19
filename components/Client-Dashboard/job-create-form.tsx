@@ -7,11 +7,13 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { createClient } from "@/utils/supabase/client";
 export type JobMeta = {
   title: string
-  level: string
+  type: "Internship" | "Job"
+  experience?: string
   stipend: string
   location: string
   duration: string
@@ -32,6 +34,7 @@ export function JobCreateForm({
   className?: string
 }) {
   const [tagInput, setTagInput] = useState("")
+  const [isDragOver, setIsDragOver] = useState(false)
 
   function set<K extends keyof JobMeta>(key: K, v: JobMeta[K]) {
     onChange({ ...value, [key]: v })
@@ -48,20 +51,87 @@ export function JobCreateForm({
     onChange({ ...value, tags: value.tags.filter((x) => x !== t) })
   }
 
+  const handleFileSelect = (file: File | null) => {
+    onChange({ ...value, jdFile: file, jdFileName: file?.name })
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+    
+    const files = e.dataTransfer.files
+    if (files && files.length > 0) {
+      const file = files[0]
+      
+      // Check file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB')
+        return
+      }
+      
+      // Check file type
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain']
+      const allowedExtensions = ['.pdf', '.doc', '.docx', '.txt']
+      
+      const isValidType = allowedTypes.includes(file.type) || allowedExtensions.some(ext => file.name.toLowerCase().endsWith(ext))
+      
+      if (isValidType) {
+        handleFileSelect(file)
+      } else {
+        alert('Please select a valid file type (PDF, DOC, DOCX, or TXT)')
+      }
+    }
+  }
+
   return (
     <Card className={cn("rounded-2xl border bg-card/60 backdrop-blur-sm", className)}>
       <CardHeader className="pb-2">
         <CardTitle className="text-xl md:text-2xl text-primary">Create Job Form</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-5">
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="title">Job Title</Label>
-            <Input id="title" value={value.title} onChange={(e) => set("title", e.target.value)} />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="level">Level</Label>
-            <Input id="level" value={value.level} onChange={(e) => set("level", e.target.value)} />
+        <div className="grid gap-2">
+          <Label htmlFor="title">Job Title</Label>
+          <Input id="title" value={value.title} onChange={(e) => set("title", e.target.value)} />
+        </div>
+
+        <div className="grid gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="type">Type</Label>
+              <Select value={value.type} onValueChange={(v) => set("type", v as "Internship" | "Job")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Internship">Internship</SelectItem>
+                  <SelectItem value="Job">Job</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {value.type === "Job" && (
+              <div className="grid gap-2">
+                <Label htmlFor="experience">Experience Required</Label>
+                <Input 
+                  id="experience" 
+                  value={value.experience || ""} 
+                  onChange={(e) => set("experience", e.target.value)}
+                  placeholder="e.g., 2-3 years"
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -131,36 +201,70 @@ export function JobCreateForm({
           />
         </div>
 
-        {/* JD Upload - Moved to Skills/Tags original position */}
+        {/* JD Upload */}
         <div className="space-y-2">
           <Label htmlFor="jd-file">JD Upload (PDF, DOC, DOCX, TXT)</Label>
-          <label
-            htmlFor="jd-file"
-            className="flex cursor-pointer items-center justify-between rounded-lg border-2 border-dashed border-primary/40 bg-card/60 px-4 py-6 transition hover:border-primary hover:bg-primary/5"
-          >
-            <div className="flex flex-col">
-              <span className="text-sm text-muted-foreground">
-                Drag & drop or click to upload
-              </span>
-              <span className="text-xs text-muted-foreground">Max 5MB</span>
-            </div>
-            <Button type="button" variant="outline">
-              Choose file
-            </Button>
-          </label>
-          <input
-            id="jd-file"
-            type="file"
-            accept=".pdf,application/pdf"
-            className="sr-only"
-            onChange={(e) => {
-              const f = e.target.files?.[0] ?? null
-              onChange({ ...value, jdFile: f, jdFileName: f?.name })
-            }}
-          />
-          {value.jdFileName && (
-            <p className="text-sm text-primary">Selected: {value.jdFileName}</p>
-          )}
+          <div className="relative">
+            <label
+              htmlFor="jd-file"
+              className={cn(
+                "flex cursor-pointer items-center justify-between rounded-lg border-2 border-dashed px-4 py-6 transition-all duration-200",
+                isDragOver
+                  ? "border-primary bg-primary/10 shadow-md"
+                  : "border-primary/40 bg-card/60 hover:border-primary hover:bg-primary/5 hover:shadow-sm"
+              )}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-foreground">
+                  {value.jdFileName ? value.jdFileName : isDragOver ? "Drop file here" : "Drag & drop or click to upload"}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {value.jdFileName ? "Click to change file" : "Supports PDF, DOC, DOCX, TXT (Max 5MB)"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {value.jdFileName && (
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleFileSelect(null);
+                    }}
+                  >
+                    ×
+                  </Button>
+                )}
+                <Button type="button" variant="outline" size="sm" className="pointer-events-none">
+                  {value.jdFileName ? "Change" : "Choose file"}
+                </Button>
+              </div>
+            </label>
+            <input
+              id="jd-file"
+              type="file"
+              accept=".pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+              className="sr-only"
+              onChange={(e) => {
+                const f = e.target.files?.[0] ?? null
+                if (f) {
+                  // Check file size (5MB limit)
+                  if (f.size > 5 * 1024 * 1024) {
+                    alert('File size must be less than 5MB')
+                    e.target.value = '' // Reset input
+                    return
+                  }
+                }
+                handleFileSelect(f)
+              }}
+            />
+          </div>
         </div>
 
         <Separator className="my-1" />

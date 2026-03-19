@@ -25,7 +25,9 @@ import { cn } from "@/lib/utils";
 const schema = z.object({
   title: z.string().min(3, "Title is required"),
   rate: z.string().min(1, "Rate is required"),
-  level: z.enum(["Entry level", "Intermediate", "Expert"]),
+  type: z.enum(["Internship", "Job"]),
+  experience: z.string().optional(),
+  level: z.string().min(1, "Level is required"),
   description: z.string().min(20, "Please add a longer description"),
   location: z.string().min(2, "Location is required"),
   tags: z.string().optional(),

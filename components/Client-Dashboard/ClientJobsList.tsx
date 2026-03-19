@@ -112,7 +112,7 @@ export default function ClientJobs() {
   }
 
   return (
-    <main className="max-w-7xl px-5 pl-6 py-2">
+    <main className=" px-5 pl-6 py-2">
       <motion.header
         className="mb-6 flex items-center justify-between"
         initial={{ opacity: 0, y: -12 }}

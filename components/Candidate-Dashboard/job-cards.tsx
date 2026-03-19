@@ -298,8 +298,10 @@ const IntegrationCard = ({
 
 export default function JobsGrid() {
   const [jobs, setJobs] = useState<JobWithFormStatus[]>([]);
+  const [internships, setInternships] = useState<JobWithFormStatus[]>([]);
   const [visible, setVisible] = useState(106);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"all" | "jobs" | "internships">("all");
 
   useEffect(() => {
     fetchJobsWithFormStatus();
@@ -321,6 +323,7 @@ export default function JobsGrid() {
 
     if (!jobsData) {
       setJobs([]);
+      setInternships([]);
       setLoading(false);
       return;
     }
@@ -329,7 +332,11 @@ export default function JobsGrid() {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      setJobs(jobsData.map((job) => ({ ...job, alreadySubmitted: false })));
+      const allJobs = jobsData.map((job) => ({ ...job, alreadySubmitted: false }));
+      // Parse and segregate jobs
+      const { jobs: parsedJobs, internships: parsedInternships } = parseJobsAndInternships(allJobs);
+      setJobs(parsedJobs);
+      setInternships(parsedInternships);
       setLoading(false);
       return;
     }
@@ -341,7 +348,10 @@ export default function JobsGrid() {
       .single();
 
     if (!profileRow) {
-      setJobs(jobsData.map((job) => ({ ...job, alreadySubmitted: false })));
+      const allJobs = jobsData.map((job) => ({ ...job, alreadySubmitted: false }));
+      const { jobs: parsedJobs, internships: parsedInternships } = parseJobsAndInternships(allJobs);
+      setJobs(parsedJobs);
+      setInternships(parsedInternships);
       setLoading(false);
       return;
     }
@@ -376,9 +386,51 @@ export default function JobsGrid() {
       })
     );
 
-    setJobs(jobsWithStatus);
+    // Parse and segregate jobs
+    const { jobs: parsedJobs, internships: parsedInternships } = parseJobsAndInternships(jobsWithStatus);
+    setJobs(parsedJobs);
+    setInternships(parsedInternships);
     setLoading(false);
   };
+
+  // Helper function to parse level field and segregate jobs and internships
+  const parseJobsAndInternships = (allJobs: JobWithFormStatus[]) => {
+    const jobs: JobWithFormStatus[] = [];
+    const internships: JobWithFormStatus[] = [];
+
+    allJobs.forEach((job) => {
+      const level = job.level?.toLowerCase() || "";
+      
+      // Check if it's an internship
+      if (level === "internship" || level.includes("intern")) {
+        internships.push(job);
+      }
+      // Check if it's a job (starts with "job")
+      else if (level.startsWith("job")) {
+        jobs.push(job);
+      }
+      // If parsing fails, default to internship as specified
+      else {
+        internships.push(job);
+      }
+    });
+
+    return { jobs, internships };
+  };
+
+  // Get current data based on active tab
+  const getCurrentData = () => {
+    switch (activeTab) {
+      case "jobs":
+        return jobs;
+      case "internships":
+        return internships;
+      default:
+        return [...jobs, ...internships];
+    }
+  };
+
+  const currentData = getCurrentData();
 
   if (loading) {
     return (
@@ -396,10 +448,49 @@ export default function JobsGrid() {
 
   return (
     <div className="p-6 pt-0 space-y-6" suppressHydrationWarning>
-      <h1 className="text-2xl text-primary">Available Jobs</h1>
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <h1 className="text-2xl text-primary">Available Opportunities</h1>
+        
+        {/* Tab Navigation */}
+        <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+          <button
+            onClick={() => setActiveTab("all")}
+            className={cn(
+              "px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer whitespace-nowrap",
+              activeTab === "all"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted-foreground/10"
+            )}
+          >
+            All ({jobs.length + internships.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("jobs")}
+            className={cn(
+              "px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer whitespace-nowrap",
+              activeTab === "jobs"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted-foreground/10"
+            )}
+          >
+            Jobs ({jobs.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("internships")}
+            className={cn(
+              "px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer whitespace-nowrap",
+              activeTab === "internships"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted-foreground/10"
+            )}
+          >
+            Internships ({internships.length})
+          </button>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {jobs.slice(0, visible).map((job) => {
+        {currentData.slice(0, visible).map((job) => {
           const appliedCount = Array.isArray(job.Applied_Candidates)
             ? job.Applied_Candidates.length
             : typeof job.Applied_Candidates === "number"
@@ -426,22 +517,27 @@ export default function JobsGrid() {
         })}
       </div>
 
-      {visible < jobs.length && (
+      {visible < currentData.length && (
         <div className="flex justify-center">
           <Button
             onClick={() => setVisible((prev) => prev + 6)}
             variant="outline"
             size="lg"
           >
-            View More Jobs
+            View More
           </Button>
         </div>
       )}
 
-      {jobs.length === 0 && (
+      {currentData.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12">
           <p className="text-center text-gray-500 text-md">
-            No jobs available at the moment.
+            {activeTab === "jobs" 
+              ? "No jobs available at the moment."
+              : activeTab === "internships"
+              ? "No internships available at the moment."
+              : "No opportunities available at the moment."
+            }
           </p>
         </div>
       )}
