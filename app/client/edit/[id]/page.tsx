@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { JobCreateForm, type JobMeta } from "@/components/Client-Dashboard/job-create-form"
 import { QuestionBuilder, type Question } from "@/components/Client-Dashboard/question-builder"
-import { JobFormPreview } from "@/components/Client-Dashboard/job-form-preview"
+
 import { createClient } from "@/utils/supabase/client"
 import { useParams, useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -288,25 +288,11 @@ export default function EditJobPage() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-10">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-primary">Edit Job</h1>
-        <p className="text-muted-foreground">Update your job posting and application form</p>
-      </div>
-
-      <JobCreateForm value={meta} onChange={setMeta} className="mb-6" />
-
-      <section className="grid gap-6 md:grid-cols-2">
-        <QuestionBuilder
-          value={questions}
-          onChange={setQuestions}
-          onGenerateAI={generateFormWithAI}
-        />
-        <JobFormPreview questions={questions} />
-      </section>
-
+    <main className=" px-6 py-10">
+      <JobCreateForm value={meta} onChange={setMeta} className="mb-6" mode="edit" />
+      <QuestionBuilder value={questions} onChange={setQuestions} onGenerateAI={generateFormWithAI} />
       <div className="mt-6 flex justify-end gap-4">
-        <Button variant="outline" onClick={() => router.push('/client/jobs')}>
+        <Button variant="outline" onClick={() => router.push('/client')}>
           Cancel
         </Button>
         <Button

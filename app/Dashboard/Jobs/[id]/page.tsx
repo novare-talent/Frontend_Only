@@ -23,9 +23,9 @@ export default async function Page({
     console.error("Error fetching form:", error.message);
   }
 
-  const formData = data?.form ?? undefined;
-  const formId = data?.form_id ?? undefined;
-  const jobId = data?.job_id ?? undefined;
+  const formData = data?.form ?? null;
+  const formId = data?.form_id ?? null;
+  const jobId = id;
 
   return (
     <div className="p-6">

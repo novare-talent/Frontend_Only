@@ -34,11 +34,13 @@ export function JobCreateForm({
   onChange,
   className,
   errors = {},
+  mode = "create",
 }: {
   value: JobMeta
   onChange: (v: JobMeta) => void
   className?: string
   errors?: FormErrors
+  mode?: "create" | "edit"
 }) {
   const [tagInput, setTagInput] = useState("")
   const [isDragOver, setIsDragOver] = useState(false)
@@ -113,7 +115,15 @@ export function JobCreateForm({
     <Card className={cn("rounded-2xl border bg-card/60 backdrop-blur-sm", className)}>
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl md:text-2xl text-primary">Create Job Posting</CardTitle>
+          <div>
+            {mode === "create" && <CardTitle className="text-xl md:text-2xl text-primary">Create Job Posting</CardTitle>}
+            {mode === "edit" && (
+              <>
+                <CardTitle className="text-xl md:text-2xl text-primary">Edit Job</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">Update your job posting and application form</p>
+              </>
+            )}
+          </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
               <div 

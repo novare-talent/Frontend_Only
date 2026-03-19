@@ -57,7 +57,7 @@ export default function JobForm({
   jobId,
 }: {
   formData: any;
-  formId?: string;
+  formId?: string | null;
   jobId?: string;
 }) {
   const supabaseClient = createClient();
@@ -227,14 +227,15 @@ export default function JobForm({
     // Resume is absolutely required
     if (!selectedResume) {
       toast.error("Resume required", { description: "Please select a resume before submitting." });
-      // focus the resume card (try focusing the first resume view link or the form)
       const resumeLink = formEl.querySelector("a[href]") as HTMLElement | null;
       if (resumeLink) resumeLink.focus();
       return false;
     }
 
-    // Validate all required questions
-    for (let idx = 0; idx < (formData.questions ?? []).length; idx++) {
+    // Validate all required questions only if form exists
+    if (!formData?.questions) return true;
+
+    for (let idx = 0; idx < formData.questions.length; idx++) {
       const q = formData.questions[idx];
       if (!q?.required) continue;
 
@@ -315,29 +316,31 @@ export default function JobForm({
         answers["Email Address"] = profileData.email || "";
       }
 
-      (formData.questions ?? []).forEach((q: any, idx: number) => {
-        const name = `question-${idx}`;
-        let value: any = "";
+      if (formData?.questions) {
+        formData.questions.forEach((q: any, idx: number) => {
+          const name = `question-${idx}`;
+          let value: any = "";
 
-        if (q.type === "MULTI") {
-          value = JSON.stringify(multiSelectValues[name] || []);
-        } else {
-          const el = (formEl.elements as any)[name];
+          if (q.type === "MULTI") {
+            value = JSON.stringify(multiSelectValues[name] || []);
+          } else {
+            const el = (formEl.elements as any)[name];
 
-          if (el && typeof el.value === "string") {
-            value = el.value ?? "";
-          } else if (el && "length" in el) {
-            for (let i = 0; i < el.length; i++) {
-              if (el[i].checked) {
-                value = el[i].value;
-                break;
+            if (el && typeof el.value === "string") {
+              value = el.value ?? "";
+            } else if (el && "length" in el) {
+              for (let i = 0; i < el.length; i++) {
+                if (el[i].checked) {
+                  value = el[i].value;
+                  break;
+                }
               }
             }
           }
-        }
 
-        answers[q.title ?? name] = value;
-      });
+          answers[q.title ?? name] = value;
+        });
+      }
 
       answers["selected_resume"] = selectedResume ?? null;
 
@@ -421,6 +424,8 @@ export default function JobForm({
     );
   }
 
+  const hasForm = formData && formData.questions && formData.questions.length > 0;
+
   return (
     <form
   onSubmit={handleSubmit}
@@ -433,7 +438,7 @@ export default function JobForm({
 
       <div className="space-y-4">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight">{formData.title}</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">{formData?.title || "Job Application"}</h1>
         </div>
 
         {/* JOB DETAILS DISPLAY */}
@@ -568,8 +573,9 @@ export default function JobForm({
       </div>
 
       {/* Questions */}
-      <div className="flex flex-col gap-6">
-        {formData.questions?.map((q: any, idx: number) => {
+      {hasForm && (
+        <div className="flex flex-col gap-6">
+          {formData.questions.map((q: any, idx: number) => {
           const name = `question-${idx}`;
 
           if (q.type === "TEXT") {
@@ -640,6 +646,7 @@ export default function JobForm({
           return null;
         })}
       </div>
+      )}
 
       <div className="flex justify-end">
         <Button
