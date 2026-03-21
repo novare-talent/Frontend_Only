@@ -135,9 +135,14 @@ export function QuestionBuilder({ value, onChange, className, onGenerateAI, isGe
               if (type) onDropFromPalette(type)
             }}
           >
-            {value.length === 0 ? (
+            {value.length === 0 ? (<>
+                            <p className="text-sm text-destructive font-medium">Please add at least one question to create the job.</p>
               <p className="text-sm text-muted-foreground">Drag question types here or click a type above to add.</p>
-            ) : (
+            </>
+              
+            )
+            
+            : (
               <ul className="grid gap-3">
                 {value.map((q) => (
                   <li
