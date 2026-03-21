@@ -403,7 +403,11 @@ export default function NewJobPage() {
       <JobCreateForm value={meta} onChange={setMeta} className="mb-6" />
       <QuestionBuilder value={questions} onChange={setQuestions} onGenerateAI={generateFormWithAI} isGenerating={isGeneratingForm} />
       <div className="mt-6 flex justify-end">
-        <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleCreate} disabled={isCreating || !meta.title || !meta.description}>
+        <Button 
+          className="bg-primary text-primary-foreground hover:bg-primary/90" 
+          onClick={handleCreate} 
+          disabled={isCreating || !meta.title || !meta.description || questions.length === 0}
+        >
           {isCreating ? "Creating..." : "Create Job"}
         </Button>
       </div>
