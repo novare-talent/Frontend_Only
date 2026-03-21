@@ -1,25 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import OpenAI from 'openai'
 import PDFParser from 'pdf2json'
 
-// Initialize Gemini
-const genai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+// Initialize OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY!
+})
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Authenticate user and check role
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // 2. Check if user is admin or client
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
@@ -27,10 +24,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (profileError || !profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: 'Profile not found' }, { status: 403 })
     }
 
     if (!['admin', 'client'].includes(profile.role)) {
@@ -40,21 +34,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 3. Parse the request body (now expecting JSON with URL)
     const body = await request.json()
     const { jdUrl, jobTitle, jobDescription } = body
 
     if (!jdUrl) {
-      return NextResponse.json(
-        { error: 'JD URL is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'JD URL is required' }, { status: 400 })
     }
 
-    // 4. Fetch PDF from Supabase URL
     console.log('Fetching PDF from:', jdUrl)
     const pdfResponse = await fetch(jdUrl)
-    
+
     if (!pdfResponse.ok) {
       throw new Error(`Failed to fetch PDF from URL: ${pdfResponse.statusText}`)
     }
@@ -62,10 +51,9 @@ export async function POST(request: NextRequest) {
     const pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer())
     console.log(`Downloaded PDF, size: ${pdfBuffer.length} bytes`)
 
-    // 5. Extract text from PDF
     console.log('Extracting text from PDF...')
     const jdText = await extractTextFromPDFBuffer(pdfBuffer)
-    
+
     if (!jdText || jdText.trim().length === 0) {
       return NextResponse.json(
         { error: 'Could not extract text from PDF. Please ensure the file is a valid PDF with readable text.' },
@@ -75,11 +63,9 @@ export async function POST(request: NextRequest) {
 
     console.log(`Successfully extracted ${jdText.length} characters from PDF`)
 
-    // 6. Generate questions using Gemini
-    console.log('Generating questions with Gemini AI...')
-    const questions = await generateQuestionsWithGemini(jdText, jobTitle, jobDescription)
+    console.log('Generating questions with OpenAI...')
+    const questions = await generateQuestionsWithOpenAI(jdText, jobTitle, jobDescription)
 
-    // 7. Return the questions
     return NextResponse.json({
       success: true,
       questions,
@@ -95,29 +81,24 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Helper function to extract text from PDF buffer using pdf2json
 async function extractTextFromPDFBuffer(buffer: Buffer): Promise<string> {
   return new Promise((resolve, reject) => {
     try {
-      // Create PDF parser
       const pdfParser = new (PDFParser as any)(null, 1)
-      
-      let parsedText = ''
-      
+
       pdfParser.on('pdfParser_dataError', (errData: any) => {
         console.error('PDF Parser Error:', errData.parserError)
         reject(new Error(`Failed to parse PDF: ${errData.parserError}`))
       })
-      
+
       pdfParser.on('pdfParser_dataReady', () => {
-        parsedText = (pdfParser as any).getRawTextContent()
+        const parsedText = (pdfParser as any).getRawTextContent()
         console.log(`Extracted text length: ${parsedText.length}`)
         resolve(parsedText)
       })
-      
-      // Parse the PDF buffer directly
+
       pdfParser.parseBuffer(buffer)
-      
+
     } catch (error) {
       console.error('Error in extractTextFromPDFBuffer:', error)
       reject(new Error(`Failed to extract text from PDF: ${error instanceof Error ? error.message : 'Unknown error'}`))
@@ -125,15 +106,12 @@ async function extractTextFromPDFBuffer(buffer: Buffer): Promise<string> {
   })
 }
 
-// Helper function to generate questions with Gemini
-async function generateQuestionsWithGemini(
+async function generateQuestionsWithOpenAI(
   jdText: string,
   jobTitle?: string,
   jobDescription?: string
 ): Promise<any[]> {
   try {
-    const model = genai.getGenerativeModel({ model: 'gemini-2.5-flash' })
-
     const systemPrompt = `You are "Founder's Chief Hiring Strategist v2.0" — an expert in designing lean, signal-rich hiring forms for high-impact roles.
 
 Your mission: create a set of questions that screens for conviction, motivation, availability, and skill–role alignment, **not generic data**.
@@ -163,27 +141,6 @@ Your mission: create a set of questions that screens for conviction, motivation,
 - Focus: Signal > Noise. Insight > Politeness.
 - Number of questions: 10–15, depending on role complexity.
 
-### Example Output Format
-[
-  {
-    "type": "radio",
-    "title": "Are you comfortable working full-time from Mumbai?",
-    "required": true,
-    "options": ["Yes", "Can relocate", "Remote only"]
-  },
-  {
-    "type": "text",
-    "title": "Describe one project where you solved a complex technical problem end-to-end.",
-    "required": true
-  },
-  {
-    "type": "multi",
-    "title": "Which of the following technologies have you worked with?",
-    "required": true,
-    "options": ["React", "Node.js", "Python", "AWS", "Docker"]
-  }
-]
-
 IMPORTANT: Return ONLY the JSON array. No markdown code blocks, no explanations, no additional text.`
 
     const userPrompt = `Generate application form questions based on this Job Description (JD):
@@ -196,11 +153,18 @@ ${jdText}
 
 Return ONLY a valid JSON array of question objects. No markdown, no explanations.`
 
-    const result = await model.generateContent([systemPrompt, userPrompt])
-    const response = await result.response
-    let text = response.text().trim()
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 4000
+    })
 
-    console.log('Raw Gemini AI Response length:', text.length)
+    let text = completion.choices[0]?.message?.content?.trim() || ''
+    console.log('Raw OpenAI Response length:', text.length)
 
     // Remove markdown code blocks if present
     if (text.startsWith('```json')) {
@@ -209,8 +173,8 @@ Return ONLY a valid JSON array of question objects. No markdown, no explanations
       text = text.replace(/^```\s*/, '').replace(/\s*```$/, '')
     }
 
-    // Extract JSON from response
-    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    // Extract JSON array from response
+    const jsonMatch = text.match(/\[[\s\S]*\]/)
     if (!jsonMatch) {
       console.error('Failed to extract JSON. Response preview:', text.substring(0, 500))
       throw new Error('Could not extract valid JSON from AI response')
@@ -218,7 +182,6 @@ Return ONLY a valid JSON array of question objects. No markdown, no explanations
 
     const questions = JSON.parse(jsonMatch[0])
 
-    // Validate the questions
     if (!Array.isArray(questions)) {
       throw new Error('AI did not return a valid array of questions')
     }
@@ -227,7 +190,6 @@ Return ONLY a valid JSON array of question objects. No markdown, no explanations
       throw new Error('AI returned an empty array of questions')
     }
 
-    // Ensure all questions have required fields
     const validatedQuestions = questions.map((q: any, index: number) => {
       if (!q.type || !q.title) {
         throw new Error(`Question ${index + 1} is missing required fields`)
@@ -244,15 +206,16 @@ Return ONLY a valid JSON array of question objects. No markdown, no explanations
       return {
         type: q.type,
         title: q.title,
-        required: q.required !== false, // Default to true
+        required: q.required !== false,
         ...(q.options && { options: q.options })
       }
     })
 
     console.log(`Successfully validated ${validatedQuestions.length} questions`)
     return validatedQuestions
+
   } catch (error) {
-    console.error('Error in generateQuestionsWithGemini:', error)
+    console.error('Error in generateQuestionsWithOpenAI:', error)
     if (error instanceof Error) {
       throw new Error(`Failed to generate questions: ${error.message}`)
     }
