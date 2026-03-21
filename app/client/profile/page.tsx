@@ -12,13 +12,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Mail, Phone, Save, Camera } from "lucide-react";
+import { User, Mail, Phone, Save } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 // --- Main Profile Page Component ---
 export default function ProfilePage() {
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const profileImageInputRef = useRef<HTMLInputElement>(null);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -102,43 +101,7 @@ export default function ProfilePage() {
     setLoading(false);
   };
 
-  // Profile image upload
-  const handleProfileImageChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    if (event.target.files && event.target.files[0] && user) {
-      setLoading(true);
-      const file = event.target.files[0];
-      const supabase = createClient();
 
-      const filePath = `${user.id}/${Date.now()}_${file.name}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) {
-        console.error("Avatar upload error:", uploadError.message);
-        setLoading(false);
-        return;
-      }
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("avatars").getPublicUrl(filePath);
-
-      setProfileImage(publicUrl);
-      const { error } = await supabase
-        .from("profiles")
-        .update({ profile_image: publicUrl })
-        .eq("id", user.id);
-
-      if (error) {
-        console.error("Error updating profile image:", error.message);
-      }
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -171,30 +134,13 @@ export default function ProfilePage() {
               <div className="flex items-start gap-8">
                 {/* Avatar column */}
                 <div className="flex-shrink-0">
-                  <div className="relative group">
-                    <Avatar className="h-28 w-28">
-                      <AvatarImage src={profileImage || undefined} alt="User profile picture" />
-                      <AvatarFallback>
-                        {profile?.first_name?.[0]}
-                        {profile?.last_name?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-
-                    <div
-                      className="absolute inset-0 bg-black bg-opacity-40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                      onClick={() => profileImageInputRef.current?.click()}
-                    >
-                      <Camera className="h-6 w-6 text-white" />
-                    </div>
-
-                    <Input
-                      ref={profileImageInputRef}
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleProfileImageChange}
-                    />
-                  </div>
+                  <Avatar className="h-28 w-28">
+                    <AvatarImage src={profileImage || undefined} alt="User profile picture" />
+                    <AvatarFallback>
+                      {profile?.first_name?.[0]}
+                      {profile?.last_name?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
                 </div>
               </div>
 
@@ -264,7 +210,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Password (UI only — auth not updated here) */}
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
                   <div className="relative">
                     <Input
@@ -282,7 +228,7 @@ export default function ProfilePage() {
                       {showPassword ? "Hide" : "Show"}
                     </button>
                   </div>
-                </div>
+                </div> */}
               </div>
 
               <div className="pt-2">

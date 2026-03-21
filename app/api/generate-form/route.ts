@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import OpenAI from 'openai'
 import PDFParser from 'pdf2json'
+import { v4 as uuidv4 } from 'uuid'
 
-// Initialize OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!
 })
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { jdUrl, jobTitle, jobDescription } = body
+    const { jdUrl, jobId } = body
 
     if (!jdUrl) {
       return NextResponse.json({ error: 'JD URL is required' }, { status: 400 })
@@ -52,7 +52,22 @@ export async function POST(request: NextRequest) {
     console.log(`Downloaded PDF, size: ${pdfBuffer.length} bytes`)
 
     console.log('Extracting text from PDF...')
-    const jdText = await extractTextFromPDFBuffer(pdfBuffer)
+    let jdText = ''
+    
+    try {
+      jdText = await extractTextFromPDFBuffer(pdfBuffer)
+    } catch (pdfError) {
+      console.warn('pdf2json failed, trying fallback method:', pdfError)
+      try {
+        jdText = await extractTextFallback(pdfBuffer)
+      } catch (fallbackError) {
+        console.error('All PDF extraction methods failed:', fallbackError)
+        return NextResponse.json(
+          { error: 'Could not extract text from PDF. The file may be corrupted or image-based.' },
+          { status: 400 }
+        )
+      }
+    }
 
     if (!jdText || jdText.trim().length === 0) {
       return NextResponse.json(
@@ -63,13 +78,47 @@ export async function POST(request: NextRequest) {
 
     console.log(`Successfully extracted ${jdText.length} characters from PDF`)
 
-    console.log('Generating questions with OpenAI...')
-    const questions = await generateQuestionsWithOpenAI(jdText, jobTitle, jobDescription)
+    console.log('Generating form with OpenAI...')
+    const formData = await generateFormWithOpenAI(jdText)
+
+    const newFormId = uuidv4()
+    
+    // Map question types from OpenAI format (TEXT/RADIO) to frontend format (text/radio/multi)
+    const mappedQuestions = formData.questions.map((q: any) => ({
+      id: uuidv4(),
+      type: q.type.toLowerCase() as 'text' | 'radio' | 'multi',
+      title: q.title,
+      required: true,
+      ...(q.options && { options: q.options })
+    }))
+    
+    const formRecord = {
+      form_id: newFormId,
+      job_id: jobId || null,
+      form: {
+        title: formData.title,
+        questions: mappedQuestions
+      }
+    }
+
+    const { data: insertedForm, error: insertError } = await supabase
+      .from('forms')
+      .insert(formRecord)
+      .select()
+      .single()
+
+    if (insertError) {
+      throw new Error(`Failed to save form: ${insertError.message}`)
+    }
 
     return NextResponse.json({
       success: true,
-      questions,
-      message: 'Form generated successfully'
+      form_id: newFormId,
+      title: formData.title,
+      questions: mappedQuestions,
+      job_id: jobId || null,
+      created_at: insertedForm.created_at,
+      message: 'Form generated and saved successfully'
     })
 
   } catch (error: any) {
@@ -83,53 +132,90 @@ export async function POST(request: NextRequest) {
 
 async function extractTextFromPDFBuffer(buffer: Buffer): Promise<string> {
   return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error('PDF parsing timeout'))
+    }, 30000) // 30 second timeout
+
     try {
       const pdfParser = new (PDFParser as any)(null, 1)
 
       pdfParser.on('pdfParser_dataError', (errData: any) => {
+        clearTimeout(timeout)
         console.error('PDF Parser Error:', errData.parserError)
         reject(new Error(`Failed to parse PDF: ${errData.parserError}`))
       })
 
       pdfParser.on('pdfParser_dataReady', () => {
-        const parsedText = (pdfParser as any).getRawTextContent()
-        console.log(`Extracted text length: ${parsedText.length}`)
-        resolve(parsedText)
+        clearTimeout(timeout)
+        try {
+          const parsedText = (pdfParser as any).getRawTextContent()
+          console.log(`Extracted text length: ${parsedText.length}`)
+          resolve(parsedText)
+        } catch (err) {
+          reject(new Error('Failed to extract text content from parsed PDF'))
+        }
       })
 
       pdfParser.parseBuffer(buffer)
 
     } catch (error) {
+      clearTimeout(timeout)
       console.error('Error in extractTextFromPDFBuffer:', error)
       reject(new Error(`Failed to extract text from PDF: ${error instanceof Error ? error.message : 'Unknown error'}`))
     }
   })
 }
 
-async function generateQuestionsWithOpenAI(
-  jdText: string,
-  jobTitle?: string,
-  jobDescription?: string
-): Promise<any[]> {
+async function extractTextFallback(buffer: Buffer): Promise<string> {
+  // Simple fallback: extract text objects from PDF structure
+  const pdfText = buffer.toString('latin1')
+  const textMatches = pdfText.match(/\(([^)]+)\)\s*Tj/g)
+  
+  if (!textMatches || textMatches.length === 0) {
+    throw new Error('No text found in PDF')
+  }
+  
+  const extractedText = textMatches
+    .map(match => {
+      const text = match.match(/\(([^)]+)\)/)?.[1] || ''
+      return text
+        .replace(/\\n/g, '\n')
+        .replace(/\\r/g, '\r')
+        .replace(/\\t/g, '\t')
+        .replace(/\\\(/g, '(')
+        .replace(/\\\)/g, ')')
+        .replace(/\\\\/g, '\\')
+    })
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  
+  console.log(`Fallback extraction: ${extractedText.length} characters`)
+  return extractedText
+}
+
+async function generateFormWithOpenAI(jdText: string): Promise<any> {
   try {
     const systemPrompt = `You are "Founder's Chief Hiring Strategist v2.0" — an expert in designing lean, signal-rich hiring forms for high-impact roles.
 
-Your mission: create a set of questions that screens for conviction, motivation, availability, and skill–role alignment, **not generic data**.
+Your mission: create a *Google Form JSON* that screens for conviction, motivation, availability, and skill–role alignment, *not generic data*.
 
 ### Core Rules
-- Output **pure JSON array only** — no markdown, no text outside JSON.
-- The output must be an array of question objects with this schema:
-  [
-    {
-      "type": "text" or "radio" or "multi",
-      "title": "Question title",
-      "required": true or false,
-      "options": ["Option1", "Option2"]  // only for "radio" or "multi"
-    }
-  ]
-- Use "text" for open-ended inputs, "radio" for single-choice, and "multi" for multiple-choice.
-- Every "radio" or "multi" question must have **2+ options**.
-- **Do NOT** include name, email, LinkedIn, CV, GitHub, or personal info fields — they are already fetched from user profiles.
+- Output *pure JSON only* — no markdown, no text outside JSON.
+- The output must match this schema:
+  {
+    "title": "Form title",
+    "questions": [
+      {
+        "type": "TEXT" or "RADIO",
+        "title": "Question title",
+        "options": ["Option1", "Option2"]  // only for RADIO
+      }
+    ]
+  }
+- Use "TEXT" for open-ended inputs and "RADIO" for multiple-choice.
+- Every "RADIO" question must have *2+ options*.
+- *Do NOT* include name, email, LinkedIn, CV, GitHub, or personal info fields — they are already fetched from user profiles.
 - Prioritize high-signal questions that:
   - Test technical or domain-specific understanding (based on JD).
   - Gauge motivation, ownership, and mindset (why this role, why now).
@@ -139,19 +225,11 @@ Your mission: create a set of questions that screens for conviction, motivation,
 ### Output Style
 - Tone: Direct, founder-level clarity.
 - Focus: Signal > Noise. Insight > Politeness.
-- Number of questions: 10–15, depending on role complexity.
+- Number of questions: 10–18, depending on role complexity.`
 
-IMPORTANT: Return ONLY the JSON array. No markdown code blocks, no explanations, no additional text.`
+    const userPrompt = `Generate the Google Form JSON based on this Job Description (JD):
 
-    const userPrompt = `Generate application form questions based on this Job Description (JD):
-
-${jobTitle ? `Job Title: ${jobTitle}\n\n` : ''}
-${jobDescription ? `Job Description: ${jobDescription}\n\n` : ''}
-
-Full JD Text:
-${jdText}
-
-Return ONLY a valid JSON array of question objects. No markdown, no explanations.`
+${jdText}`
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -159,66 +237,46 @@ Return ONLY a valid JSON array of question objects. No markdown, no explanations
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
+      response_format: { type: 'json_object' },
       temperature: 0.7,
       max_tokens: 4000
     })
 
-    let text = completion.choices[0]?.message?.content?.trim() || ''
+    const text = completion.choices[0]?.message?.content?.trim() || ''
     console.log('Raw OpenAI Response length:', text.length)
 
-    // Remove markdown code blocks if present
-    if (text.startsWith('```json')) {
-      text = text.replace(/^```json\s*/, '').replace(/\s*```$/, '')
-    } else if (text.startsWith('```')) {
-      text = text.replace(/^```\s*/, '').replace(/\s*```$/, '')
+    const formData = JSON.parse(text)
+
+    if (!formData.title || !formData.questions || !Array.isArray(formData.questions)) {
+      throw new Error('AI did not return valid form structure')
     }
 
-    // Extract JSON array from response
-    const jsonMatch = text.match(/\[[\s\S]*\]/)
-    if (!jsonMatch) {
-      console.error('Failed to extract JSON. Response preview:', text.substring(0, 500))
-      throw new Error('Could not extract valid JSON from AI response')
+    if (formData.questions.length === 0) {
+      throw new Error('AI returned an empty questions array')
     }
 
-    const questions = JSON.parse(jsonMatch[0])
-
-    if (!Array.isArray(questions)) {
-      throw new Error('AI did not return a valid array of questions')
-    }
-
-    if (questions.length === 0) {
-      throw new Error('AI returned an empty array of questions')
-    }
-
-    const validatedQuestions = questions.map((q: any, index: number) => {
+    formData.questions.forEach((q: any, index: number) => {
       if (!q.type || !q.title) {
         throw new Error(`Question ${index + 1} is missing required fields`)
       }
 
-      if (!['text', 'radio', 'multi'].includes(q.type)) {
+      if (!['TEXT', 'RADIO'].includes(q.type)) {
         throw new Error(`Question ${index + 1} has invalid type: ${q.type}`)
       }
 
-      if ((q.type === 'radio' || q.type === 'multi') && (!q.options || q.options.length < 2)) {
+      if (q.type === 'RADIO' && (!q.options || q.options.length < 2)) {
         throw new Error(`Question ${index + 1} must have at least 2 options`)
-      }
-
-      return {
-        type: q.type,
-        title: q.title,
-        required: q.required !== false,
-        ...(q.options && { options: q.options })
       }
     })
 
-    console.log(`Successfully validated ${validatedQuestions.length} questions`)
-    return validatedQuestions
+    console.log(`Successfully validated form with ${formData.questions.length} questions`)
+    return formData
 
   } catch (error) {
-    console.error('Error in generateQuestionsWithOpenAI:', error)
+    console.error('Error in generateFormWithOpenAI:', error)
     if (error instanceof Error) {
-      throw new Error(`Failed to generate questions: ${error.message}`)
+      throw new Error(`Failed to generate form: ${error.message}`)
     }
-    throw new Error('Failed to generate questions: Unknown error')
+    throw new Error('Failed to generate form: Unknown error')
   }
 }
