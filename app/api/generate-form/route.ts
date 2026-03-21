@@ -115,14 +115,14 @@ Your mission: create a *Google Form JSON* that screens for conviction, motivatio
     "title": "Form title",
     "questions": [
       {
-        "type": "TEXT" or "RADIO",
+        "type": "TEXT" or "RADIO" or "MULTI",
         "title": "Question title",
-        "options": ["Option1", "Option2"]  // only for RADIO
+        "options": ["Option1", "Option2"]  // only for RADIO and MULTI
       }
     ]
   }
-- Use "TEXT" for open-ended inputs and "RADIO" for multiple-choice.
-- Every "RADIO" question must have *2+ options*.
+- Use "TEXT" for open-ended inputs, "RADIO" for single-choice (pick one), and "MULTI" for multiple-choice (pick all that apply).
+- Every "RADIO" and "MULTI" question must have *2+ options*.
 - *Do NOT* include name, email, LinkedIn, CV, GitHub, or personal info fields — they are already fetched from user profiles.
 - Prioritize high-signal questions that:
   - Test technical or domain-specific understanding (based on JD).
@@ -178,10 +178,10 @@ Your mission: create a *Google Form JSON* that screens for conviction, motivatio
     if (!q.type || !q.title) {
       throw new Error(`Question ${index + 1} is missing required fields`)
     }
-    if (!['TEXT', 'RADIO'].includes(q.type)) {
+    if (!['TEXT', 'RADIO', 'MULTI'].includes(q.type)) {
       throw new Error(`Question ${index + 1} has invalid type: ${q.type}`)
     }
-    if (q.type === 'RADIO' && (!q.options || q.options.length < 2)) {
+    if (['RADIO', 'MULTI'].includes(q.type) && (!q.options || q.options.length < 2)) {
       throw new Error(`Question ${index + 1} must have at least 2 options`)
     }
   })
