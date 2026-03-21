@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
 import {
   Card,
   CardContent,
@@ -33,8 +34,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { ShineBorder } from "@/components/ui/shine-border";
 
 export type JobCardProps = {
   jobId?: string;
@@ -185,6 +187,16 @@ export function JobCard({
 
   const handleDelete = async () => {
     if (!jobId) return;
+    const result = await Swal.fire({
+      title: "Delete Job?",
+      text: "This will permanently delete the job, its form, and all evaluations.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#ef4444",
+    });
+    if (!result.isConfirmed) return;
     setLoading(true);
     await supabase.from("evaluations").delete().eq("job_id", jobId);
     await supabase.from("forms").delete().eq("job_id", jobId);
@@ -280,7 +292,7 @@ export function JobCard({
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center">
+      <div className="min-h-[90vh] w-full flex flex-col items-center justify-center">
         <DotLottieReact
           src="/assets/dashboards.lottie"
           loop
@@ -296,9 +308,15 @@ export function JobCard({
     <>
       <Dialog open={evalLoading}>
         <DialogContent
-          className="flex flex-col items-center gap-4 py-10 px-8 max-w-sm rounded-2xl [&>button]:hidden"
+          className=" flex flex-col items-center gap-4 py-10 px-8 max-w-sm rounded-2xl [&>button]:hidden overflow-hidden"
           onInteractOutside={(e) => e.preventDefault()}
         >
+          <DialogTitle className="sr-only">Evaluating Candidates</DialogTitle>
+          <ShineBorder
+            borderWidth={2}
+            duration={10}
+            shineColor={["#a855f7", "#3b82f6", "#10b981"]}
+          />
           <DotLottieReact
             src="/assets/evaluation.lottie"
             loop

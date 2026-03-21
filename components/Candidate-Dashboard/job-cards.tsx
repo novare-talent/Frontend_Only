@@ -452,7 +452,7 @@ export default function JobsGrid() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center">
+      <div className="min-h-[90vh] w-full flex flex-col items-center justify-center">
         <DotLottieReact
           src="/assets/dashboards.lottie"
           loop

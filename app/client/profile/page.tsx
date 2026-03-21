@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Mail, Phone, Save } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 // --- Main Profile Page Component ---
 export default function ProfilePage() {
@@ -105,8 +106,14 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-[90vh] w-full bg-muted/40 p-4 lg:p-8 flex items-center justify-center">
-        <p>Loading profile...</p>
+      <div className="min-h-[90vh] w-full bg-muted/40 p-4 lg:p-8 flex flex-col items-center justify-center">
+        <DotLottieReact
+          src="/assets/dashboards.lottie"
+          loop
+          autoplay
+          className="w-64 h-64"
+        />
+        <p className="mt-4 text-lg">Loading profile...</p>
       </div>
     );
   }

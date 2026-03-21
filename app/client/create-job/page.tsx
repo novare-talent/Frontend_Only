@@ -8,6 +8,7 @@ import { JobFormPreview } from "@/components/Client-Dashboard/job-form-preview";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 export default function NewJobPage() {
   const [meta, setMeta] = useState<JobMeta>({
@@ -37,30 +38,25 @@ export default function NewJobPage() {
   const router = useRouter();
 
   useEffect(() => {
-    let mounted = true;
     const supabase = createClient();
-
+    
     async function init() {
       try {
         const { data } = await supabase.auth.getUser();
         const user = data?.user ?? null;
         if (!user) {
-          if (!mounted) return;
           toast.error("Authentication Required", { description: "Please login to create a job." });
           router.replace("/signin");
           return;
         }
-        if (mounted) setUserId(user.id);
+        setUserId(user.id);
 
-        // Check jobs_remaining on mount using server endpoint /api/credits
-        const token = (await supabase.auth.getSession())?.data?.session?.access_token ?? null;
+        const token = (await supabase.auth.getSession())?.data?.session?.access_token;
         if (!token) {
           toast.error("Authentication Error", { description: "Unable to verify session." });
           router.replace("/signin");
           return;
         }
-
-        setCheckingCredits(true);
 
         const res = await fetch("/api/credits", {
           method: "GET",
@@ -73,36 +69,23 @@ export default function NewJobPage() {
           return;
         }
 
-        const ct = res.headers.get("content-type") ?? "";
-        if (!ct.includes("application/json")) {
-          toast.error("Error", { description: "Invalid response from server." });
-          router.replace("/client");
-          return;
-        }
-
         const json = await res.json().catch(() => ({}));
         const jobs = Number(json?.jobs_remaining ?? 0);
 
         if (jobs <= 0) {
-          toast("No Jobs Remaining", { description: "You will be redirected to billing to purchase more jobs." });
+          toast("No Jobs Remaining", { description: "Redirecting to billing..." });
           router.replace("/client/billing");
           return;
         }
-
-        // proceed normally
-      } catch (err: any) {
-        toast.error("Error", { description: "Unexpected error while checking credits." });
+      } catch (err) {
+        toast.error("Error", { description: "Unable to verify credits." });
         router.replace("/client");
       } finally {
-        if (mounted) setCheckingCredits(false);
+        setCheckingCredits(false);
       }
     }
-
+    
     init();
-    return () => {
-      mounted = false;
-    };
-    // run once
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -395,7 +378,17 @@ export default function NewJobPage() {
   }
 
   if (checkingCredits) {
-    return <div className="p-8 text-center text-muted-foreground">Checking account credits…</div>;
+    return (
+      <div className="min-h-[90vh] w-full flex flex-col items-center justify-center">
+        <DotLottieReact
+          src="/assets/dashboards.lottie"
+          loop
+          autoplay
+          className="w-64 h-64"
+        />
+        <p className="mt-4 text-lg">Verifying credits...</p>
+      </div>
+    );
   }
 
   return (
