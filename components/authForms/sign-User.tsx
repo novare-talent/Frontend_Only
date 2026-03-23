@@ -43,8 +43,6 @@ export function SignUpForm({
   });
 
   const [userErrors, setUserErrors] = useState({
-    githubLink: "",
-    linkedinLink: "",
     email: "",
   });
 
@@ -59,8 +57,6 @@ export function SignUpForm({
 
   const validateUserUrls = () => {
     const newErrors = {
-      githubLink: "",
-      linkedinLink: "",
       email: "",
     };
 
@@ -72,24 +68,8 @@ export function SignUpForm({
       newErrors.email = "Only IIT institutional emails are allowed";
     }
 
-    if (
-      userFormData.githubLink &&
-      !userFormData.githubLink.startsWith("https://github.com/")
-    ) {
-      newErrors.githubLink = "GitHub URL must start with https://github.com/";
-    }
-
-    if (
-      userFormData.linkedinLink &&
-      !userFormData.linkedinLink.startsWith("https://linkedin.com/in/") &&
-      !userFormData.linkedinLink.startsWith("https://www.linkedin.com/in/")
-    ) {
-      newErrors.linkedinLink =
-        "LinkedIn URL must start with https://linkedin.com/in/ or https://www.linkedin.com/in/";
-    }
-
     setUserErrors(newErrors);
-    return !newErrors.email && !newErrors.githubLink && !newErrors.linkedinLink;
+    return !newErrors.email;
   };
 
   const validateClientEmail = () => {
@@ -433,12 +413,6 @@ export function SignUpForm({
     setUserFormData({ ...userFormData, [id]: value });
 
     // Clear errors when user starts typing
-    if (userErrors.githubLink && id === "githubLink") {
-      setUserErrors({ ...userErrors, githubLink: "" });
-    }
-    if (userErrors.linkedinLink && id === "linkedinLink") {
-      setUserErrors({ ...userErrors, linkedinLink: "" });
-    }
     if (userErrors.email && id === "email") {
       setUserErrors({ ...userErrors, email: "" });
     }
@@ -463,7 +437,6 @@ export function SignUpForm({
       userFormData.phone &&
       userFormData.linkedinLink &&
       userFormData.password &&
-      validateUserUrls() &&
       userFormData.password.length >= 6
     );
   };
@@ -477,7 +450,6 @@ export function SignUpForm({
       clientFormData.phone &&
       clientFormData.companyName &&
       clientFormData.password &&
-      validateClientEmail() &&
       clientFormData.password.length >= 6
     );
   };
@@ -642,13 +614,7 @@ export function SignUpForm({
                     value={userFormData.githubLink}
                     onChange={handleUserChange}
                     placeholder="https://github.com/username (optional)"
-                    className={userErrors.githubLink ? "border-red-500" : ""}
                   />
-                  {userErrors.githubLink && (
-                    <p className="text-sm text-red-500">
-                      {userErrors.githubLink}
-                    </p>
-                  )}
                 </div>
 
                 <div className="grid gap-2 mt-3">
@@ -660,13 +626,7 @@ export function SignUpForm({
                     value={userFormData.linkedinLink}
                     onChange={handleUserChange}
                     placeholder="https://linkedin.com/in/username"
-                    className={userErrors.linkedinLink ? "border-red-500" : ""}
                   />
-                  {userErrors.linkedinLink && (
-                    <p className="text-sm text-red-500">
-                      {userErrors.linkedinLink}
-                    </p>
-                  )}
                 </div>
 
                 <Button
