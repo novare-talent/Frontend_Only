@@ -8,7 +8,6 @@ import ScrollReveal from "@/components/landing/effects/ScrollReveal";
 const LOGOS = [
   { src: "/images/sine-logo.png", alt: "SINE IIT Bombay" },
   { src: "/images/iitbaa-logo.png", alt: "IIT Bombay Alumni Association" },
-  { src: "/images/nt-logo.png", alt: "Novare Talent" },
 ];
 
 export default function SocialProofBar() {
@@ -20,7 +19,8 @@ export default function SocialProofBar() {
         </p>
       </ScrollReveal>
 
-      <Marquee style={{ "--duration": "25s" } as React.CSSProperties}>
+      {/* <Marquee style={{ "--duration": "25s" } as React.CSSProperties}> */}
+      <div className="flex flex-row">
         {LOGOS.map((logo, i) => (
           <div
             key={i}
@@ -36,7 +36,8 @@ export default function SocialProofBar() {
             />
           </div>
         ))}
-      </Marquee>
+      </div>
+      {/* </Marquee> */}
     </section>
   );
 }

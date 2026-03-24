@@ -18,7 +18,7 @@ export default function Navbar() {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-        className="fixed top-5 left-6 z-40 hidden md:flex"
+        className="fixed top-5 left-6 z-40 hidden lg:flex"
       >
         <Link href="/" className="flex items-center gap-2">
           <Image
@@ -35,7 +35,7 @@ export default function Navbar() {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1], delay: 0.05 }}
-        className="fixed top-5 left-1/2 -translate-x-1/2 z-40 hidden md:flex"
+        className="fixed top-5 left-1/2 -translate-x-1/2 z-40 hidden lg:flex"
       >
         <nav className="flex items-center gap-1 px-4 py-2 rounded-full glass border border-white/10">
         
@@ -56,7 +56,7 @@ export default function Navbar() {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1], delay: 0.1 }}
-        className="fixed top-5 right-6 z-40 hidden md:flex items-center gap-3"
+        className="fixed top-5 right-6 z-40 hidden lg:flex items-center gap-3"
       >
         <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className="text-white hover:text-white/80 transition-colors">
           <Instagram size={18} />
@@ -67,7 +67,7 @@ export default function Navbar() {
           </svg>
         </a>
         <GlowButton href="/Dashboard">
-          Apply to Hire
+          Start your Journey
         </GlowButton>
       </motion.div>
 
@@ -76,7 +76,7 @@ export default function Navbar() {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-        className="fixed top-0 left-0 right-0 z-40 md:hidden bg-[rgba(3,0,20,0.9)] backdrop-blur-xl border-b border-white/5"
+        className="fixed top-0 left-0 right-0 z-40 lg:hidden bg-[rgba(3,0,20,0.9)] backdrop-blur-xl border-b border-white/5"
       >
         <div className="flex items-center justify-between px-6 h-16">
           <a href="#" className="flex items-center gap-2">
@@ -100,7 +100,7 @@ export default function Navbar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-30 bg-[var(--color-bg-primary)]/95 backdrop-blur-xl md:hidden"
+            className="fixed inset-0 z-30 bg-[var(--color-bg-primary)]/95 backdrop-blur-xl lg:hidden"
           >
             <div className="flex flex-col items-center justify-center h-full gap-8">
               {NAV_LINKS.map((link, i) => (

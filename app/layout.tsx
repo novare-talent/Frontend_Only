@@ -48,6 +48,7 @@ import type { Metadata } from "next";
 import { Lora, Lato } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SessionProvider } from "@/context/SessionContext";
+import { MousePositionProvider } from "@/hooks/useMousePosition";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -88,10 +89,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SessionProvider>
-            {children}
-          </SessionProvider>
-          <Toaster />
+          <MousePositionProvider>
+            <SessionProvider>
+              {children}
+            </SessionProvider>
+            <Toaster />
+          </MousePositionProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -162,7 +162,7 @@ export const STUDENT_TESTIMONIALS = [
 export const TEAM_MEMBERS = [
   {
     name: "Sahil Sheoran",
-    role: "Founder & CEO",
+    role: "Co-Founder & CEO",
     college: "IIT Bombay",
     image: "/images/team/sahil.webp",
   },
@@ -180,7 +180,7 @@ export const TEAM_MEMBERS = [
   },
   {
     name: "Ayush Awatade",
-    role: "Founding Engineer",
+    role: "Co-Founder & CTO",
     college: "IIT Bombay",
     image: "/images/team/ayush.webp",
   },
