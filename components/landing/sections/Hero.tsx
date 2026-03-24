@@ -68,13 +68,13 @@ export default function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.8 }}
-          className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+          className="mt-10 flex flex-row flex-wrap items-stretch justify-center gap-3"
         >
-          <GlowButton href="/sign-up?role=recruiter" className="text-base w-42">
+          <GlowButton href="/sign-up?role=recruiter" className="text-base flex-1 min-w-[140px] max-w-[180px] h-12">
             Hire Top 1% Talent
           </GlowButton>
-          <span className="text-[var(--color-lavender)] font-medium">or</span>
-          <GlowButton href="/sign-up" className="text-base w-42 bg-transparent border border-[var(--color-glass-border)] hover:bg-white/5">
+          <span className="text-[var(--color-lavender)] font-medium self-center">or</span>
+          <GlowButton href="/sign-up" className="text-base flex-1 min-w-[140px] max-w-[180px] h-12 bg-transparent border border-[var(--color-glass-border)] hover:bg-white/5">
             Get Hired
           </GlowButton>
         </motion.div>

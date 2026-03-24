@@ -59,7 +59,7 @@ export default function Testimonials() {
               parallaxInvert
             />
             <GlowOrb
-              className="bottom-0 left-0"
+              className="bottom-0 left-0 "
               color="rgba(124, 58, 237, 0.4)"
               size="800px"
               parallaxIntensity={15}

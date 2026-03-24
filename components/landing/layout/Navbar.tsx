@@ -71,20 +71,20 @@ export default function Navbar() {
         </GlowButton>
       </motion.div>
 
-      {/* Mobile header */}
+      {/* Mobile header - Floating Pill */}
       <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-        className="fixed top-0 left-0 right-0 z-40 lg:hidden bg-[rgba(3,0,20,0.9)] backdrop-blur-xl border-b border-white/5"
+        className="fixed top-5 left-4 right-4 z-40 lg:hidden"
       >
-        <div className="flex items-center justify-between px-6 h-16">
+        <div className="flex items-center justify-between px-6 h-14 rounded-full glass border border-white/10 shadow-lg">
           <a href="#" className="flex items-center gap-2">
             <Image
               src="/images/logo.svg"
               alt="Novare Talent"
-              width={150}
-              height={28}
+              width={120}
+              height={24}
             />
           </a>
           <button onClick={() => setMobileOpen(!mobileOpen)} className="text-white p-2">

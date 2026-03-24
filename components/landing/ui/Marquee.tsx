@@ -55,8 +55,8 @@ export function Marquee({
       )}
     >
       {/* Fade gradients */}
-      <div className="absolute left-0 top-0 z-10 h-full w-20 bg-gradient-to-r from-[var(--color-bg-primary)] to-transparent pointer-events-none" />
-      <div className="absolute right-0 top-0 z-10 h-full w-20 bg-gradient-to-l from-[var(--color-bg-primary)] to-transparent pointer-events-none" />
+      <div className="absolute left-0 top-0 z-10 h-full w-20 bg-gradient-to-r from-[var(--color-bg-primary)] to-transparent pointer-events-none hidden md:block" />
+      <div className="absolute right-0 top-0 z-10 h-full w-20 bg-gradient-to-l from-[var(--color-bg-primary)] to-transparent pointer-events-none hidden md:block" />
       
       {/* Marquee content */}
       <div className="flex gap-(--gap)">
