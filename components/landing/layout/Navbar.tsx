@@ -37,7 +37,7 @@ export default function Navbar() {
         transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1], delay: 0.05 }}
         className="fixed top-5 left-1/2 -translate-x-1/2 z-40 hidden lg:flex"
       >
-        <nav className="flex items-center gap-1 px-4 py-2 rounded-full glass border border-white/10">
+        <nav className="flex items-center gap-1 px-4 py-2 rounded-full glass backdrop-blur-lg border border-white/10">
         
           {NAV_LINKS.map((link) => (
             <a
