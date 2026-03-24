@@ -45,7 +45,8 @@
 // }
 
 import type { Metadata } from "next";
-import { Lora, Lato } from "next/font/google";
+import { Lora } from "next/font/google";
+import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SessionProvider } from "@/context/SessionContext";
 import { MousePositionProvider } from "@/hooks/useMousePosition";
@@ -53,10 +54,10 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
 /* Default font (everywhere) */
-const lato = Lato({
-  subsets: ["latin"],
-  weight: ["300", "400", "700"],
+const satoshi = localFont({
+  src: "../public/fonts/Satoshi-Variable.ttf",
   variable: "--font-sans",
+  weight: "300 900",
 });
 
 /* Optional serif font */
@@ -80,7 +81,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${lato.variable} ${lora.variable}`}
+      className={`${satoshi.variable} ${lora.variable}`}
     >
       <body className="antialiased font-sans">
         <ThemeProvider
