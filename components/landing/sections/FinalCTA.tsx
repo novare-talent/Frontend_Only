@@ -17,10 +17,10 @@ export default function FinalCTA() {
 
         <div className="flex flex-col items-center gap-6">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <GlowButton href="/hire" className="text-base">
+            <GlowButton href="/sign-up?role=recruiter" className="text-base">
               Hire Top 1% Talent
             </GlowButton>
-            <GlowButton href="/get-hired" variant="secondary" className="text-base">
+            <GlowButton href="/sign-up" variant="secondary" className="text-base">
               Get Hired
             </GlowButton>
           </div>
