@@ -1,0 +1,45 @@
+import React from 'react';
+
+interface GlowButtonProps {
+  children: React.ReactNode;
+  href?: string;
+  onClick?: () => void;
+  className?: string;
+  type?: 'button' | 'submit' | 'reset';
+  variant?: 'primary' | 'secondary';
+}
+
+export default function GlowButton({ children, href, onClick, className = '', type = 'button', variant = 'primary' }: GlowButtonProps) {
+  const buttonContent = (
+    <>
+      <div className="points_wrapper">
+        {Array.from({ length: 10 }, (_, i) => (
+          <i key={i} className="point" />
+        ))}
+      </div>
+      <span className="inner">
+        {children}
+      </span>
+    </>
+  );
+
+  const buttonClasses = `
+    ${variant === 'secondary' ? 'button-secondary' : 'button'} relative inline-flex items-center justify-center 
+    cursor-pointer overflow-hidden transition-all duration-300 ease-out
+    active:scale-95 ${className}
+  `.trim();
+
+  if (href) {
+    return (
+      <a href={href} className={buttonClasses}>
+        {buttonContent}
+      </a>
+    );
+  }
+
+  return (
+    <button onClick={onClick} type={type} className={buttonClasses}>
+      {buttonContent}
+    </button>
+  );
+}
