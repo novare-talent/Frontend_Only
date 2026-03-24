@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Plus, Minus } from "lucide-react";
+import { Plus, Minus } from "lucide-react";
 import GlowOrb from "@/components/landing/effects/GlowOrb";
 import { FAQS } from "@/lib/constants";
 import { ShineBorder } from "@/components/landing/ui/shine-border";
@@ -114,7 +114,7 @@ export default function FAQs() {
             <div className="space-y-6">
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
                 Got questions?{" "}
-                <span className="gradient-text">We've got answers.</span>
+                <span className="gradient-text">We&apos;ve got answers.</span>
               </h2>
               <p className="text-white text-lg leading-relaxed">
                 Everything you need to know about Novare Talent — how we work, who we serve, and what makes us different.

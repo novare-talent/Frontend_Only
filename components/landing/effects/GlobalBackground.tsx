@@ -1,6 +1,6 @@
 "use client";
 
-import GlowOrb from "@/components/effects/GlowOrb";
+import GlowOrb from "@/components/landing/effects/GlowOrb";
 
 export default function GlobalBackground() {
   return (

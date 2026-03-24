@@ -21,7 +21,7 @@ export default function Footer() {
               />
             </div>
             <p className="text-sm text-white mb-4 leading-relaxed">
-              India's elite talent network. Connecting top 1% institute graduates with companies building the future.
+              India&apos;s elite talent network. Connecting top 1% institute graduates with companies building the future.
             </p>
             <p className="text-xs text-white">
               Incubated at SINE, IIT Bombay

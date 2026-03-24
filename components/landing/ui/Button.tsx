@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import GlowButton from "@/components/ui/GlowButton";
+import GlowButton from "@/components/landing/ui/GlowButton";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary";

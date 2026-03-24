@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useSpring, useTransform } from "framer-motion";
+import { motion, useSpring } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useMousePosition } from "@/hooks/useMousePosition";
 

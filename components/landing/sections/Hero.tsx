@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
 import ThreeGrid from "@/components/landing/effects/ThreeGrid";
 import GlowOrb from "@/components/landing/effects/GlowOrb";
 import GlowButton from "@/components/landing/ui/GlowButton";
@@ -35,7 +34,7 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="inline-block px-4 py-1.5 rounded-full text-xs font-mono tracking-[0.2em] uppercase text-[var(--color-lavender)] border border-[var(--color-glass-border)] bg-[var(--color-glass-bg)] mb-8"
         >
-          India's Elite Talent Network
+          India&apos;s Elite Talent Network
         </motion.span>
 
         {/* Headline */}
@@ -61,7 +60,7 @@ export default function Hero() {
         >
           From thousands of candidates to the few who change outcomes.
           <br className="hidden md:block" />
-          Curated talent from IITs, IIMs, and India's top institutes.
+          Curated talent from IITs, IIMs, and India&apos;s top institutes.
         </motion.p>
 
         {/* CTA */}

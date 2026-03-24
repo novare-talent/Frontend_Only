@@ -5,7 +5,6 @@ import SectionHeader from "@/components/landing/ui/SectionHeader";
 import GlowButton from "@/components/landing/ui/GlowButton";
 import { StaggerContainer, StaggerItem } from "@/components/landing/effects/ScrollReveal";
 import GlowOrb from "@/components/landing/effects/GlowOrb";
-import AuroraMesh from "@/components/landing/effects/AuroraMesh";
 
 const cards = [
   {

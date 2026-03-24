@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Instagram } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { NAV_LINKS, SOCIAL_LINKS } from "@/lib/constants";
 import GlowButton from "@/components/landing/ui/GlowButton";
 
@@ -19,14 +20,14 @@ export default function Navbar() {
         transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
         className="fixed top-5 left-6 z-40 hidden md:flex"
       >
-        <a href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <Image
             src="/images/logo.svg"
             alt="Novare Talent"
             width={150}
             height={28}
           />
-        </a>
+        </Link>
       </motion.div>
 
       {/* Floating Glass Nav — center */}
