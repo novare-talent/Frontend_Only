@@ -1,0 +1,28 @@
+<svg width="1248" height="530" viewBox="0 0 1248 530" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Grid pattern for bottom section -->
+  <defs>
+    <pattern id="grid-bottom" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(196,181,253,0.12)" stroke-width="1"/>
+    </pattern>
+    <linearGradient id="fade-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(196,181,253,0.3);stop-opacity:1" />
+      <stop offset="50%" style="stop-color:rgba(196,181,253,0.15);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:rgba(196,181,253,0.05);stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Base grid -->
+  <rect width="1248" height="530" fill="url(#grid-bottom)"/>
+  
+  <!-- Vertical accent lines -->
+  <line x1="208" y1="0" x2="208" y2="530" stroke="rgba(196,181,253,0.15)" stroke-width="1"/>
+  <line x1="416" y1="0" x2="416" y2="530" stroke="rgba(196,181,253,0.18)" stroke-width="1"/>
+  <line x1="624" y1="0" x2="624" y2="530" stroke="url(#fade-gradient)" stroke-width="2"/>
+  <line x1="832" y1="0" x2="832" y2="530" stroke="rgba(196,181,253,0.18)" stroke-width="1"/>
+  <line x1="1040" y1="0" x2="1040" y2="530" stroke="rgba(196,181,253,0.15)" stroke-width="1"/>
+  
+  <!-- Horizontal accent lines -->
+  <line x1="0" y1="132" x2="1248" y2="132" stroke="rgba(196,181,253,0.15)" stroke-width="1"/>
+  <line x1="0" y1="265" x2="1248" y2="265" stroke="rgba(196,181,253,0.2)" stroke-width="1"/>
+  <line x1="0" y1="398" x2="1248" y2="398" stroke="rgba(196,181,253,0.15)" stroke-width="1"/>
+</svg>

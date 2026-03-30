@@ -1,13 +1,17 @@
 "use client";
 
 import GlowButton from "@/components/landing/ui/GlowButton";
-
+import { DotPattern } from "@/components/landing/ui/dot-pattern";
 
 export default function FinalCTA() {
   return (
-
-    
-    <section id="cta" className="relative overflow-hidden border border-white/10 bg-black/80 backdrop-blur-sm rounded-2xl mx-auto max-w-6xl m-8" style={{background: 'radial-gradient(ellipse at top, rgba(124, 58, 237, 0.6) 0%, transparent 70%)'}} > 
+    <section id="cta" className="relative overflow-hidden border border-white/10 bg-black/80 backdrop-blur-sm rounded-2xl mx-auto max-w-6xl m-8" style={{background: 'radial-gradient(ellipse at top, rgba(124, 58, 237, 0.6) 0%, transparent 70%)'}} >
+      <DotPattern
+        width={20}
+        height={20}
+        cr={0.8}
+        className="text-violet-400/30 mask-[radial-gradient(ellipse_at_center,white_30%,transparent_80%)]"
+      />
       <div className="relative z-10 flex flex-col items-center justify-center gap-10 py-16 px-4">
         <h2 className="text-white text-4xl md:text-7xl font-extrabold tracking-tight max-w-xs md:max-w-xl text-center">
           Ready to hire{" "}

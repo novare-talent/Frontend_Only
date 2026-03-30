@@ -1,0 +1,13 @@
+<svg width="1248" height="202" viewBox="0 0 1248 202" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Grid pattern for top section -->
+  <defs>
+    <pattern id="grid-top" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(196,181,253,0.15)" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1248" height="202" fill="url(#grid-top)"/>
+  <!-- Vertical lines -->
+  <line x1="312" y1="0" x2="312" y2="202" stroke="rgba(196,181,253,0.2)" stroke-width="1"/>
+  <line x1="624" y1="0" x2="624" y2="202" stroke="rgba(196,181,253,0.25)" stroke-width="1.5"/>
+  <line x1="936" y1="0" x2="936" y2="202" stroke="rgba(196,181,253,0.2)" stroke-width="1"/>
+</svg>
