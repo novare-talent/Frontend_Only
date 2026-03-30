@@ -69,8 +69,8 @@ export default function ForgotPasswordPage({
                     className="hidden dark:block"
                   />
                 </Link>
-                <h1 className="mb-1 mt-4 text-xl font-semibold">Recover Password</h1>
-                <p className="text-sm">Enter your email to receive a reset link</p>
+                <h1 className="mb-1 mt-4 text-xl font-semibold text-foreground">Recover Password</h1>
+                <p className="text-sm text-muted-foreground">Enter your email to receive a reset link</p>
               </div>
 
               {params.error && (
@@ -87,7 +87,7 @@ export default function ForgotPasswordPage({
 
               <div className="mt-6 space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="block text-sm">
+                  <Label htmlFor="email" className="block text-sm text-foreground">
                     Email
                   </Label>
                   <Input

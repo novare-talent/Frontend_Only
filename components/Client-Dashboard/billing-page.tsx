@@ -360,7 +360,7 @@ export function BillingPage() {
               <div className="flex gap-3">
                 {getNotificationIcon()}
                 <div className="flex-1">
-                  <h4 className="font-semibold text-sm mb-1">{notification?.title}</h4>
+                  <h4 className="font-semibold text-sm mb-1 text-foreground">{notification?.title}</h4>
                   <p className="text-sm text-muted-foreground">{notification?.message}</p>
                 </div>
                 <Button

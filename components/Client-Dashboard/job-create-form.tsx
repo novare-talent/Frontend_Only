@@ -140,7 +140,7 @@ export function JobCreateForm({
         
         {/* Job Title - Full Width */}
         <div className="grid gap-2">
-          <Label htmlFor="title" className="text-sm font-medium">
+          <Label htmlFor="title" className="text-sm font-medium text-foreground">
             Job Title / Position <span className="text-destructive">*</span>
           </Label>
           <Input 
@@ -157,7 +157,7 @@ export function JobCreateForm({
         {/* Type & Experience Row */}
         <div className="grid md:grid-cols-2 gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="type" className="text-sm font-medium">
+            <Label htmlFor="type" className="text-sm font-medium text-foreground">
               Type <span className="text-destructive">*</span>
             </Label>
             <Select value={value.type} onValueChange={(v) => set("type", v as "Internship" | "Job")}>
@@ -172,7 +172,7 @@ export function JobCreateForm({
           </div>
           {value.type === "Job" && (
             <div className="grid gap-2">
-              <Label htmlFor="experience" className="text-sm font-medium">Experience Required</Label>
+              <Label htmlFor="experience" className="text-sm font-medium text-foreground">Experience Required</Label>
               <Input 
                 id="experience" 
                 value={value.experience || ""} 
@@ -187,7 +187,7 @@ export function JobCreateForm({
         {/* Stipend, Location, Duration Row */}
         <div className="grid md:grid-cols-3 gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="stipend" className="text-sm font-medium">
+            <Label htmlFor="stipend" className="text-sm font-medium text-foreground">
               Stipend / Salary <span className="text-destructive">*</span>
             </Label>
             <Input 
@@ -199,7 +199,7 @@ export function JobCreateForm({
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="location" className="text-sm font-medium">
+            <Label htmlFor="location" className="text-sm font-medium text-foreground">
               Location <span className="text-destructive">*</span>
             </Label>
             <Input 
@@ -211,7 +211,7 @@ export function JobCreateForm({
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="duration" className="text-sm font-medium">
+            <Label htmlFor="duration" className="text-sm font-medium text-foreground">
               Duration <span className="text-destructive">*</span>
             </Label>
             <Input 
@@ -226,7 +226,7 @@ export function JobCreateForm({
 
         {/* Closing Time */}
         <div className="grid gap-2">
-          <Label htmlFor="closing" className="text-sm font-medium">
+          <Label htmlFor="closing" className="text-sm font-medium text-foreground">
             Application Deadline <span className="text-destructive">*</span>
           </Label>
           <Input
@@ -240,7 +240,7 @@ export function JobCreateForm({
 
         {/* Skills - Full Width Row */}
         <div className="grid gap-2">
-          <Label className="text-sm font-medium">Required Skills / Tags</Label>
+          <Label className="text-sm font-medium text-foreground">Required Skills / Tags</Label>
           <div className="relative">
             <div className="flex items-center gap-2">
               <Input
@@ -315,7 +315,7 @@ export function JobCreateForm({
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
             <div>
-              <Label htmlFor="desc" className="text-sm font-medium">
+              <Label htmlFor="desc" className="text-sm font-medium text-foreground">
                 Short Description for Job Role / Position <span className="text-destructive">*</span>
               </Label>
               <p className="text-xs text-muted-foreground mt-0.5">This will be visible on the job card</p>
@@ -345,7 +345,7 @@ export function JobCreateForm({
 
         {/* JD Upload */}
         <div className="space-y-2">
-          <Label htmlFor="jd-file" className="text-sm font-medium">
+          <Label htmlFor="jd-file" className="text-sm font-medium text-foreground">
             Upload Your Job Description (PDF Only) <span className="text-destructive">*</span>
           </Label>
           <p className="text-xs text-muted-foreground">Upload a detailed job description document (Max 5MB)</p>

@@ -182,16 +182,6 @@ export function QuestionBuilder({ value, onChange, className, onGenerateAI, isGe
             ))}
 
             <Button
-              variant="outline"
-              size="sm"
-              className="text-xs"
-              onClick={() => setPreviewLoader(true)}
-              type="button"
-            >
-              Preview Loader
-            </Button>
-
-            <Button
               variant="secondary"
               className="ml-auto"
               onClick={async () => { setLocalGenerating(true); try { await onGenerateAI?.() } finally { setLocalGenerating(false) } }}
@@ -280,7 +270,7 @@ export function QuestionBuilder({ value, onChange, className, onGenerateAI, isGe
                       <div className="grid gap-3">
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <p className="font-medium text-sm">
+                            <p className="font-medium text-sm text-foreground">
                               {q.title}
                               {q.required && <span className="text-red-500 ml-1">*</span>}
                             </p>

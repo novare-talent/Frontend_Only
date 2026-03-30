@@ -475,8 +475,8 @@ export function SignUpForm({
                 className="hidden dark:block"
               />
             </Link>
-            <h1 className="mb-1 mt-4 text-xl font-semibold">Welcome Aboard</h1>
-            <p className="text-sm">Create an Account to build your professional profile.</p>
+            <h1 className="mb-1 mt-4 text-xl font-semibold text-foreground">Welcome Aboard</h1>
+            <p className="text-sm text-muted-foreground">Create an Account to build your professional profile.</p>
           </div>
           <Tabs
             value={signupType}
@@ -520,7 +520,7 @@ export function SignUpForm({
                 {/* Fields */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div className="grid gap-2 mt-3">
-                    <Label htmlFor="firstName">First Name</Label>
+                    <Label htmlFor="firstName" className="text-foreground">First Name</Label>
                     <Input
                       id="firstName"
                       type="text"
@@ -531,7 +531,7 @@ export function SignUpForm({
                     />
                   </div>
                   <div className="grid gap-2 mt-3">
-                    <Label htmlFor="lastName">Last Name</Label>
+                    <Label htmlFor="lastName" className="text-foreground">Last Name</Label>
                     <Input
                       id="lastName"
                       type="text"
@@ -544,7 +544,7 @@ export function SignUpForm({
                 </div>
 
                 <div className="grid gap-2 mt-3">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="text-foreground">Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -565,7 +565,7 @@ export function SignUpForm({
                 </div>
 
                 <div className="grid gap-2 mt-3">
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone" className="text-foreground">Phone Number</Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -581,7 +581,7 @@ export function SignUpForm({
                 </div>
 
                 <div className="grid gap-2 mt-3">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-foreground">Password</Label>
                   <div className="relative">
                     <Input
                       id="password"
@@ -607,7 +607,7 @@ export function SignUpForm({
                 </div>
 
                 <div className="grid gap-2 mt-3">
-                  <Label htmlFor="githubLink">GitHub</Label>
+                  <Label htmlFor="githubLink" className="text-foreground">GitHub</Label>
                   <Input
                     id="githubLink"
                     type="url"
@@ -618,7 +618,7 @@ export function SignUpForm({
                 </div>
 
                 <div className="grid gap-2 mt-3">
-                  <Label htmlFor="linkedinLink">LinkedIn</Label>
+                  <Label htmlFor="linkedinLink" className="text-foreground">LinkedIn</Label>
                   <Input
                     id="linkedinLink"
                     type="url"
@@ -643,7 +643,7 @@ export function SignUpForm({
               <form onSubmit={handleClientSubmit}>
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div className="grid gap-2 mt-3">
-                    <Label htmlFor="clientFirstName">First Name</Label>
+                    <Label htmlFor="clientFirstName" className="text-foreground">First Name</Label>
                     <Input
                       id="clientFirstName"
                       type="text"
@@ -659,7 +659,7 @@ export function SignUpForm({
                     />
                   </div>
                   <div className="grid gap-2 mt-3">
-                    <Label htmlFor="clientLastName">Last Name</Label>
+                    <Label htmlFor="clientLastName" className="text-foreground">Last Name</Label>
                     <Input
                       id="clientLastName"
                       type="text"
@@ -677,7 +677,7 @@ export function SignUpForm({
                 </div>
 
                 <div className="grid gap-2 mt-3">
-                  <Label htmlFor="clientEmail">Company Email</Label>
+                  <Label htmlFor="clientEmail" className="text-foreground">Company Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -703,7 +703,7 @@ export function SignUpForm({
                 </div>
 
                 <div className="grid gap-2 mt-3">
-                  <Label htmlFor="clientPhone">Phone Number</Label>
+                  <Label htmlFor="clientPhone" className="text-foreground">Phone Number</Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -724,7 +724,7 @@ export function SignUpForm({
                 </div>
 
                 <div className="grid gap-2 mt-3">
-                  <Label htmlFor="clientCompanyName">Company Name</Label>
+                  <Label htmlFor="clientCompanyName" className="text-foreground">Company Name</Label>
                   <Input
                     id="clientCompanyName"
                     type="text"
@@ -741,7 +741,7 @@ export function SignUpForm({
                 </div>
 
                 <div className="grid gap-2 mt-3">
-                  <Label htmlFor="clientPassword">Password</Label>
+                  <Label htmlFor="clientPassword" className="text-foreground">Password</Label>
                   <div className="relative">
                     <Input
                       id="clientPassword"
@@ -794,14 +794,14 @@ export function SignUpForm({
             By clicking continue, you agree to our{" "}
             <Link
               href="/Terms&Conditions.pdf"
-              className="underline underline-offset-4"
+              className="underline underline-offset-4 text-foreground hover:text-primary"
             >
               Terms of Service
             </Link>{" "}
             and{" "}
             <Link
               href="/Refund&CreditPolicy.pdf"
-              className="underline underline-offset-4"
+              className="underline underline-offset-4 text-foreground hover:text-primary"
             >
               Refund Policy
             </Link>

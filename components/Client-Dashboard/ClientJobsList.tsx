@@ -106,7 +106,7 @@ export default function ClientJobs() {
           autoplay
           className="w-64 h-64"
         />
-        <p className="mt-4 text-lg">Loading your dashboard...</p>
+        <p className="mt-4 text-lg text-foreground">Loading your dashboard...</p>
       </div>
     );
   }
@@ -120,7 +120,7 @@ export default function ClientJobs() {
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
         <div className="flex items-center gap-4">
-          <h1 className="text-balance text-2xl font-semibold text-brand">
+          <h1 className="text-balance text-2xl font-semibold text-foreground">
             Created Jobs
           </h1>
         </div>
@@ -156,7 +156,7 @@ export default function ClientJobs() {
                 />
               </svg>
             </div>
-            <h3 className="mb-2 text-xl font-semibold">Ready to hire?</h3>
+            <h3 className="mb-2 text-xl font-semibold text-foreground">Ready to hire?</h3>
             <p className="mb-6 text-muted-foreground max-w-md">
               You haven&apos;t posted any jobs yet. Use the button in the top
               right to get started.

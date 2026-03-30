@@ -110,13 +110,13 @@ export function LoginForm({
               className="hidden dark:block"
             />
           </Link>
-          <h1 className="mb-1 mt-4 text-xl font-semibold">Login to your account</h1>
-          <p className="text-sm">Enter your email below to login to your account</p>
+          <h1 className="mb-1 mt-4 text-xl font-semibold text-foreground">Login to your account</h1>
+          <p className="text-sm text-muted-foreground">Enter your email below to login to your account</p>
         </div>
 
         <div className="mt-6 space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="email" className="block text-sm">Email</Label>
+            <Label htmlFor="email" className="block text-sm text-foreground">Email</Label>
             <Input
               id="email"
               type="email"
@@ -129,7 +129,7 @@ export function LoginForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="block text-sm">Password</Label>
+            <Label htmlFor="password" className="block text-sm text-foreground">Password</Label>
             <Input
               id="password"
               type="password"
@@ -145,9 +145,9 @@ export function LoginForm({
             {loading ? "Logging in..." : "Login"}
           </Button>
 
-          <div className="text-center text-sm">
+          <div className="text-center text-sm text-muted-foreground">
             Forgot Your Password?{" "}
-            <Link href="/forgot-password" className="underline underline-offset-4">
+            <Link href="/forgot-password" className="underline underline-offset-4 text-foreground hover:text-primary">
               Reset
             </Link>
           </div>

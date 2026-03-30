@@ -342,7 +342,7 @@ export function JobCard({
             <div className="flex gap-3">
               {getNotificationIcon()}
               <div className="flex-1">
-                <h4 className="font-semibold text-sm mb-1">
+                <h4 className="font-semibold text-sm mb-1 text-foreground">
                   {notification?.title}
                 </h4>
                 <p className="text-sm text-muted-foreground">
@@ -406,17 +406,17 @@ export function JobCard({
           </CardTitle>
 
           <CardDescription className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="inline-flex items-center gap-1">
+            <span className="inline-flex items-center gap-1 text-muted-foreground">
               <Wallet className="size-4 text-accent-foreground" aria-hidden />
               {meta.rate || "Not specified"}
             </span>
             <span className="text-muted-foreground">•</span>
-            <span>{meta.level || "Not specified"}</span>
+            <span className="text-muted-foreground">{meta.level || "Not specified"}</span>
           </CardDescription>
         </CardHeader>
 
         <CardContent className="flex flex-col gap-4">
-          <p className="text-pretty leading-relaxed">{description || "No description provided"}</p>
+          <p className="text-pretty leading-relaxed text-foreground">{description || "No description provided"}</p>
 
           {tags && tags.length > 0 && (
             <div className="flex flex-wrap gap-2">

@@ -128,8 +128,8 @@ export default function UpdatePasswordPage({
                     className="hidden dark:block"
                   />
                 </Link>
-                <h1 className="mb-1 mt-4 text-xl font-semibold">Reset Password</h1>
-                <p className="text-sm">Enter your new password below</p>
+                <h1 className="mb-1 mt-4 text-xl font-semibold text-foreground">Reset Password</h1>
+                <p className="text-sm text-muted-foreground">Enter your new password below</p>
               </div>
 
               {params.error && (
@@ -150,7 +150,7 @@ export default function UpdatePasswordPage({
 
               <div className="mt-6 space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="block text-sm">
+                  <Label htmlFor="password" className="block text-sm text-foreground">
                     New Password
                   </Label>
                   <Input
@@ -165,7 +165,7 @@ export default function UpdatePasswordPage({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password" className="block text-sm">
+                  <Label htmlFor="confirm-password" className="block text-sm text-foreground">
                     Confirm Password
                   </Label>
                   <Input

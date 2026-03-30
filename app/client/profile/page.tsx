@@ -113,7 +113,7 @@ export default function ProfilePage() {
           autoplay
           className="w-64 h-64"
         />
-        <p className="mt-4 text-lg">Loading profile...</p>
+        <p className="mt-4 text-lg text-foreground">Loading profile...</p>
       </div>
     );
   }
@@ -121,9 +121,9 @@ export default function ProfilePage() {
   return (
     <div className="min-h-[90vh] w-full bg-muted/40 p-4 lg:px-8">
       {user ? (
-        <p className="mb-2">Welcome, {user.email}</p>
+        <p className="mb-2 text-foreground">Welcome, {user.email}</p>
       ) : (
-        <p className="mb-4">Loading user...</p>
+        <p className="mb-4 text-foreground">Loading user...</p>
       )}
 
       <div className="max-w-6xl w-full ">
@@ -156,7 +156,7 @@ export default function ProfilePage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
+                      <Label htmlFor="firstName" className="text-foreground">First Name</Label>
                       <Input
                         id="firstName"
                         name="firstName"
@@ -164,7 +164,7 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
+                      <Label htmlFor="lastName" className="text-foreground">Last Name</Label>
                       <Input
                         id="lastName"
                         name="lastName"
@@ -174,7 +174,7 @@ export default function ProfilePage() {
                   </div>
                 {/* Company Email */}
                 <div className="space-y-2">
-                  <Label htmlFor="companyEmail">Company Email</Label>
+                  <Label htmlFor="companyEmail" className="text-foreground">Company Email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -191,7 +191,7 @@ export default function ProfilePage() {
 
                 {/* Phone */}
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone" className="text-foreground">Phone Number</Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -207,7 +207,7 @@ export default function ProfilePage() {
 
                 {/* Company Name */}
                 <div className="space-y-2">
-                  <Label htmlFor="companyName">Company Name</Label>
+                  <Label htmlFor="companyName" className="text-foreground">Company Name</Label>
                   <Input
                     id="companyName"
                     name="companyName"
