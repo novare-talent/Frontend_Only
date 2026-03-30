@@ -66,10 +66,12 @@ export default function SigHireLayout({
 }) {
   return (
     <MultiSessionProvider>
-      <Suspense fallback={<div className="h-14 bg-muted">Loading...</div>}>
-        <Navbar />
-      </Suspense>
-      <main>{children}</main>
+      <div className="relative min-h-screen">
+        <Suspense fallback={null}>
+          <Navbar />
+        </Suspense>
+        {children}
+      </div>
     </MultiSessionProvider>
   );
 }

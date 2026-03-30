@@ -5,8 +5,10 @@ import { useSession } from '@/context/SessionContext';
 import { RankingsTable } from './rankings-table';
 import { QueriesManagement } from './queries-management';
 import { fetchRankings, type Candidate } from '@/lib/ranking-api';
-import { RotateCw, AlertCircle, X, RotateCcw, Send } from 'lucide-react';
+import { RotateCw, AlertCircle, X, RotateCcw, Send, HelpCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useDriverGuide } from '@/hooks/useDriverGuide';
+import { rankingsGuide } from '@/lib/driver-config';
 
 interface RankingsScreenProps {
   sessionId?: string | null;
@@ -25,6 +27,7 @@ export function RankingsScreen({ sessionId, refreshTrigger = 0 }: RankingsScreen
   const [showError, setShowError] = useState(false);
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [selectedCandidates, setSelectedCandidates] = useState<Set<string>>(new Set());
+  const { startTour } = useDriverGuide("rankings", rankingsGuide, false);
 
   const loadRankings = useCallback(async (isRefresh = false) => {
     if (!sessionId) {
@@ -124,24 +127,22 @@ export function RankingsScreen({ sessionId, refreshTrigger = 0 }: RankingsScreen
 
   if (!sessionId) {
     return (
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-6">
+      <div className="rounded-xl border border-border bg-card p-8 shadow-sm">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-amber-900 font-semibold mb-2">No Active Session</h3>
-            <p className="text-amber-800 text-sm mb-4">
+            <h3 className="mb-2 text-lg font-semibold text-foreground">No Active Session</h3>
+            <p className="mb-4 text-sm text-muted-foreground">
               Please upload your candidates and job description to start ranking.
             </p>
           </div>
         </div>
-        <div className="flex gap-3">
-          <button
-            onClick={() => router.push('/sig-hire/uploads')}
-            className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 transition text-sm font-medium"
-          >
-            <RotateCcw className="w-4 h-4" />
-            Start New Session
-          </button>
-        </div>
+        <button
+          onClick={() => router.push('/sig-hire/uploads')}
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          <RotateCcw className="h-4 w-4" />
+          Start New Session
+        </button>
       </div>
     );
   }
@@ -149,13 +150,13 @@ export function RankingsScreen({ sessionId, refreshTrigger = 0 }: RankingsScreen
   // Show full loading state only on initial load with no data
   if (isLoading && candidates.length === 0) {
     return (
-      <div className="rounded-lg border border-blue-200 bg-blue-50 p-6 text-center">
-        <div className="flex items-center justify-center mb-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="rounded-xl border border-border bg-card p-8 text-center shadow-sm">
+        <div className="mb-4 flex items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
         </div>
-        <h3 className="text-blue-900 font-semibold mb-2">Loading Rankings</h3>
-        <p className="text-blue-700 text-sm">
-          Fetching candidate rankings from Supabase...
+        <h3 className="mb-2 font-semibold text-foreground">Loading Rankings</h3>
+        <p className="text-sm text-muted-foreground">
+          Fetching candidate rankings...
         </p>
       </div>
     );
@@ -165,65 +166,72 @@ export function RankingsScreen({ sessionId, refreshTrigger = 0 }: RankingsScreen
     <div className="w-full">
       {/* Error Banner - Non-blocking, dismissible */}
       {showError && error && (
-        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 flex items-start justify-between">
+        <div className="mb-6 flex items-start justify-between rounded-xl border border-destructive/50 bg-destructive/10 p-4">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-destructive" />
             <div>
-              <h4 className="text-amber-900 font-semibold text-sm mb-1">Error Loading Latest Rankings</h4>
-              <p className="text-amber-800 text-sm whitespace-pre-wrap">{error}</p>
+              <h4 className="mb-1 text-sm font-semibold text-foreground">Error Loading Latest Rankings</h4>
+              <p className="whitespace-pre-wrap text-sm text-muted-foreground">{error}</p>
             </div>
           </div>
           <button
             onClick={() => setShowError(false)}
-            className="text-amber-600 hover:text-amber-700 flex-shrink-0"
+            className="flex-shrink-0 text-muted-foreground hover:text-foreground"
             aria-label="Dismiss error"
           >
-            <X className="w-4 h-4" />
+            <X className="h-4 w-4" />
           </button>
         </div>
       )}
 
       {/* Header with refresh and restart buttons */}
-      <div className="mb-6 flex items-start justify-between">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-primary mb-2">Candidate Rankings</h2>
+          <h2 className="mb-2 text-3xl font-bold tracking-tight text-foreground">Candidate Rankings</h2>
           <p className="text-muted-foreground">
             {candidates.length} candidates ranked by job description match and query scores
             {selectedCandidates.size > 0 && (
-              <span className="ml-2 text-primary font-semibold">
+              <span className="ml-2 font-semibold text-primary">
                 • {selectedCandidates.size} selected
               </span>
             )}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={startTour}
+            className="rounded-lg border border-border bg-card p-2 transition-colors hover:border-primary/50 hover:bg-accent"
+            title="Start Guide"
+          >
+            <HelpCircle className="h-5 w-5 text-primary" />
+          </button>
           <button
             onClick={handleManualRefresh}
             disabled={isRefreshing}
-            className="flex items-center gap-2 px-3 py-2 rounded-md border border-border hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition"
+            className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
             aria-label="Refresh rankings"
           >
-            <RotateCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            <RotateCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span className="text-sm font-medium">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
           </button>
           
           {selectedCandidates.size > 0 && (
             <button
               onClick={handleSendAssignments}
-              className="flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-white hover:bg-primary/90 transition font-medium text-sm"
+              className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               aria-label="Send assignments"
             >
-              <Send className="w-4 h-4" />
+              <Send className="h-4 w-4" />
               Send Assignment ({selectedCandidates.size})
             </button>
           )}
           
           <button
             onClick={() => setShowRestartConfirm(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-md border border-red-300 text-red-700 hover:bg-red-50 transition text-sm"
+            className="flex items-center gap-2 rounded-lg border border-destructive/50 bg-card px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
             aria-label="Restart session"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className="h-4 w-4" />
             Restart
           </button>
         </div>
@@ -231,24 +239,24 @@ export function RankingsScreen({ sessionId, refreshTrigger = 0 }: RankingsScreen
 
       {/* Restart Confirmation Dialog */}
       {showRestartConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg max-w-sm w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm rounded-xl bg-card p-6 shadow-lg">
+            <h3 className="mb-2 text-lg font-semibold text-foreground">
               Restart Session?
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 text-sm mb-6">
+            <p className="mb-6 text-sm text-muted-foreground">
               This will clear all rankings and queries. You&apos;ll need to upload new candidates and job description to continue.
             </p>
-            <div className="flex gap-3 justify-end">
+            <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowRestartConfirm(false)}
-                className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
+                className="rounded-lg border border-border bg-card px-4 py-2 transition-colors hover:bg-accent"
               >
                 Cancel
               </button>
               <button
                 onClick={handleRestartSession}
-                className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition"
+                className="rounded-lg bg-destructive px-4 py-2 text-destructive-foreground transition-colors hover:bg-destructive/90"
               >
                 Restart Session
               </button>
@@ -266,16 +274,18 @@ export function RankingsScreen({ sessionId, refreshTrigger = 0 }: RankingsScreen
       
       {/* Always show table if we have data, even if there's an error */}
       {candidates.length > 0 ? (
-        <RankingsTable 
-          candidates={candidates} 
-          isLoading={isRefreshing}
-          selectedCandidates={selectedCandidates}
-          onSelectionChange={setSelectedCandidates}
-        />
+        <div data-tour="rankings-list">
+          <RankingsTable 
+            candidates={candidates} 
+            isLoading={isRefreshing}
+            selectedCandidates={selectedCandidates}
+            onSelectionChange={setSelectedCandidates}
+          />
+        </div>
       ) : (
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-12 text-center">
-          <h3 className="text-gray-700 font-semibold mb-2">No Rankings Yet</h3>
-          <p className="text-gray-600 text-sm">
+        <div className="rounded-xl border border-border bg-card p-12 text-center shadow-sm">
+          <h3 className="mb-2 font-semibold text-foreground">No Rankings Yet</h3>
+          <p className="text-sm text-muted-foreground">
             Submit a query using the ranking bot to see candidate rankings.
           </p>
         </div>

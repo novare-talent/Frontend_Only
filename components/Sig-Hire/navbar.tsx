@@ -1,15 +1,20 @@
 "use client";
 
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Button } from "@heroui/react";
-import { ModeToggle } from "../toggle-button";
 import { useSession } from "@/context/SessionContext";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Menu, X, Sparkles } from "lucide-react";
+import Image from "next/image";
+import GlowButton from "@/components/landing/ui/GlowButton";
+import { useMultiSession } from "@/context/MultiSessionContext";
+import { initializeSession } from "@/lib/ranking-api";
+import { createClient } from "@/utils/supabase/client";
 
 const navItems = [
-  { label: "Home", href: "/sig-hire/home" },
+  { label: "Home", href: "/sig-hire" },
   { label: "Sessions", href: "/sig-hire/sessions" },
   { label: "Uploads", href: "/sig-hire/uploads" },
   { label: "Rankings", href: "/sig-hire/rankings" },
@@ -19,87 +24,190 @@ const navItems = [
 ];
 
 export function Navbar() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { sessionId } = useSession();
+  const router = useRouter();
+  const { sessionId, setSessionId, setClientId } = useSession();
+  const { addSession } = useMultiSession();
   
   const currentSessionId = searchParams.get('session_id') || sessionId;
   const sessionDisplay = currentSessionId ? 
-    `Session: ${currentSessionId.substring(0, 8)}...` : 
+    `${currentSessionId.substring(0, 8)}...` : 
     null;
 
+  const handleStartHiring = async () => {
+    try {
+      setIsLoading(true);
+      const supabase = createClient();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+      if (authError || !user) {
+        router.push("/sign-in");
+        return;
+      }
+
+      setClientId(user.id);
+      const sessionResponse = await initializeSession(user.id);
+      
+      if (!sessionResponse.session_id) {
+        throw new Error("Failed to create session");
+      }
+
+      await addSession({
+        session_id: sessionResponse.session_id,
+        client_id: user.id,
+        status: "initialized",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+
+      setSessionId(sessionResponse.session_id);
+      router.push(`/sig-hire/uploads?session_id=${sessionResponse.session_id}`);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <nav
-      className="sticky top-0 z-50 w-full
-      border-b border-purple-100
-      bg-white/80 backdrop-blur-md
-      dark:border-white/10 dark:bg-neutral-950/80"
-    >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-2">
-        {/* Logo */}
-        <Link
-          href="/sig-hire/home"
-          className="text-xl font-extrabold
-          bg-gradient-to-r from-purple-600 to-indigo-600
-          bg-clip-text text-transparent"
-        >
-          SigHyre
+    <>
+      {/* Floating Logo */}
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+        className="fixed top-5 left-6 z-40 hidden lg:flex"
+      >
+        <Link href="/sig-hire" className="flex items-center gap-2">
+          <span className="text-2xl font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+            SigHyre
+          </span>
         </Link>
+      </motion.div>
 
-        {/* Nav links */}
-        <div className="flex items-center gap-1">
+      {/* Floating Glass Nav — center */}
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1], delay: 0.05 }}
+        className="fixed top-5 left-1/2 -translate-x-1/2 z-40 hidden lg:flex"
+      >
+        <nav className="flex items-center gap-1 px-4 py-2 rounded-full glass backdrop-blur-lg border border-white/10">
           {navItems.map((item) => {
-            const isActive =
-              pathname === item.href ||
-              (item.href !== "/" && pathname.startsWith(item.href));
-
-            // Add session_id to certain routes
-            const shouldAddSessionId = [
-              '/sig-hire/uploads',
-              '/sig-hire/rankings',
-              '/sig-hire/assignments',
-              '/sig-hire/evaluations'
-            ].includes(item.href);
-
-            const href = shouldAddSessionId && currentSessionId 
-              ? `${item.href}?session_id=${currentSessionId}`
-              : item.href;
+            const isActive = pathname === item.href || (item.href !== "/sig-hire" && pathname.startsWith(item.href));
+            const shouldAddSessionId = ['/sig-hire/uploads', '/sig-hire/rankings', '/sig-hire/assignments', '/sig-hire/evaluations'].includes(item.href);
+            const href = shouldAddSessionId && currentSessionId ? `${item.href}?session_id=${currentSessionId}` : item.href;
 
             return (
               <Link
                 key={item.href}
                 href={href}
                 className={cn(
-                  "relative rounded-lg px-3 py-2 text-sm font-medium transition whitespace-nowrap",
-                  "text-neutral-600 hover:text-purple-600 hover:bg-purple-50",
-                  "dark:text-neutral-300 dark:hover:text-purple-400 dark:hover:bg-white/5",
-                  isActive &&
-                    "text-purple-600 bg-purple-100/70 dark:text-purple-400 dark:bg-purple-500/10"
+                  "text-sm transition-colors duration-200 px-3 py-1.5 rounded-full relative",
+                  isActive ? "text-white bg-white/10" : "text-white/70 hover:text-white hover:bg-white/5"
                 )}
               >
                 {item.label}
-                {isActive && (
-                  <span
-                    className="absolute inset-x-2 -bottom-1 h-0.5 rounded-full
-                    bg-gradient-to-r from-purple-500 to-indigo-500"
-                  />
-                )}
               </Link>
             );
           })}
-        </div>
+        </nav>
+      </motion.div>
 
-        {/* Session indicator and Right actions */}
-        <div className="flex items-center gap-3">
-          {sessionDisplay && (
-            <div className="text-xs px-2 py-1 rounded-full bg-purple-100/50 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 flex items-center gap-1">
-              {sessionDisplay}
-              <ChevronRight className="w-3 h-3" />
-            </div>
-          )}
-          <ModeToggle />
+      {/* Floating Right — session indicator + start hiring */}
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1], delay: 0.1 }}
+        className="fixed top-5 right-6 z-40 hidden lg:flex items-center gap-3"
+      >
+        {sessionDisplay && (
+          <div className="text-xs px-3 py-2 rounded-full glass border border-white/10 text-white/90 flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+            {sessionDisplay}
+          </div>
+        )}
+        <GlowButton 
+          onClick={handleStartHiring} 
+          disabled={isLoading}
+          className="flex items-center gap-2"
+        >
+          <Sparkles size={16} />
+          {isLoading ? "Starting..." : "Start Hiring"}
+        </GlowButton>
+      </motion.div>
+
+      {/* Mobile header - Floating Pill */}
+      <motion.header
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+        className="fixed top-5 left-4 right-4 z-40 lg:hidden"
+      >
+        <div className="flex items-center justify-between px-6 h-14 rounded-full glass border border-white/10 shadow-lg">
+          <Link href="/sig-hire" className="flex items-center gap-2">
+            <span className="text-xl font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              SigHyre
+            </span>
+          </Link>
+          <button onClick={() => setMobileOpen(!mobileOpen)} className="text-white p-2">
+            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
-      </div>
-    </nav>
+      </motion.header>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-30 bg-[var(--color-bg-primary)]/95 backdrop-blur-xl lg:hidden"
+          >
+            <div className="flex flex-col items-center justify-center h-full gap-8">
+              {navItems.map((item, i) => {
+                const shouldAddSessionId = ['/sig-hire/uploads', '/sig-hire/rankings', '/sig-hire/assignments', '/sig-hire/evaluations'].includes(item.href);
+                const href = shouldAddSessionId && currentSessionId ? `${item.href}?session_id=${currentSessionId}` : item.href;
+
+                return (
+                  <motion.div
+                    key={item.href}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                  >
+                    <Link
+                      href={href}
+                      onClick={() => setMobileOpen(false)}
+                      className="text-2xl font-medium text-white hover:text-[var(--color-lavender)] transition-colors"
+                    >
+                      {item.label}
+                    </Link>
+                  </motion.div>
+                );
+              })}
+              {sessionDisplay && (
+                <div className="text-sm px-4 py-2 rounded-full glass border border-white/10 text-white/90 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+                  Session: {sessionDisplay}
+                </div>
+              )}
+              <GlowButton 
+                onClick={() => { handleStartHiring(); setMobileOpen(false); }} 
+                disabled={isLoading}
+                className="flex items-center gap-2"
+              >
+                <Sparkles size={16} />
+                {isLoading ? "Starting..." : "Start Hiring"}
+              </GlowButton>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

@@ -4,8 +4,10 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AssignmentEvaluationScreen } from "@/components/Sig-Hire/evaluations-table";
 import { useMultiSession } from "@/context/MultiSessionContext";
-import { Loader, AlertCircle } from "lucide-react";
+import { Loader, AlertCircle, HelpCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useDriverGuide } from "@/hooks/useDriverGuide";
+import { evaluationsGuide } from "@/lib/driver-config";
 
 export function EvaluationsContent() {
   const searchParams = useSearchParams();
@@ -14,6 +16,7 @@ export function EvaluationsContent() {
   const { sessions, currentSessionId, setCurrentSessionId } = useMultiSession();
   const [isLoading, setIsLoading] = useState(true);
   const [jobId, setJobId] = useState<string | null>(null);
+  const { startTour } = useDriverGuide("evaluations", evaluationsGuide, false);
 
   useEffect(() => {
     // 1. Check URL params first (job_id or assignment_id)
@@ -88,6 +91,15 @@ export function EvaluationsContent() {
 
   return (
     <div className="px-6 py-4">
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={startTour}
+          className="p-2 rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-glass-bg)] hover:border-[var(--color-lavender)]/50 transition-colors"
+          title="Start Guide"
+        >
+          <HelpCircle className="w-5 h-5 text-[var(--color-lavender)]" />
+        </button>
+      </div>
       <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="space-y-2">
           {currentSessionId && (

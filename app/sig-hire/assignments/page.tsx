@@ -11,13 +11,11 @@ function AssignmentsContent() {
   const candidateIds = candidatesParam ? candidatesParam.split(',') : undefined;
 
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="@container/main flex flex-1 flex-col gap-2">
-        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-          <SectionCards sessionId={sessionId || undefined} candidateIds={candidateIds} />
-        </div>
+    <main className="relative min-h-screen">
+      <div className="relative z-10 px-6 py-24">
+        <SectionCards sessionId={sessionId || undefined} candidateIds={candidateIds} />
       </div>
-    </div>
+    </main>
   );
 }
 

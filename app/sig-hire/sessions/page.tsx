@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState, Suspense, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { useMultiSession, SessionData } from "@/context/MultiSessionContext";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Plus, Trash2, Eye, BookOpen } from "lucide-react";
+import { motion } from "framer-motion";
+import { Loader2, Plus, Trash2, Eye, BookOpen, Calendar, Users, FileText, HelpCircle } from "lucide-react";
+import GlowButton from "@/components/landing/ui/GlowButton";
+import { useDriverGuide } from "@/hooks/useDriverGuide";
+import { sessionsGuide } from "@/lib/driver-config";
 
 function SessionsPageContent() {
   const router = useRouter();
@@ -17,63 +19,103 @@ function SessionsPageContent() {
   const [user, setUser] = useState<any>(null);
   const [creatingSession, setCreatingSession] = useState(false);
   const [assignmentsCounts, setAssignmentsCounts] = useState<Record<string, number>>({});
+  const { startTour } = useDriverGuide("sessions", sessionsGuide, false);
+  const initRef = useRef(false);
 
   useEffect(() => {
+    if (initRef.current) return;
+    initRef.current = true;
+    
     const loadUser = async () => {
+      console.log('[Sessions Page] Starting loadUser...');
+      const startTime = performance.now();
+      
+      const authStart = performance.now();
       const {
         data: { user },
       } = await supabase.auth.getUser();
+      console.log(`[Sessions Page] Auth check took: ${(performance.now() - authStart).toFixed(2)}ms`);
       
       if (!user) {
+        console.log('[Sessions Page] No user found');
         setLoading(false);
         return;
       }
 
+      console.log('[Sessions Page] User found:', user.id);
       setUser(user);
       
-      // Load sessions from database for this user
       try {
+        const sessionsStart = performance.now();
         await loadSessions(user.id);
+        console.log(`[Sessions Page] loadSessions took: ${(performance.now() - sessionsStart).toFixed(2)}ms`);
       } catch (err) {
         console.error("Failed to load sessions:", err);
       }
       
       setLoading(false);
+      console.log(`[Sessions Page] Total load time: ${(performance.now() - startTime).toFixed(2)}ms`);
     };
     loadUser();
-  }, [loadSessions]);
+  }, [loadSessions, supabase]);
 
-  // Load assignments count for each session
   useEffect(() => {
     const loadAssignmentsCounts = async () => {
-      const counts: Record<string, number> = {};
-      for (const session of sessions) {
-        const assignments = await getSessionAssignments(session.session_id);
-        counts[session.session_id] = assignments.length;
+      console.log('[Sessions Page] Starting loadAssignmentsCounts...');
+      const startTime = performance.now();
+      
+      if (sessions.length === 0) {
+        console.log('[Sessions Page] No sessions, skipping assignments count');
+        return;
       }
+
+      const jobIds = sessions
+        .map(s => s.job_id)
+        .filter((id): id is string => !!id);
+
+      console.log(`[Sessions Page] Found ${jobIds.length} job IDs to query`);
+
+      if (jobIds.length === 0) {
+        setAssignmentsCounts({});
+        return;
+      }
+
+      const client = createClient();
+      const queryStart = performance.now();
+      const { data } = await client
+        .from("assignments")
+        .select("job_id")
+        .in("job_id", jobIds)
+        .neq("candidate_id", "00000000-0000-0000-0000-000000000000");
+      console.log(`[Sessions Page] Assignments query took: ${(performance.now() - queryStart).toFixed(2)}ms`);
+
+      const counts: Record<string, number> = {};
+      sessions.forEach(session => {
+        if (session.job_id) {
+          counts[session.session_id] = data?.filter(a => a.job_id === session.job_id).length || 0;
+        }
+      });
       setAssignmentsCounts(counts);
+      console.log(`[Sessions Page] Total assignments count load: ${(performance.now() - startTime).toFixed(2)}ms`);
     };
-    if (sessions.length > 0) {
-      loadAssignmentsCounts();
-    }
-  }, [sessions, getSessionAssignments]);
+    loadAssignmentsCounts();
+  }, [sessions]);
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "ready":
-        return "bg-green-100 text-green-800";
+        return "bg-green-500/20 text-green-300 border-green-500/30";
       case "processing":
-        return "bg-blue-100 text-blue-800";
+        return "bg-blue-500/20 text-blue-300 border-blue-500/30";
       case "failed":
-        return "bg-red-100 text-red-800";
+        return "bg-red-500/20 text-red-300 border-red-500/30";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-purple-500/20 text-purple-300 border-purple-500/30";
     }
   };
 
   const handleViewSession = (sessionId: string, status: string) => {
     setCurrentSessionId(sessionId);
-    // If initialized, go to uploads; if ready, go to rankings
     const route = status === "initialized" 
       ? `/sig-hire/uploads?session_id=${sessionId}`
       : `/sig-hire/rankings?session_id=${sessionId}`;
@@ -84,10 +126,8 @@ function SessionsPageContent() {
     setCurrentSessionId(sessionId);
     const session = sessions.find(s => s.session_id === sessionId);
     if (session?.job_id) {
-      // Navigate to evaluations page with job_id to view assignments and their submission status
       router.push(`/sig-hire/evaluations?job_id=${session.job_id}&session_id=${sessionId}`);
     } else {
-      // Fallback to assignments creation page if job_id not available
       router.push(`/sig-hire/assignments?session_id=${sessionId}`);
     }
   };
@@ -114,7 +154,6 @@ function SessionsPageContent() {
 
     try {
       setCreatingSession(true);
-      // Initialize new session
       const { initializeSession } = await import("@/lib/ranking-api");
       const sessionResponse = await initializeSession(user.id);
 
@@ -122,7 +161,6 @@ function SessionsPageContent() {
         throw new Error("Failed to create session");
       }
 
-      // Save to database
       await addSession({
         session_id: sessionResponse.session_id,
         client_id: user.id,
@@ -131,10 +169,7 @@ function SessionsPageContent() {
         updated_at: new Date().toISOString(),
       });
 
-      // Redirect to uploads
-      router.push(
-        `/sig-hire/uploads?session_id=${sessionResponse.session_id}`
-      );
+      router.push(`/sig-hire/uploads?session_id=${sessionResponse.session_id}`);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to create session");
       setCreatingSession(false);
@@ -144,143 +179,160 @@ function SessionsPageContent() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin" />
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--color-lavender)]" />
       </div>
     );
   }
 
   return (
-    <div className="px-6 py-4 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Job Ranking Sessions</h1>
-          <p className="text-muted-foreground mt-2">
-            Manage your candidate ranking and evaluation sessions
-          </p>
-        </div>
-        <Button
-          onClick={handleCreateNew}
-          disabled={creatingSession}
-          className="bg-gradient-to-r from-primary to-indigo-600"
-        >
-          {creatingSession ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Creating...
-            </>
-          ) : (
-            <>
-              <Plus className="w-4 h-4 mr-2" />
-              New Session
-            </>
-          )}
-        </Button>
-      </div>
-
-      {sessions && sessions.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {sessions.map((session: SessionData) => (
-            <Card
-              key={session.session_id}
-              className={`cursor-pointer transition-all hover:shadow-lg ${
-                currentSessionId === session.session_id
-                  ? "ring-2 ring-primary"
-                  : ""
-              }`}
+    <main className="relative min-h-screen">
+      <div className="relative z-10 px-6 py-24 max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
+              Job Ranking Sessions
+            </h1>
+            <p className="text-white/70 text-lg">
+              Manage your candidate ranking and evaluation sessions
+            </p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="flex items-center gap-3"
+          >
+            <button
+              onClick={startTour}
+              className="p-2 rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-glass-bg)] hover:border-[var(--color-lavender)]/50 transition-colors"
+              title="Start Guide"
             >
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg">
+              <HelpCircle className="w-5 h-5 text-[var(--color-lavender)]" />
+            </button>
+            <GlowButton 
+              onClick={handleCreateNew} 
+              disabled={creatingSession}
+              className="flex items-center gap-2"
+              data-tour="new-session-btn"
+              type="button"
+            >
+              {creatingSession ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4" />
+                  New Session
+                </>
+              )}
+            </GlowButton>
+          </motion.div>
+        </div>
+
+        {sessions && sessions.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sessions.map((session: SessionData, index: number) => (
+              <motion.div
+                key={session.session_id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                data-tour={index === 0 ? "session-card" : undefined}
+                className={`p-6 rounded-2xl border backdrop-blur-xl transition-all duration-300 hover:border-[var(--color-lavender)]/50 ${
+                  currentSessionId === session.session_id
+                    ? "border-[var(--color-lavender)] bg-[var(--color-glass-bg)]"
+                    : "border-[var(--color-glass-border)] bg-[var(--color-glass-bg)]"
+                }`}
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-white mb-2">
                       {session.job_name || "Untitled Job"}
-                    </CardTitle>
-                    <CardDescription>
+                    </h3>
+                    <div className="flex items-center gap-2 text-white/60 text-sm">
+                      <Calendar className="w-4 h-4" />
                       {new Date(session.created_at).toLocaleDateString()}
-                    </CardDescription>
+                    </div>
                   </div>
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full ${getStatusBadgeColor(
-                      session.status
-                    )}`}
-                  >
+                  <span className={`text-xs px-3 py-1 rounded-full border ${getStatusBadgeColor(session.status)}`}>
                     {session.status}
                   </span>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+
+                <div className="space-y-3 mb-4">
                   {session.candidates_count && (
-                    <div className="text-sm">
-                      <span className="text-muted-foreground">Candidates: </span>
-                      <span className="font-semibold">
-                        {session.candidates_count}
+                    <div className="flex items-center gap-2 text-white/80">
+                      <Users className="w-4 h-4 text-[var(--color-lavender)]" />
+                      <span className="text-sm">
+                        {session.candidates_count} Candidates
                       </span>
                     </div>
                   )}
                   {assignmentsCounts[session.session_id] !== undefined && (
-                    <div className="text-sm">
-                      <span className="text-muted-foreground">Assignments: </span>
-                      <span className="font-semibold">
-                        {assignmentsCounts[session.session_id]}
+                    <div className="flex items-center gap-2 text-white/80">
+                      <FileText className="w-4 h-4 text-[var(--color-lavender)]" />
+                      <span className="text-sm">
+                        {assignmentsCounts[session.session_id]} Assignments
                       </span>
                     </div>
                   )}
                   {session.error && (
-                    <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                    <div className="text-sm text-red-300 bg-red-500/10 p-3 rounded-lg border border-red-500/20">
                       Error: {session.error}
                     </div>
                   )}
-                  <div className="flex gap-2 mt-4 flex-wrap">
-                    <Button
-                      onClick={() => handleViewSession(session.session_id, session.status)}
-                      variant="default"
-                      size="sm"
-                      disabled={session.status === "failed" || session.status === "processing"}
-                    >
-                      <Eye className="w-4 h-4 mr-1" />
-                      {session.status === "initialized" ? "Upload Data" : "View Rankings"}
-                    </Button>
-                    {assignmentsCounts[session.session_id] !== undefined && assignmentsCounts[session.session_id] > 0 && (
-                      <Button
-                        onClick={() => handleViewAssignments(session.session_id)}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <BookOpen className="w-4 h-4 mr-1" />
-                        Assignments ({assignmentsCounts[session.session_id]})
-                      </Button>
-                    )}
-                    <Button
-                      onClick={() =>
-                        handleDeleteSession(session.session_id)
-                      }
-                      variant="destructive"
-                      size="sm"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <Card className="text-center py-12">
-          <CardHeader>
-            <CardTitle>No Sessions Yet</CardTitle>
-            <CardDescription>
+
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    onClick={() => handleViewSession(session.session_id, session.status)}
+                    disabled={session.status === "failed" || session.status === "processing"}
+                    className="flex-1 px-3 py-2 text-sm rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <Eye className="w-4 h-4" />
+                    {session.status === "initialized" ? "Upload" : "Rankings"}
+                  </button>
+                  {assignmentsCounts[session.session_id] !== undefined && assignmentsCounts[session.session_id] > 0 && (
+                    <button
+                      onClick={() => handleViewAssignments(session.session_id)}
+                      className="px-3 py-2 text-sm rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all flex items-center gap-2"
+                    >
+                      <BookOpen className="w-4 h-4" />
+                      {assignmentsCounts[session.session_id]}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleDeleteSession(session.session_id)}
+                    className="px-3 py-2 text-sm rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/20 transition-all"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-20 p-12 rounded-3xl border border-[var(--color-glass-border)] bg-[var(--color-glass-bg)] backdrop-blur-xl"
+          >
+            <h2 className="text-2xl font-bold text-white mb-3">No Sessions Yet</h2>
+            <p className="text-white/70 mb-6">
               Create your first ranking session to get started
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={handleCreateNew} size="lg">
-              Create New Session
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+            </p>
+            <button onClick={handleCreateNew}>
+              <GlowButton>Create New Session</GlowButton>
+            </button>
+          </motion.div>
+        )}
+      </div>
+    </main>
   );
 }
 

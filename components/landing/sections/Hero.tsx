@@ -1,12 +1,27 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import ThreeGrid from "@/components/landing/effects/ThreeGrid";
 import GlowOrb from "@/components/landing/effects/GlowOrb";
 import GlowButton from "@/components/landing/ui/GlowButton";
 import SocialProofBar from "./SocialProofBar";
+import { createClient } from "@/utils/supabase/client";
 
 export default function Hero() {
+  const router = useRouter();
+
+  const handleAuthClick = async (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
+    e.preventDefault();
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (session) {
+      router.push("/Dashboard");
+    } else {
+      router.push(path);
+    }
+  };
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
       {/* Background — 3D grid + parallax orbs */}
@@ -70,15 +85,19 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.8 }}
           className="mt-10 flex flex-row flex-wrap items-stretch justify-center gap-3"
         >
-          <GlowButton href="/sign-up?role=recruiter" className="text-base flex-1 min-w-[140px] max-w-[180px] h-12">
-            Hire Top 1% Talent
-          </GlowButton>
+          <a href="/sign-up?role=recruiter" onClick={(e) => handleAuthClick(e, "/sign-up?role=recruiter")}>
+            <GlowButton className="text-base flex-1 min-w-[140px] max-w-[180px] h-12">
+              Hire Top 1% Talent
+            </GlowButton>
+          </a>
           <span className="text-[var(--color-lavender)] font-medium self-center">or</span>
-          <GlowButton href="/sign-up" className="text-base flex-1 min-w-[140px] max-w-[180px] h-12 bg-transparent border border-[var(--color-glass-border)] hover:bg-white/5">
-            Get Hired
-          </GlowButton>
+          <a href="/sign-up" onClick={(e) => handleAuthClick(e, "/sign-up")}>
+            <GlowButton className="text-base flex-1 min-w-[140px] max-w-[180px] h-12 bg-transparent border border-[var(--color-glass-border)] hover:bg-white/5">
+              Get Hired
+            </GlowButton>
+          </a>
         </motion.div>
-        
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

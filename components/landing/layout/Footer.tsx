@@ -1,8 +1,25 @@
+"use client";
+
 import { Instagram } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { FOOTER_LINKS, SOCIAL_LINKS, CONTACT } from "@/lib/constants";
+import { createClient } from "@/utils/supabase/client";
 
 export default function Footer() {
+  const router = useRouter();
+
+  const handleAuthClick = async (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
+    e.preventDefault();
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session) {
+      router.push("/Dashboard");
+    } else {
+      router.push(path);
+    }
+  };
   return (
     <footer className="relative overflow-hidden  bg-black/80 backdrop-blur-sm " style={{ backgroundImage: 'url(/images/footer-bg.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
       {/* Dark overlay */}
@@ -55,12 +72,22 @@ export default function Footer() {
             <ul className="space-y-3">
               {FOOTER_LINKS.discover.map((link) => (
                 <li key={link.label}>
-                  <a
-                    href={link.href}
-                    className="text-sm text-white hover:text-gray-300 transition-colors"
-                  >
-                    {link.label}
-                  </a>
+                  {link.href === "/Dashboard" || link.href === "/sign-up" ? (
+                    <a
+                      href={link.href}
+                      onClick={(e) => handleAuthClick(e, link.href)}
+                      className="text-sm text-white hover:text-gray-300 transition-colors cursor-pointer"
+                    >
+                      {link.label}
+                    </a>
+                  ) : (
+                    <a
+                      href={link.href}
+                      className="text-sm text-white hover:text-gray-300 transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>

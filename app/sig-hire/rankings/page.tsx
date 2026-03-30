@@ -12,25 +12,20 @@ function RankingsContent() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [isHydrated, setIsHydrated] = useState(false);
   
-  // Use URL sessionId if provided, otherwise fallback to context (localStorage)
   const sessionId = urlSessionId || contextSessionId;
 
   useEffect(() => {
-    // Mark as hydrated after first render to avoid hydration mismatches
     setIsHydrated(true);
     
-    // If URL has sessionId, save it to context (and localStorage)
     if (urlSessionId) {
       setSessionId(urlSessionId);
     }
   }, [urlSessionId, setSessionId]);
 
   const handleQuerySubmitted = () => {
-    // Trigger a refresh of the rankings table
     setRefreshKey((prev) => prev + 1);
   };
 
-  // Return loading UI until hydrated to prevent mismatch errors
   if (!isHydrated) {
     return (
       <div className="px-6 py-4">
@@ -42,24 +37,21 @@ function RankingsContent() {
   }
 
   return (
-    <div className="px-6 py-4">
-      {/* Container that drives responsiveness */}
-      <div className="@container/main grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
-        {/* LEFT: main content (takes remaining space) */}
-        <main className="flex flex-col gap-6">
-          <RankingsScreen sessionId={sessionId} refreshTrigger={refreshKey} />
-        </main>
-
-        {/* RIGHT: Chatbot sidebar — fixed width (360px) on lg+, stacks below on sm */}
-        <aside className="flex">
-          {/* make the sidebar sticky so it remains visible while scrolling */}
-          <div className="w-full lg:sticky lg:top-6">
-            {/* RankingBotCard accepts className to control height/scrolling */}
-            <RankingBotCard className="h-[min(70vh,800px)]" sessionId={sessionId} onQuerySubmitted={handleQuerySubmitted} />
+    <main className="relative min-h-screen bg-background">
+      <div className="container mx-auto max-w-[1600px] px-4 pt-24 pb-12 sm:px-6 lg:px-8 lg:pt-28">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
+          <div className="flex flex-col gap-6">
+            <RankingsScreen sessionId={sessionId} refreshTrigger={refreshKey} />
           </div>
-        </aside>
+
+          <aside className="flex">
+            <div className="w-full lg:sticky lg:top-28 lg:h-fit" data-tour="ranking-bot">
+              <RankingBotCard className="h-[min(70vh,800px)]" sessionId={sessionId} onQuerySubmitted={handleQuerySubmitted} />
+            </div>
+          </aside>
+        </div>
       </div>
-    </div>
+    </main>
   );
 }
 
@@ -70,7 +62,3 @@ export default function Page() {
     </Suspense>
   );
 }
-
-
-
-  

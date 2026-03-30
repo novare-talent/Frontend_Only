@@ -1,15 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Instagram } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { NAV_LINKS, SOCIAL_LINKS } from "@/lib/constants";
 import GlowButton from "@/components/landing/ui/GlowButton";
+import { createClient } from "@/utils/supabase/client";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const router = useRouter();
+
+  const handleAuthClick = async (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session) {
+      router.push("/Dashboard");
+    } else {
+      router.push("/sign-in");
+    }
+  };
 
   return (
     <>
@@ -66,9 +81,11 @@ export default function Navbar() {
             <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
           </svg>
         </a>
-        <GlowButton href="/Dashboard">
-          Start your Journey
-        </GlowButton>
+        <a href="/sign-in" onClick={handleAuthClick}>
+          <GlowButton>
+            Start your Journey
+          </GlowButton>
+        </a>
       </motion.div>
 
       {/* Mobile header - Floating Pill */}
@@ -116,9 +133,11 @@ export default function Navbar() {
                   {link.label}
                 </motion.a>
               ))}
-              <GlowButton href="/Dashboard">
-                Apply to Hire
-              </GlowButton>
+              <a href="/sign-up" onClick={handleAuthClick}>
+                <GlowButton>
+                  Apply to Hire
+                </GlowButton>
+              </a>
             </div>
           </motion.div>
         )}

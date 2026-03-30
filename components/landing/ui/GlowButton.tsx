@@ -7,9 +7,10 @@ interface GlowButtonProps {
   className?: string;
   type?: 'button' | 'submit' | 'reset';
   variant?: 'primary' | 'secondary';
+  disabled?: boolean;
 }
 
-export default function GlowButton({ children, href, onClick, className = '', type = 'button', variant = 'primary' }: GlowButtonProps) {
+export default function GlowButton({ children, href, onClick, className = '', type = 'button', variant = 'primary', disabled = false }: GlowButtonProps) {
   const buttonContent = (
     <>
       <div className="points_wrapper">
@@ -26,7 +27,7 @@ export default function GlowButton({ children, href, onClick, className = '', ty
   const buttonClasses = `
     ${variant === 'secondary' ? 'button-secondary' : 'button'} relative inline-flex items-center justify-center 
     cursor-pointer overflow-hidden transition-all duration-300 ease-out
-    active:scale-95 ${className}
+    active:scale-95 ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}
   `.trim();
 
   if (href) {
@@ -38,7 +39,7 @@ export default function GlowButton({ children, href, onClick, className = '', ty
   }
 
   return (
-    <button onClick={onClick} type={type} className={buttonClasses}>
+    <button onClick={onClick} type={type} className={buttonClasses} disabled={disabled}>
       {buttonContent}
     </button>
   );

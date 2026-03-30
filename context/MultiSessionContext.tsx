@@ -5,7 +5,8 @@ import React, {
   useContext,
   useState,
   ReactNode,
-  useEffect,
+  useCallback,
+  useRef,
 } from "react";
 import { createClient } from "@/utils/supabase/client";
 
@@ -54,6 +55,7 @@ export function MultiSessionProvider({ children }: { children: ReactNode }) {
     }
   );
   const [isLoading, setIsLoading] = useState(false);
+  const loadingRef = useRef(false);
 
   // Set current session ID with localStorage persistence
   const setCurrentSessionId = (id: string | null) => {
@@ -68,58 +70,80 @@ export function MultiSessionProvider({ children }: { children: ReactNode }) {
   };
 
   // Load sessions from Supabase
-  const loadSessions = async (clientId: string) => {
+  const loadSessions = useCallback(async (clientId: string) => {
+    if (loadingRef.current) {
+      console.log('[MultiSessionContext] Already loading, skipping...');
+      return;
+    }
+    
+    console.log('[MultiSessionContext] Starting loadSessions for client:', clientId);
+    const startTime = performance.now();
+    loadingRef.current = true;
     setIsLoading(true);
     try {
+      const queryStart = performance.now();
       const { data, error } = await supabase
         .from(SUPABASE_TABLE)
         .select("*")
         .eq("profile_id", clientId)
         .order("created_at", { ascending: false });
+      console.log(`[MultiSessionContext] Sessions query took: ${(performance.now() - queryStart).toFixed(2)}ms`);
 
       if (error) {
         console.error("Error loading sessions:", error.message || JSON.stringify(error));
         return;
       }
 
-      // Transform rankings_sighire data to SessionData format
-      // Also fetch job_id from jobs table for each session
-      const transformedSessions = await Promise.all(
-        (data || []).map(async (row: any) => {
-          let jobId: string | undefined;
-          try {
-            const { data: jobData } = await supabase
-              .from("jobs")
-              .select("job_id")
-              .eq("form_id", row.id)
-              .single();
-            jobId = jobData?.job_id;
-          } catch (e) {
-            // If job not found, that's okay - assignments might not have been created yet
-          }
+      if (!data || data.length === 0) {
+        console.log('[MultiSessionContext] No sessions found');
+        setSessions([]);
+        return;
+      }
 
-          return {
-            session_id: row.id,
-            client_id: row.profile_id,
-            job_id: jobId,
-            job_name: row.queries?.[0]?.job_name || "Job Ranking Session",
-            status: row.status,
-            candidates_count: row.candidate_meta ? Object.keys(row.candidate_meta).length : 0,
-            created_at: row.created_at,
-            updated_at: row.closed_at || row.created_at,
-            error: row.error,
-            ranking_results: row.rankings,
-          };
-        })
-      );
+      console.log(`[MultiSessionContext] Found ${data.length} sessions`);
+      
+      const sessionIds = data.map((row: any) => row.id);
+      
+      // Only query jobs if we have sessions
+      let jobsMap = new Map();
+      if (sessionIds.length > 0) {
+        const jobsQueryStart = performance.now();
+        const { data: jobsData } = await supabase
+          .from("jobs")
+          .select("job_id, form_id")
+          .in("form_id", sessionIds)
+          .limit(100); // Add limit to prevent full table scan
+        console.log(`[MultiSessionContext] Jobs query took: ${(performance.now() - jobsQueryStart).toFixed(2)}ms, found ${jobsData?.length || 0} jobs`);
+        
+        jobsMap = new Map(
+          (jobsData || []).map((job: any) => [job.form_id, job.job_id])
+        );
+      }
+      
+      const mapStart = performance.now();
+      const transformedSessions = data.map((row: any) => ({
+        session_id: row.id,
+        client_id: row.profile_id,
+        job_id: jobsMap.get(row.id),
+        job_name: row.queries?.[0]?.job_name || "Job Ranking Session",
+        status: row.status,
+        candidates_count: row.candidate_meta ? Object.keys(row.candidate_meta).length : 0,
+        created_at: row.created_at,
+        updated_at: row.closed_at || row.created_at,
+        error: row.error,
+        ranking_results: row.rankings,
+      }));
+      console.log(`[MultiSessionContext] Data transformation took: ${(performance.now() - mapStart).toFixed(2)}ms`);
 
       setSessions(transformedSessions);
+      console.log(`[MultiSessionContext] Total loadSessions time: ${(performance.now() - startTime).toFixed(2)}ms`);
     } catch (err) {
       console.error("Failed to load sessions:", err);
     } finally {
+      loadingRef.current = false;
       setIsLoading(false);
     }
-  };
+  }, [supabase]);
 
   // Get assignments for a session
   const getSessionAssignments = async (sessionId: string) => {

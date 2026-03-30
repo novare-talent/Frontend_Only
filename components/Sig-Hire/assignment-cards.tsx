@@ -15,7 +15,9 @@ import { createClient } from "@/utils/supabase/client";
 import { bulkCreateAssignments } from "@/app/actions/assignments";
 import { createCandidateMappings } from "@/app/actions/candidates";
 import { fetchRankings, type Candidate } from "@/lib/ranking-api";
-import { AlertCircle, CheckCircle, Loader } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader, HelpCircle } from "lucide-react";
+import { useDriverGuide } from "@/hooks/useDriverGuide";
+import { assignmentsGuide } from "@/lib/driver-config";
 
 interface SectionCardsProps {
   sessionId?: string;
@@ -52,6 +54,7 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
   const [submissionLinks, setSubmissionLinks] = useState<Array<{candidateId: string; name: string; email: string; link: string}>>([]);
   const [previousAssignments, setPreviousAssignments] = useState<PreviousAssignment[]>([]);
   const [isLoadingPrevious, setIsLoadingPrevious] = useState(false);
+  const { startTour } = useDriverGuide("assignments", assignmentsGuide, false);
 
   // Fetch job_id from sessionId (always, regardless of candidateIds)
   useEffect(() => {
@@ -367,7 +370,17 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
     }
   };
   return (
-    <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:h-fit-content *:data-[slot=card]:shadow-s lg:px-6 @xl/main:grid-cols-2 @4xl/main:grid-cols-3">
+    <>
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={startTour}
+          className="p-2 rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-glass-bg)] hover:border-[var(--color-lavender)]/50 transition-colors"
+          title="Start Guide"
+        >
+          <HelpCircle className="w-5 h-5 text-[var(--color-lavender)]" />
+        </button>
+      </div>
+      <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:h-fit-content *:data-[slot=card]:shadow-s lg:px-6 @xl/main:grid-cols-2 @4xl/main:grid-cols-3">
       
       {/* Error Message */}
       {error && (
@@ -390,7 +403,7 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
       )}
 
       {/* Card 1: Assignment Creation */}
-<Card className="@container/card relative overflow-hidden rounded-3xl
+<Card data-tour="assignment-form" className="@container/card relative overflow-hidden rounded-3xl
   bg-gradient-to-br from-purple-50 via-white to-indigo-50
   border border-purple-100
   shadow-[0_20px_40px_-20px_rgba(124,58,237,0.50)]
@@ -490,7 +503,7 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
 </Card>
 
       {candidates.length > 0 && (
-        <Card className="@container/card relative overflow-hidden rounded-3xl col-span-1
+        <Card data-tour="candidate-select" className="@container/card relative overflow-hidden rounded-3xl col-span-1
   bg-gradient-to-br from-purple-50 via-white to-indigo-50
   border border-purple-100
   shadow-[0_20px_40px_-20px_rgba(124,58,237,0.50)]
@@ -847,5 +860,6 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
         </div>
       )}
     </div>
+    </>
   )
 }
