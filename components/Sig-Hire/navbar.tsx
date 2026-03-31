@@ -14,13 +14,13 @@ import { initializeSession } from "@/lib/ranking-api";
 import { createClient } from "@/utils/supabase/client";
 
 const navItems = [
-  { label: "Home", href: "/sig-hire" },
-  { label: "Sessions", href: "/sig-hire/sessions" },
-  { label: "Uploads", href: "/sig-hire/uploads" },
-  { label: "Rankings", href: "/sig-hire/rankings" },
-  { label: "Assignments", href: "/sig-hire/assignments" },
-  { label: "Evaluations", href: "/sig-hire/evaluations" },
-  { label: "Insights", href: "/sig-hire/insights" },
+  { label: "Home", href: "/sig-hire", tourId: "nav-home" },
+  { label: "Sessions", href: "/sig-hire/sessions", tourId: "nav-sessions" },
+  { label: "Uploads", href: "/sig-hire/uploads", tourId: "nav-uploads" },
+  { label: "Rankings", href: "/sig-hire/rankings", tourId: "nav-rankings" },
+  { label: "Assignments", href: "/sig-hire/assignments", tourId: "nav-assignments" },
+  { label: "Evaluations", href: "/sig-hire/evaluations", tourId: "nav-evaluations" },
+  { label: "Insights", href: "/sig-hire/insights", tourId: "nav-insights" },
 ];
 
 export function Navbar() {
@@ -125,6 +125,7 @@ export function Navbar() {
                 <Link
                   key={item.href}
                   href={href}
+                  data-tour={item.tourId}
                   className={cn(
                     "text-sm transition-colors duration-200 px-3 py-1.5 rounded-full relative",
                     isActive ? "text-white bg-white/10" : "text-white/70 hover:text-white hover:bg-white/5"
@@ -149,6 +150,7 @@ export function Navbar() {
               disabled={isLoading}
               variant="primary"
               className="flex items-center gap-2"
+              data-tour="start-hiring-btn"
             >
               <Sparkles size={16} />
               {isLoading ? "Starting..." : "Start Hiring"}

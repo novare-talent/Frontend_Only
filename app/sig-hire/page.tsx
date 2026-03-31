@@ -14,12 +14,16 @@ import { FeaturesSection } from "@/components/Sig-Hire/home/features-section";
 import { HowItWorksSection } from "@/components/Sig-Hire/home/how-it-works-section";
 import { TestimonialsSection } from "@/components/Sig-Hire/home/testimonials-section";
 import { CTASection } from "@/components/Sig-Hire/home/cta-section";
+import { useDriverGuide } from "@/hooks/useDriverGuide";
+import { homeGuide } from "@/lib/driver-config";
+import { GuideButton } from "@/components/ui/guide-button";
 
 function HomePageContent() {
   const router = useRouter();
   const { setSessionId, setClientId, isLoading, setIsLoading, error, setError } = useSession();
   const { addSession, loadSessions, sessions } = useMultiSession();
   const [loadingMessage, setLoadingMessage] = useState("Initializing session...");
+  const { startTour } = useDriverGuide("home", homeGuide, true);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -67,6 +71,11 @@ function HomePageContent() {
 
   return (
     <main className="relative min-h-screen overflow-hidden" style={{ background: "#0a0118" }}>
+
+      {/* Guide Button - Fixed position */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <GuideButton onClick={startTour} />
+      </div>
 
       {/* Global styles */}
       <style>{`
@@ -118,10 +127,10 @@ function HomePageContent() {
         sessions={sessions ?? []}
         onViewSessions={handleViewSessions}
       />
-      <StatsTicker />
+      {/* <StatsTicker /> */}
       <FeaturesSection />
       <HowItWorksSection />
-      <TestimonialsSection />
+      {/* <TestimonialsSection /> */}
       <CTASection />
       <Footer />
     </main>

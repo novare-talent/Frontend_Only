@@ -140,6 +140,79 @@ export const insightsGuide: DriveStep[] = [
   },
 ];
 
+export const homeGuide: DriveStep[] = [
+  {
+    popover: {
+      title: "Welcome to SigHyre",
+      description: "Your AI-powered hiring assistant. Let's explore the navigation and key features.",
+    },
+  },
+  {
+    element: "[data-tour='nav-home']",
+    popover: {
+      title: "Home",
+      description: "Return to the main landing page with product overview and features.",
+      side: "bottom",
+    },
+  },
+  {
+    element: "[data-tour='nav-sessions']",
+    popover: {
+      title: "Sessions",
+      description: "View and manage all your job ranking sessions in one place.",
+      side: "bottom",
+    },
+  },
+  {
+    element: "[data-tour='nav-uploads']",
+    popover: {
+      title: "Uploads",
+      description: "Upload job descriptions and candidate resumes to start the AI ranking process.",
+      side: "bottom",
+    },
+  },
+  {
+    element: "[data-tour='nav-rankings']",
+    popover: {
+      title: "Rankings",
+      description: "View AI-powered candidate rankings with detailed match scores and analysis.",
+      side: "bottom",
+    },
+  },
+  {
+    element: "[data-tour='nav-assignments']",
+    popover: {
+      title: "Assignments",
+      description: "Create and send technical assignments to shortlisted candidates.",
+      side: "bottom",
+    },
+  },
+  {
+    element: "[data-tour='nav-evaluations']",
+    popover: {
+      title: "Evaluations",
+      description: "Review and evaluate candidate assignment submissions with AI assistance.",
+      side: "bottom",
+    },
+  },
+  {
+    element: "[data-tour='nav-insights']",
+    popover: {
+      title: "Insights",
+      description: "Access analytics and insights about your hiring performance and trends.",
+      side: "bottom",
+    },
+  },
+  {
+    element: "[data-tour='start-hiring-btn']",
+    popover: {
+      title: "Start Hiring",
+      description: "Click here to create a new session and begin the AI-powered candidate ranking process.",
+      side: "left",
+    },
+  },
+];
+
 export function createDriver(steps: DriveStep[]) {
   return driver({
     ...baseConfig,

@@ -2,16 +2,12 @@
 
 import { motion } from "framer-motion";
 import {
-  Brain,
-  Target,
-  AlertTriangle,
-  Shield,
-  BarChart2,
   FileText,
   CheckCircle,
 } from "lucide-react";
 import { SectionLabel, SectionHeading, SectionSubheading } from "./section-ui";
 import GlowOrb from "@/components/landing/effects/GlowOrb";
+import SectionHeader from "@/components/landing/ui/SectionHeader";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ILLUSTRATIONS
@@ -520,7 +516,7 @@ interface BentoCardProps {
   colSpan: string;
   index: number;
   visual: React.ReactNode;
-  icon: React.ReactNode;
+  // icon: React.ReactNode;
 }
 
 function BentoCard({
@@ -544,7 +540,7 @@ function BentoCard({
         ease: [0.25, 0.46, 0.45, 0.94],
       }}
       whileHover={{ y: -2, transition: { duration: 0.18 } }}
-      className={`relative overflow-hidden rounded-2xl ${colSpan}`}
+      className={`relative overflow-hidden rounded-sm ${colSpan}`}
       style={{
         background: "rgba(255,255,255,0.018)",
         border: "1px solid rgba(255,255,255,0.06)",
@@ -560,7 +556,7 @@ function BentoCard({
 
       {/* Hover border inset glow */}
       <motion.div
-        className="absolute inset-0 pointer-events-none rounded-2xl"
+        className="absolute inset-0 pointer-events-none rounded-sm"
         initial={{ opacity: 0 }}
         whileHover={{ opacity: 1 }}
         transition={{ duration: 0.2 }}
@@ -569,16 +565,7 @@ function BentoCard({
 
       {/* Content */}
       <div className="relative z-10 p-6">
-        {/* Icon badge */}
-        <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center mb-4"
-          style={{
-            background: `${accentColor}12`,
-            border: `1px solid ${accentColor}22`,
-          }}
-        >
-          <span style={{ color: accentColor }}>{icon}</span>
-        </div>
+
 
         <h3
           className="font-semibold text-white mb-1.5 leading-snug"
@@ -613,7 +600,6 @@ const CARDS: Omit<BentoCardProps, "index">[] = [
     accentColor: "#a78bfa",
     glowColor: "rgba(139,92,246,0.13)",
     colSpan: "col-span-1 md:col-span-2 lg:col-span-2",
-    icon: <Brain className="w-4 h-4" />,
     visual: <RankingIllustration />,
   },
   {
@@ -622,7 +608,6 @@ const CARDS: Omit<BentoCardProps, "index">[] = [
     accentColor: "#818cf8",
     glowColor: "rgba(99,102,241,0.13)",
     colSpan: "col-span-1",
-    icon: <Target className="w-4 h-4" />,
     visual: <SkillFitIllustration />,
   },
   {
@@ -631,7 +616,6 @@ const CARDS: Omit<BentoCardProps, "index">[] = [
     accentColor: "#fbbf24",
     glowColor: "rgba(245,158,11,0.12)",
     colSpan: "col-span-1",
-    icon: <AlertTriangle className="w-4 h-4" />,
     visual: <RiskIllustration />,
   },
   {
@@ -640,7 +624,6 @@ const CARDS: Omit<BentoCardProps, "index">[] = [
     accentColor: "#10b981",
     glowColor: "rgba(16,185,129,0.12)",
     colSpan: "col-span-1 lg:col-span-2",
-    icon: <Shield className="w-4 h-4" />,
     visual: <BiasIllustration />,
   },
   {
@@ -649,7 +632,6 @@ const CARDS: Omit<BentoCardProps, "index">[] = [
     accentColor: "#f472b6",
     glowColor: "rgba(236,72,153,0.12)",
     colSpan: "col-span-1",
-    icon: <BarChart2 className="w-4 h-4" />,
     visual: <ComparativeIllustration />,
   },
   {
@@ -658,7 +640,6 @@ const CARDS: Omit<BentoCardProps, "index">[] = [
     accentColor: "#38bdf8",
     glowColor: "rgba(14,165,233,0.12)",
     colSpan: "col-span-1 md:col-span-2 lg:col-span-2",
-    icon: <FileText className="w-4 h-4" />,
     visual: <ReportIllustration />,
   },
 ];
@@ -685,24 +666,12 @@ export function FeaturesSection() {
       />
 
       <div className="max-w-5xl mx-auto">
-        <SectionLabel>Capabilities</SectionLabel>
-
-        <SectionHeading>
-          Everything you need to shortlist{" "}
-          <span
-            style={{
-              background: "linear-gradient(135deg, #a78bfa, #818cf8)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            better candidates
-          </span>
-        </SectionHeading>
-
-        <SectionSubheading>
-          Every feature is designed to turn resume chaos into confident, defensible hiring decisions.
-        </SectionSubheading>
+        <SectionHeader
+          tag="Capabilities"
+          title="Everything you need to shortlist"
+          titleAccent="better candidates"
+          description="Every feature is designed to turn resume chaos into confident, defensible hiring decisions."
+        />
 
         {/* ── Bento Grid ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-14">
