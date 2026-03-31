@@ -6,7 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 import { useMultiSession, SessionData } from "@/context/MultiSessionContext";
 import { motion } from "framer-motion";
 import { Loader2, Plus, Trash2, Eye, BookOpen, Calendar, Users, FileText, HelpCircle } from "lucide-react";
-import GlowButton from "@/components/landing/ui/GlowButton";
+import ChromeButton from "@/components/Sig-Hire/ChromeButton";
 import { useDriverGuide } from "@/hooks/useDriverGuide";
 import { sessionsGuide } from "@/lib/driver-config";
 
@@ -212,7 +212,7 @@ function SessionsPageContent() {
             >
               <HelpCircle className="w-5 h-5 text-[var(--color-lavender)]" />
             </button>
-            <GlowButton 
+            <ChromeButton 
               onClick={handleCreateNew} 
               disabled={creatingSession}
               className="flex items-center gap-2"
@@ -230,7 +230,7 @@ function SessionsPageContent() {
                   New Session
                 </>
               )}
-            </GlowButton>
+            </ChromeButton>
           </motion.div>
         </div>
 
@@ -327,7 +327,7 @@ function SessionsPageContent() {
               Create your first ranking session to get started
             </p>
             <button onClick={handleCreateNew}>
-              <GlowButton>Create New Session</GlowButton>
+              <ChromeButton>Create New Session</ChromeButton>
             </button>
           </motion.div>
         )}

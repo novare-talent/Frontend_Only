@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { useSession } from "@/context/SessionContext";
 import { ChevronRight, Menu, X, Sparkles } from "lucide-react";
 import Image from "next/image";
-import GlowButton from "@/components/landing/ui/GlowButton";
+import ChromeButton from "@/components/Sig-Hire/ChromeButton";
 import { useMultiSession } from "@/context/MultiSessionContext";
 import { initializeSession } from "@/lib/ranking-api";
 import { createClient } from "@/utils/supabase/client";
@@ -26,11 +26,21 @@ const navItems = [
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
   const { sessionId, setSessionId, setClientId } = useSession();
   const { addSession } = useMultiSession();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
   
   const currentSessionId = searchParams.get('session_id') || sessionId;
   const sessionDisplay = currentSessionId ? 
@@ -74,80 +84,101 @@ export function Navbar() {
 
   return (
     <>
-      {/* Floating Logo */}
+      {/* Desktop Navbar */}
       <motion.div
         initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+        animate={{ 
+          y: scrolled ? 20 : 0, 
+          opacity: 1
+        }}
         transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-        className="fixed top-5 left-6 z-40 hidden lg:flex"
+        className="fixed top-0 left-1/2 -translate-x-1/2 z-40 hidden lg:flex overflow-hidden"
+        style={{
+          width: scrolled ? "85%" : "100%",
+          minWidth: "800px",
+          maxWidth: scrolled ? "85%" : "calc(100% - 3rem)",
+          transition: "width 0.6s cubic-bezier(0.25, 0.1, 0.25, 1), max-width 0.6s cubic-bezier(0.25, 0.1, 0.25, 1)"
+        }}
       >
-        <Link href="/sig-hire" className="flex items-center gap-2">
-          <span className="text-2xl font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-            SigHyre
-          </span>
-        </Link>
-      </motion.div>
+        <div className={cn(
+          "flex items-center justify-between w-full px-6 py-3 rounded-full backdrop-blur-lg border",
+          "transition-all duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]",
+          scrolled 
+            ? "bg-neutral-950/80 border-white/20 shadow-[0_0_24px_rgba(34,42,53,0.06),0_1px_1px_rgba(0,0,0,0.05),0_0_0_1px_rgba(34,42,53,0.04),0_0_4px_rgba(34,42,53,0.08),0_16px_68px_rgba(47,48,55,0.05),0_1px_0_rgba(255,255,255,0.1)_inset]"
+            : "border-transparent"
+        )}>
+          {/* Logo */}
+          <Link href="/sig-hire" className="flex items-center gap-2">
+            <span className="text-2xl font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              SigHyre
+            </span>
+          </Link>
 
-      {/* Floating Glass Nav — center */}
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1], delay: 0.05 }}
-        className="fixed top-5 left-1/2 -translate-x-1/2 z-40 hidden lg:flex"
-      >
-        <nav className="flex items-center gap-1 px-4 py-2 rounded-full glass backdrop-blur-lg border border-white/10">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href !== "/sig-hire" && pathname.startsWith(item.href));
-            const shouldAddSessionId = ['/sig-hire/uploads', '/sig-hire/rankings', '/sig-hire/assignments', '/sig-hire/evaluations'].includes(item.href);
-            const href = shouldAddSessionId && currentSessionId ? `${item.href}?session_id=${currentSessionId}` : item.href;
+          {/* Nav Items */}
+          <nav className="flex items-center gap-1">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href || (item.href !== "/sig-hire" && pathname.startsWith(item.href));
+              const shouldAddSessionId = ['/sig-hire/uploads', '/sig-hire/rankings', '/sig-hire/assignments', '/sig-hire/evaluations'].includes(item.href);
+              const href = shouldAddSessionId && currentSessionId ? `${item.href}?session_id=${currentSessionId}` : item.href;
 
-            return (
-              <Link
-                key={item.href}
-                href={href}
-                className={cn(
-                  "text-sm transition-colors duration-200 px-3 py-1.5 rounded-full relative",
-                  isActive ? "text-white bg-white/10" : "text-white/70 hover:text-white hover:bg-white/5"
-                )}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-      </motion.div>
+              return (
+                <Link
+                  key={item.href}
+                  href={href}
+                  className={cn(
+                    "text-sm transition-colors duration-200 px-3 py-1.5 rounded-full relative",
+                    isActive ? "text-white bg-white/10" : "text-white/70 hover:text-white hover:bg-white/5"
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
 
-      {/* Floating Right — session indicator + start hiring */}
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1], delay: 0.1 }}
-        className="fixed top-5 right-6 z-40 hidden lg:flex items-center gap-3"
-      >
-        {sessionDisplay && (
-          <div className="text-xs px-3 py-2 rounded-full glass border border-white/10 text-white/90 flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-            {sessionDisplay}
+          {/* Right Section */}
+          <div className="flex items-center gap-3">
+            {sessionDisplay && (
+              <div className="text-xs px-3 py-2 rounded-full glass border border-white/10 text-white/90 flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+                {sessionDisplay}
+              </div>
+            )}
+            <ChromeButton 
+              onClick={handleStartHiring} 
+              disabled={isLoading}
+              variant="primary"
+              className="flex items-center gap-2"
+            >
+              <Sparkles size={16} />
+              {isLoading ? "Starting..." : "Start Hiring"}
+            </ChromeButton>
           </div>
-        )}
-        <GlowButton 
-          onClick={handleStartHiring} 
-          disabled={isLoading}
-          className="flex items-center gap-2"
-        >
-          <Sparkles size={16} />
-          {isLoading ? "Starting..." : "Start Hiring"}
-        </GlowButton>
+        </div>
       </motion.div>
 
       {/* Mobile header - Floating Pill */}
       <motion.header
         initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+        animate={{ 
+          y: scrolled ? 20 : 0, 
+          opacity: 1
+        }}
         transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-        className="fixed top-5 left-4 right-4 z-40 lg:hidden"
+        className="fixed top-5 left-4 right-4 z-40 lg:hidden mx-auto overflow-hidden"
+        style={{ 
+          width: scrolled ? "90%" : "100%",
+          maxWidth: scrolled ? "90%" : "calc(100% - 2rem)",
+          transition: "width 0.6s cubic-bezier(0.25, 0.1, 0.25, 1), max-width 0.6s cubic-bezier(0.25, 0.1, 0.25, 1)"
+        }}
       >
-        <div className="flex items-center justify-between px-6 h-14 rounded-full glass border border-white/10 shadow-lg">
+        <div className={cn(
+          "flex items-center justify-between px-6 h-14 rounded-full border shadow-lg backdrop-blur-lg",
+          "transition-all duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]",
+          scrolled
+            ? "bg-neutral-950/80 border-white/20 shadow-[0_0_24px_rgba(34,42,53,0.06),0_1px_1px_rgba(0,0,0,0.05),0_0_0_1px_rgba(34,42,53,0.04),0_0_4px_rgba(34,42,53,0.08),0_16px_68px_rgba(47,48,55,0.05),0_1px_0_rgba(255,255,255,0.1)_inset]"
+            : "border-transparent"
+        )}>
           <Link href="/sig-hire" className="flex items-center gap-2">
             <span className="text-xl font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
               SigHyre
@@ -196,14 +227,15 @@ export function Navbar() {
                   Session: {sessionDisplay}
                 </div>
               )}
-              <GlowButton 
+              <ChromeButton 
                 onClick={() => { handleStartHiring(); setMobileOpen(false); }} 
                 disabled={isLoading}
+                variant="primary"
                 className="flex items-center gap-2"
               >
                 <Sparkles size={16} />
                 {isLoading ? "Starting..." : "Start Hiring"}
-              </GlowButton>
+              </ChromeButton>
             </div>
           </motion.div>
         )}

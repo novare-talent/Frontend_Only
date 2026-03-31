@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { History } from "lucide-react";
-import GlowButton from "@/components/landing/ui/GlowButton";
+import ChromeButton from "@/components/Sig-Hire/ChromeButton";
 import { MOCK_CANDIDATES } from "./constants";
 import { Particles } from "@/components/ui/particles";
 
@@ -132,12 +132,13 @@ export function HeroSection({ onStartHiring, isLoading, sessions, onViewSessions
           transition={{ duration: 0.55, delay: 0.58 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-20"
         >
-          <GlowButton
+          <ChromeButton
             onClick={onStartHiring}
             disabled={isLoading}
+            className="scale-125"
           >
             Start Hiring
-          </GlowButton>
+          </ChromeButton>
 
           {sessions?.length > 0 && (
             <button

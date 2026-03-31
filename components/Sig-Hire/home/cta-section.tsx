@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import GlowButton from "@/components/landing/ui/GlowButton";
+import ChromeButton from "@/components/Sig-Hire/ChromeButton";
 import GlowOrb from "@/components/landing/effects/GlowOrb";
 import { DotPattern } from "@/components/landing/ui/dot-pattern";
 
@@ -32,9 +32,9 @@ export function CTASection() {
 
           <div className="flex flex-col items-center gap-6">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <GlowButton className="text-base">
+              <ChromeButton className="text-base">
                 Try Ranking Bot
-              </GlowButton>
+              </ChromeButton>
             </div>
             <p className="text-white/80 text-sm text-center max-w-lg">
               Join teams already screening candidates{" "}
