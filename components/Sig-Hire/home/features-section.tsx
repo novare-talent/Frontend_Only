@@ -5,7 +5,6 @@ import {
   FileText,
   CheckCircle,
 } from "lucide-react";
-import { SectionLabel, SectionHeading, SectionSubheading } from "./section-ui";
 import GlowOrb from "@/components/landing/effects/GlowOrb";
 import SectionHeader from "@/components/landing/ui/SectionHeader";
 
@@ -40,7 +39,7 @@ function RankingIllustration() {
           className="text-[11px] truncate"
           style={{ color: "rgba(167,139,250,0.72)" }}
         >
-          "Find candidates with React + 3 yrs exp"
+          Find candidates with React + 3 yrs exp
         </span>
       </motion.div>
 
@@ -516,7 +515,6 @@ interface BentoCardProps {
   colSpan: string;
   index: number;
   visual: React.ReactNode;
-  // icon: React.ReactNode;
 }
 
 function BentoCard({
@@ -527,7 +525,6 @@ function BentoCard({
   colSpan,
   index,
   visual,
-  icon,
 }: BentoCardProps) {
   return (
     <motion.div

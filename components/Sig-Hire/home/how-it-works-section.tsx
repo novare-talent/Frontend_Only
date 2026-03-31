@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { STEPS } from "./constants";
-import { SectionLabel, SectionHeading, SectionSubheading } from "./section-ui";
 import GlowOrb from "@/components/landing/effects/GlowOrb";
 import SectionHeader from "@/components/landing/ui/SectionHeader";
 import GlowButton from "@/components/landing/ui/GlowButton";
@@ -40,7 +39,7 @@ export function HowItWorksSection() {
             {/* Middle row with step cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-1 relative z-0 mb-3">
               {STEPS.map((step, i) => (
-                <StepCard key={i} {...step} index={i} total={STEPS.length} />
+                <StepCard key={i} {...step} index={i} />
               ))}
             </div>
             
@@ -84,14 +83,14 @@ function EmptyCard() {
   );
 }
 
-function StepCard({ number, icon, title, desc, index, total }: {
-  number: string; icon: React.ReactNode; title: string; desc: string; index: number; total: number;
+function StepCard({ title, desc, index }: {
+  title: string; desc: string; index: number;
 }) {
   const stepNames = ["STEP-ONE", "STEP-TWO", "STEP-THREE", "STEP-FOUR"]
 
   const illustrations = [
     // Upload illustration - Drag & Drop UI
-    <div className="relative w-24 h-24">
+    <div key="upload" className="relative w-24 h-24">
       {/* Document being dragged */}
       <motion.div 
         animate={{ y: [0, -8, 0], x: [0, 4, 0] }}
@@ -124,7 +123,7 @@ function StepCard({ number, icon, title, desc, index, total }: {
     </div>,
     
     // AI Analysis illustration - Processing UI
-    <div className="relative w-24 h-24">
+    <div key="analysis" className="relative w-24 h-24">
       {/* Browser/App window */}
       <div className="absolute inset-0 rounded-lg overflow-hidden" style={{ background: "linear-gradient(180deg, #1e293b 0%, #0f172a 100%)", border: "1px solid rgba(255,255,255,0.1)" }}>
         {/* Window header */}
@@ -165,7 +164,7 @@ function StepCard({ number, icon, title, desc, index, total }: {
     </div>,
     
     // Ranking illustration - List with scores
-    <div className="relative w-24 h-24">
+    <div key="ranking" className="relative w-24 h-24">
       {/* Ranking list */}
       <div className="absolute inset-0 rounded-lg p-2 space-y-1.5" style={{ background: "linear-gradient(180deg, #1e293b 0%, #0f172a 100%)", border: "1px solid rgba(255,255,255,0.1)" }}>
         {/* Rank 1 */}
@@ -205,7 +204,7 @@ function StepCard({ number, icon, title, desc, index, total }: {
     </div>,
     
     // Hire illustration - Success checkmark with confetti
-    <div className="relative w-24 h-24 flex items-center justify-center">
+    <div key="hire" className="relative w-24 h-24 flex items-center justify-center">
       {/* Success circle */}
       <motion.div
         initial={{ scale: 0 }}

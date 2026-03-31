@@ -333,7 +333,7 @@ function HeroBackground() {
       {/* Bottom animated section */}
       <div className="relative" style={{ height: "530px", width: "100%" }}>
         <div className="absolute inset-0" style={{ mixBlendMode: "overlay", zIndex: 12 }}>
-          <img src="/images/hero/hero-background-bottom.png" alt="" className="w-full h-full" />
+          <img src="/images/hero/hero-background-bottom.png" alt="Hero background" className="w-full h-full" />
         </div>
 
         {[
