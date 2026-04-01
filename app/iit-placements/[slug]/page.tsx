@@ -13,15 +13,15 @@ import {
   ArrowLeft,
   ChevronRight,
 } from "lucide-react";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
+import Navbar from "@/components/landing/layout/Navbar";
+import Footer from "@/components/landing/layout/Footer";
 import Breadcrumbs from "@/components/placements/Breadcrumbs";
 import PlacementStatsCard from "@/components/placements/PlacementStatsCard";
 import BranchWiseTable from "@/components/placements/BranchWiseTable";
 import PlacementTrends from "@/components/placements/PlacementTrends";
 import PlacementFAQ from "@/components/placements/PlacementFAQ";
 import PlacementCTA from "@/components/placements/PlacementCTA";
-import ScrollReveal from "@/components/effects/ScrollReveal";
+import ScrollReveal from "@/components/landing/effects/ScrollReveal";
 import {
   getAllIITs,
   getIITBySlug,
