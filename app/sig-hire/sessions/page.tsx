@@ -211,10 +211,12 @@ function SessionsPageContent() {
         updated_at: new Date().toISOString(),
       });
 
+      setCreatingSession(false);
+      await showSuccess("Session created successfully!");
       router.push(`/sig-hire/uploads?session_id=${sessionResponse.session_id}`);
     } catch (err) {
-      await showError(err instanceof Error ? err.message : "Failed to create session");
       setCreatingSession(false);
+      await showError(err instanceof Error ? err.message : "Failed to create session");
     }
   };
 

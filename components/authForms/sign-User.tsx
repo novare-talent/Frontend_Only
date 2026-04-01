@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useState } from "react";
-import { Mail, Phone, EyeOff, Eye } from "lucide-react";
+import { Mail, Phone, EyeOff, Eye, Upload, X } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
 import Image from "next/image";
@@ -51,6 +51,8 @@ export function SignUpForm({
   });
 
   const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const supabase = createClient();
@@ -220,6 +222,36 @@ export function SignUpForm({
         }
       }
 
+      let resumeUrl: string | null = null;
+      if (resumeFile) {
+        try {
+          const { data: uploadData, error: uploadError } =
+            await supabase.storage
+              .from("resumes")
+              .upload(`${user.id}/${Date.now()}_${resumeFile.name}`, resumeFile, {
+                cacheControl: "3600",
+                upsert: false,
+              });
+
+          if (uploadError) {
+            toast.error("Resume Upload Failed", {
+              description:
+                "Your account was created but we couldn't upload your resume. You can update it later in your profile.",
+              duration: 5000,
+              position: "top-right",
+            });
+          } else if (uploadData) {
+            const { data: publicUrlData } = supabase.storage
+              .from("resumes")
+              .getPublicUrl(uploadData.path);
+
+            resumeUrl = publicUrlData.publicUrl;
+          }
+        } catch {
+          // Silent failure for non-critical resume upload errors
+        }
+      }
+
       const profileData = {
         id: user.id,
         email: userFormData.email,
@@ -229,6 +261,7 @@ export function SignUpForm({
         github_link: userFormData.githubLink,
         linkedin_link: userFormData.linkedinLink,
         profile_image: profileImageUrl,
+        resume_url: resumeUrl ? [resumeUrl] : [],
         role: "user",
       };
 
@@ -263,6 +296,7 @@ export function SignUpForm({
         password: "",
       });
       setProfileImage(null);
+      setResumeFile(null);
     } catch (err) {
       toast.error("Unexpected Error", {
         description: `An unexpected error occurred: ${err instanceof Error ? err.message : "Unknown error"}`,
@@ -627,6 +661,72 @@ export function SignUpForm({
                     onChange={handleUserChange}
                     placeholder="https://linkedin.com/in/username"
                   />
+                </div>
+
+                <div className="grid gap-2 mt-3">
+                  <Label className="text-foreground">Resume (Optional)</Label>
+                  {resumeFile ? (
+                    <div className="flex items-center gap-2 p-3 border rounded-lg bg-muted/50">
+                      <Upload className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm flex-1 truncate">{resumeFile.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => setResumeFile(null)}
+                        className="text-muted-foreground hover:text-foreground cursor-pointer"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
+                        isDragging
+                          ? "border-primary bg-primary/5"
+                          : "border-muted-foreground/25 hover:border-primary hover:bg-primary/5"
+                      }`}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setIsDragging(true);
+                      }}
+                      onDragLeave={(e) => {
+                        e.preventDefault();
+                        setIsDragging(false);
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsDragging(false);
+                        const file = e.dataTransfer.files[0];
+                        if (file && file.type === "application/pdf" && file.size <= 2 * 1024 * 1024) {
+                          setResumeFile(file);
+                        } else {
+                          toast.error("Invalid File", {
+                            description: "Please upload a PDF file under 2MB",
+                          });
+                        }
+                      }}
+                      onClick={() => {
+                        const input = document.createElement("input");
+                        input.type = "file";
+                        input.accept = ".pdf";
+                        input.onchange = (e) => {
+                          const file = (e.target as HTMLInputElement).files?.[0];
+                          if (file && file.type === "application/pdf" && file.size <= 2 * 1024 * 1024) {
+                            setResumeFile(file);
+                          } else {
+                            toast.error("Invalid File", {
+                              description: "Please upload a PDF file under 2MB",
+                            });
+                          }
+                        };
+                        input.click();
+                      }}
+                    >
+                      <Upload className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-sm font-medium">Click to upload or drag & drop</p>
+                      <p className="text-xs text-muted-foreground mt-1">PDF (up to 2MB)</p>
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">You can update your resume later in the profile section</p>
                 </div>
 
                 <Button

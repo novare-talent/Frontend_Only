@@ -261,8 +261,8 @@ export function HeroSection({ onStartHiring, isLoading, sessions, onViewSessions
           style={{ opacity: 0.45 }}
         >
           {["AI-ranked in seconds", "Risk flags included", "No setup needed"].map((txt, i) => (
-            <span key={i} className="flex items-center gap-1.5 text-[12px]" style={{ color: "#64748B" }}>
-              <span style={{ color: "#7C3AED" }}>✓</span> {txt}
+            <span key={i} className="flex items-center gap-1.5 ">
+              <span>✓</span> {txt}
             </span>
           ))}
         </motion.div>

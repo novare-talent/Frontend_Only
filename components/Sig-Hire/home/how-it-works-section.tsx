@@ -9,7 +9,7 @@ import ParticleCanvas from "@/components/landing/effects/ParticleCanvas";
 
 export function HowItWorksSection() {
   return (
-    <section className="relative py-16 md:py-28 px-4 sm:px-6 overflow-hidden" >
+    <section className="relative py-4 md:py-8 px-4 sm:px-6 overflow-hidden" >
             <div className="absolute inset-0 opacity-90">
               <ParticleCanvas />
             </div>
@@ -56,10 +56,10 @@ export function HowItWorksSection() {
               </div>
               {/* Powered by section - positioned over the bottom empty cards */}
               <div className="absolute inset-0 z-30 flex flex-col items-center justify-center text-center px-6">
-                <GlowButton variant="primary" className="mb-4">
+                <GlowButton className="mb-4">
                   Powered by Novare Talent
                 </GlowButton>
-                <p className="max-w-2xl" style={{ color: "rgba(148,163,184,0.8)", fontSize: "14px", lineHeight: "1.6" }}>
+                <p className="max-w-3xl">
                   Built on cutting-edge AI technology by Novare Talent, Sighyre transforms the way companies identify and hire top talent. 
                   Our intelligent platform combines years of recruitment expertise with advanced machine learning to deliver unmatched accuracy and efficiency.
                 </p>
@@ -98,7 +98,7 @@ function StepCard({ title, desc, index }: {
       <motion.div 
         animate={{ y: [0, -8, 0], x: [0, 4, 0] }}
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-2 left-2 w-10 h-12 rounded-sm bg-white shadow-lg z-10"
+        className="absolute top-2 left-2 w-10 h-12 rounded-xs bg-white shadow-lg z-10"
         style={{ background: "linear-gradient(180deg, #fff 0%, #f8f9fa 100%)", border: "1px solid rgba(0,0,0,0.1)" }}
       >
         <div className="p-1.5 space-y-1">
@@ -113,12 +113,12 @@ function StepCard({ title, desc, index }: {
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         className="absolute top-0 left-0 z-20"
       >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="white" style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }}>
-          <path d="M0 0L0 11L3 8L5 13L7 12L5 7L9 7L0 0Z" />
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="white" style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))" }}>
+          <path d="M0 0L0 11L3 7L9 7L0 0Z" />
         </svg>
       </motion.div>
       {/* Drop zone */}
-      <div className="absolute bottom-0 right-0 w-16 h-16 rounded-lg border-2 border-dashed flex items-center justify-center" style={{ borderColor: "rgba(139,92,246,0.5)", background: "rgba(139,92,246,0.1)" }}>
+      <div className="absolute bottom-0 right-0 w-16 h-16 rounded-md border-2 border-dashed flex items-center justify-center" style={{ borderColor: "rgba(139,92,246,0.5)", background: "rgba(139,92,246,0.1)" }}>
         <svg className="w-6 h-6" style={{ color: "rgba(139,92,246,0.7)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
         </svg>
@@ -128,7 +128,7 @@ function StepCard({ title, desc, index }: {
     // AI Analysis illustration - Processing UI
     <div key="analysis" className="relative w-24 h-24">
       {/* Browser/App window */}
-      <div className="absolute inset-0 rounded-lg overflow-hidden" style={{ background: "linear-gradient(180deg, #1e293b 0%, #0f172a 100%)", border: "1px solid rgba(255,255,255,0.1)" }}>
+      <div className="absolute inset-0 rounded-[4px] overflow-hidden" style={{ background: "linear-gradient(180deg, #1e293b 0%, #0f172a 100%)", border: "1px solid rgba(255,255,255,0.1)" }}>
         {/* Window header */}
         <div className="h-4 flex items-center px-2 gap-1" style={{ background: "rgba(255,255,255,0.05)" }}>
           <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
@@ -169,13 +169,13 @@ function StepCard({ title, desc, index }: {
     // Ranking illustration - List with scores
     <div key="ranking" className="relative w-24 h-24">
       {/* Ranking list */}
-      <div className="absolute inset-0 rounded-lg p-2 space-y-1.5" style={{ background: "linear-gradient(180deg, #1e293b 0%, #0f172a 100%)", border: "1px solid rgba(255,255,255,0.1)" }}>
+      <div className="absolute inset-0 rounded-[4px] p-2 space-y-1.5" style={{ background: "linear-gradient(180deg, #1e293b 0%, #0f172a 100%)", border: "1px solid rgba(255,255,255,0.1)" }}>
         {/* Rank 1 */}
         <motion.div 
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
-          className="flex items-center gap-1.5 p-1 rounded" style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)" }}
+          className="flex items-center gap-1.5 p-1 rounded-[4px]" style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)" }}
         >
           <div className="w-4 h-4 rounded-sm bg-green-500 flex items-center justify-center text-white text-[8px] font-bold">1</div>
           <div className="flex-1 h-1 bg-green-400 rounded" />
@@ -186,7 +186,7 @@ function StepCard({ title, desc, index }: {
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2, repeat: Infinity, repeatDelay: 2 }}
-          className="flex items-center gap-1.5 p-1 rounded" style={{ background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)" }}
+          className="flex items-center gap-1.5 p-1 rounded-[4px]" style={{ background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)" }}
         >
           <div className="w-4 h-4 rounded-sm bg-purple-500 flex items-center justify-center text-white text-[8px] font-bold">2</div>
           <div className="flex-1 h-1 bg-purple-400 rounded" style={{ width: "70%" }} />
@@ -197,7 +197,7 @@ function StepCard({ title, desc, index }: {
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.4, repeat: Infinity, repeatDelay: 2 }}
-          className="flex items-center gap-1.5 p-1 rounded" style={{ background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.3)" }}
+          className="flex items-center gap-1.5 p-1 rounded-[4px]" style={{ background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.3)" }}
         >
           <div className="w-4 h-4 rounded-sm bg-amber-500 flex items-center justify-center text-white text-[8px] font-bold">3</div>
           <div className="flex-1 h-1 bg-amber-400 rounded" style={{ width: "50%" }} />
@@ -260,8 +260,6 @@ function StepCard({ title, desc, index }: {
     >
       {/* Glass card body */}
       <motion.div
-        whileHover={{ y: -2, scale: 1.02 }}
-        transition={{ duration: 0.2 }}
         className="relative z-10 w-full h-full rounded-xl p-6 flex flex-col justify-center"
         style={{
           background: "rgba(255,255,255,0.025)",
@@ -274,21 +272,21 @@ function StepCard({ title, desc, index }: {
         <div className="absolute inset-x-0 top-0 h-px rounded-t-xl"
           style={{ background: "linear-gradient(90deg, transparent, rgba(139,92,246,0.4), transparent)" }} />
 
-        <div className="text-sm font-medium mb-3" style={{ color: "rgba(139,92,246,0.8)" }}>
+        <div className="text-sm font-medium mb-3">
           {stepNames[index]}
         </div>
 
-        {/* Illustration */}
+
+        <h3 className="text-white font-semibold mb-3">
+          {title}
+        </h3>
+              {/* Illustration */}
         <div className="mb-4 flex justify-center">
           {illustrations[index]}
         </div>
-
-        <h3 className="text-white font-semibold mb-3" style={{ fontSize: "16px", letterSpacing: "-0.015em" }}>
-          {title}
-        </h3>
-        <p style={{ color: "rgba(148,163,184,0.6)", fontSize: "13px", lineHeight: "1.5" }}>
+        {/* <p style={{ color: "rgba(148,163,184,0.6)", fontSize: "13px", lineHeight: "1.5" }}>
           {desc}
-        </p>
+        </p> */}
       </motion.div>
     </motion.div>
   );

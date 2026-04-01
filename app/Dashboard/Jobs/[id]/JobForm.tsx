@@ -16,7 +16,7 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import { FileText } from "lucide-react";
+import { FileText, Upload, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 
@@ -72,6 +72,9 @@ export default function JobForm({
   const [submitting, setSubmitting] = useState(false);
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [multiSelectValues, setMultiSelectValues] = useState<Record<string, string[]>>({});
+  const [uploadingNewResume, setUploadingNewResume] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [newResumeFile, setNewResumeFile] = useState<File | null>(null);
 
   // NEW: JOB DETAILS
   const [jobDetails, setJobDetails] = useState<any>(null);
@@ -183,7 +186,7 @@ export default function JobForm({
   //   }
   // }, [loadingProfile, notLoggedIn, resumes, autoOpenedProfile, router]);
 
-  const hasResumes = useMemo(() => resumes.length > 0, [resumes]);
+  const hasResumes = useMemo(() => resumes.length > 0 || newResumeFile !== null, [resumes, newResumeFile]);
 
   function formatISTDate(dateString: string) {
     if (!dateString) return "—";
@@ -225,8 +228,8 @@ export default function JobForm({
   // Client-side validation helper
   const validateFormBeforeSubmit = (formEl: HTMLFormElement) => {
     // Resume is absolutely required
-    if (!selectedResume) {
-      toast.error("Resume required", { description: "Please select a resume before submitting." });
+    if (!selectedResume && !newResumeFile) {
+      toast.error("Resume required", { description: "Please select or upload a resume before submitting." });
       const resumeLink = formEl.querySelector("a[href]") as HTMLElement | null;
       if (resumeLink) resumeLink.focus();
       return false;
@@ -308,6 +311,44 @@ export default function JobForm({
         return;
       }
 
+      // Upload new resume if provided
+      let finalResumeUrl = selectedResume;
+      if (newResumeFile && profileId) {
+        try {
+          const filePath = `${profileId}/${Date.now()}_${newResumeFile.name}`;
+          const { data: uploadData, error: uploadError } = await supabaseClient.storage
+            .from("resumes")
+            .upload(filePath, newResumeFile, { upsert: true });
+
+          if (uploadError) {
+            toast.error("Upload Failed", {
+              description: "Failed to upload new resume. Please try again.",
+            });
+            setSubmitting(false);
+            return;
+          }
+
+          const { data: { publicUrl } } = supabaseClient.storage
+            .from("resumes")
+            .getPublicUrl(filePath);
+
+          finalResumeUrl = publicUrl;
+
+          // Update profile with new resume
+          const updatedResumes = [...resumes, publicUrl];
+          await supabaseClient
+            .from("profiles")
+            .update({ resume_url: updatedResumes })
+            .eq("id", profileId);
+        } catch (err) {
+          toast.error("Upload Error", {
+            description: "Failed to upload resume. Please try again.",
+          });
+          setSubmitting(false);
+          return;
+        }
+      }
+
       const answers: Record<string, any> = {};
 
       if (profileData) {
@@ -342,7 +383,7 @@ export default function JobForm({
         });
       }
 
-      answers["selected_resume"] = selectedResume ?? null;
+      answers["selected_resume"] = finalResumeUrl ?? null;
 
       if (!profileId) {
         toast.error("Error", {
@@ -499,73 +540,155 @@ export default function JobForm({
               <p className="text-sm text-muted-foreground">
                 You must be logged in to select a resume.
               </p>
-            ) : hasResumes ? (
-              <div className="space-y-3">
-                {resumes.map((url, idx) => {
-                  const fileName = url.split("/").pop() ?? url;
-                  const isSelected = selectedResume === url;
-                  const toggle = () =>
-                    setSelectedResume((prev) => (prev === url ? null : url));
-
-                  return (
+            ) : (
+              <div className="space-y-4">
+                {/* Upload New Resume Section */}
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Upload New Resume</Label>
+                  {newResumeFile ? (
+                    <div className="flex items-center gap-2 p-3 border rounded-lg bg-muted/50">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm flex-1 truncate">{newResumeFile.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewResumeFile(null);
+                          if (!selectedResume && resumes.length > 0) {
+                            setSelectedResume(resumes[0]);
+                          }
+                        }}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
                     <div
-                      key={idx}
-                      role="button"
-                      tabIndex={0}
-                      onClick={toggle}
-                      onKeyDown={(e) => {
-                        if (e.key === " " || e.key === "Enter") {
-                          e.preventDefault();
-                          toggle();
+                      className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
+                        isDragging
+                          ? "border-primary bg-primary/5"
+                          : "border-muted-foreground/25 hover:border-primary hover:bg-primary/5"
+                      }`}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setIsDragging(true);
+                      }}
+                      onDragLeave={(e) => {
+                        e.preventDefault();
+                        setIsDragging(false);
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setIsDragging(false);
+                        const file = e.dataTransfer.files[0];
+                        if (file && file.type === "application/pdf" && file.size <= 2 * 1024 * 1024) {
+                          setNewResumeFile(file);
+                          setSelectedResume(null);
+                        } else {
+                          toast.error("Invalid File", {
+                            description: "Please upload a PDF file under 2MB",
+                          });
                         }
                       }}
-                      className={`flex items-center justify-between gap-3 rounded-lg border p-3 transition-colors cursor-pointer ${
-                        isSelected
-                          ? "bg-accent/10 border-accent"
-                          : "hover:bg-accent"
-                      }`}
-                      title={fileName}
-                      aria-pressed={isSelected}
-                      aria-label={`Select resume ${fileName}`}
+                      onClick={() => {
+                        const input = document.createElement("input");
+                        input.type = "file";
+                        input.accept = ".pdf";
+                        input.onchange = (e) => {
+                          const file = (e.target as HTMLInputElement).files?.[0];
+                          if (file && file.type === "application/pdf" && file.size <= 2 * 1024 * 1024) {
+                            setNewResumeFile(file);
+                            setSelectedResume(null);
+                          } else {
+                            toast.error("Invalid File", {
+                              description: "Please upload a PDF file under 2MB",
+                            });
+                          }
+                        };
+                        input.click();
+                      }}
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div
-                          className={`h-4 w-4 rounded-full border flex-shrink-0 ${
-                            isSelected ? "bg-primary border-accent" : "bg-transparent"
-                          }`}
-                          aria-hidden
-                        />
-                        <div className="min-w-0">
-                          <div className="truncate font-medium">{fileName}</div>
-                          <div className="text-xs text-muted-foreground">Resume</div>
-                        </div>
-                      </div>
-
-                      <div className="text-sm text-muted-foreground truncate max-w-[40%]">
-                        <a className="underline" href={url} target="_blank" rel="noreferrer">
-                          View
-                        </a>
-                      </div>
+                      <Upload className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-sm font-medium">Click to upload or drag & drop</p>
+                      <p className="text-xs text-muted-foreground mt-1">PDF (up to 2MB)</p>
                     </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <p className="text-lg text-red-600">
-                  No resumes found in your profile. Please Upload the resume to continue with the Application
-                </p>
-                <p className="text-sm">
-                  After uploading, come back to this page and refresh.
-                </p>
-                <div>
-                  <Link
-                    href="/Dashboard/Account"
-                    className="underline-offset-2 underline text-primary"
-                  >
-                    Open profile to upload resume
-                  </Link>
+                  )}
                 </div>
+
+                {/* Divider */}
+                {resumes.length > 0 && (
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-card px-2 text-muted-foreground">Or select from below</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Existing Resumes Section */}
+                {resumes.length > 0 ? (
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Previously Uploaded Resumes</Label>
+                    {resumes.map((url, idx) => {
+                      const fileName = url.split("/").pop() ?? url;
+                      const isSelected = selectedResume === url && !newResumeFile;
+                      const toggle = () => {
+                        if (newResumeFile) {
+                          setNewResumeFile(null);
+                        }
+                        setSelectedResume((prev) => (prev === url ? null : url));
+                      };
+
+                      return (
+                        <div
+                          key={idx}
+                          role="button"
+                          tabIndex={0}
+                          onClick={toggle}
+                          onKeyDown={(e) => {
+                            if (e.key === " " || e.key === "Enter") {
+                              e.preventDefault();
+                              toggle();
+                            }
+                          }}
+                          className={`flex items-center justify-between gap-3 rounded-lg border p-3 transition-colors cursor-pointer ${
+                            isSelected
+                              ? "bg-accent/10 border-accent"
+                              : "hover:bg-accent"
+                          }`}
+                          title={fileName}
+                          aria-pressed={isSelected}
+                          aria-label={`Select resume ${fileName}`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div
+                              className={`h-4 w-4 rounded-full border flex-shrink-0 ${
+                                isSelected ? "bg-primary border-accent" : "bg-transparent"
+                              }`}
+                              aria-hidden
+                            />
+                            <div className="min-w-0">
+                              <div className="truncate font-medium">{fileName}</div>
+                              <div className="text-xs text-muted-foreground">Resume</div>
+                            </div>
+                          </div>
+
+                          <div className="text-sm text-muted-foreground truncate max-w-[40%]">
+                            <a className="underline" href={url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+                              View
+                            </a>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground text-center py-2">
+                    No previously uploaded resumes found.
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

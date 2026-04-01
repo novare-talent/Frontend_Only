@@ -17,6 +17,7 @@ import { CTASection } from "@/components/Sig-Hire/home/cta-section";
 import { useDriverGuide } from "@/hooks/useDriverGuide";
 import { homeGuide } from "@/lib/driver-config";
 import { GuideButton } from "@/components/ui/guide-button";
+import { showSuccess, showError } from "@/lib/swal";
 
 function HomePageContent() {
   const router = useRouter();
@@ -35,19 +36,28 @@ function HomePageContent() {
   }, [loadSessions]);
 
   const handleStartHiring = async () => {
+    // If there are existing sessions, just navigate to sessions page
+    if (sessions && sessions.length > 0) {
+      router.push("/sig-hire/sessions");
+      return;
+    }
+
+    // Otherwise, create a new session
     try {
       setIsLoading(true);
       setError(null);
-      setLoadingMessage("Getting your profile...");
+      setLoadingMessage("Creating your session");
 
       const supabase = createClient();
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError || !user) throw new Error("Please sign in to continue");
 
+      console.log("Profile ID:", user.id);
+      console.log("Initializing session...");
       setClientId(user.id);
-      setLoadingMessage(`Profile ID: ${user.id}\nInitializing session...`);
 
       const sessionResponse = await initializeSession(user.id);
+      console.log("Session response:", sessionResponse);
       if (!sessionResponse.session_id) throw new Error("Failed to create session");
 
       await addSession({
@@ -60,10 +70,13 @@ function HomePageContent() {
 
       setSessionId(sessionResponse.session_id);
       setIsLoading(false);
+      
+      await showSuccess("Session created successfully!");
       router.push(`/sig-hire/uploads?session_id=${sessionResponse.session_id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to initialize session. Please try again.");
       setIsLoading(false);
+      await showError(err instanceof Error ? err.message : "Failed to initialize session. Please try again.");
+      setError(err instanceof Error ? err.message : "Failed to initialize session. Please try again.");
     }
   };
 

@@ -28,7 +28,7 @@ function RankingIllustration() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ delay: 0.3, duration: 0.4 }}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg"
+        className="flex items-center gap-2 px-3 py-2 rounded-sm"
         style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(139,92,246,0.18)" }}
       >
         <span
@@ -45,7 +45,7 @@ function RankingIllustration() {
 
       {/* Candidate rows */}
       <div
-        className="rounded-xl overflow-hidden"
+        className="rounded-sm overflow-hidden"
         style={{ border: "1px solid rgba(139,92,246,0.1)" }}
       >
         {candidates.map((c, i) => (
@@ -196,7 +196,7 @@ function RiskIllustration() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.3 + i * 0.09, duration: 0.35 }}
-          className="flex items-start gap-2.5 px-3 py-2 rounded-lg"
+          className="flex items-start gap-2.5 px-3 py-2 rounded-sm"
           style={{
             background: item.status === "warn" ? "rgba(245,158,11,0.06)" : "rgba(0,0,0,0.18)",
             border: `1px solid ${item.status === "warn" ? "rgba(245,158,11,0.18)" : "rgba(255,255,255,0.04)"}`,
@@ -233,39 +233,45 @@ function BiasIllustration() {
   return (
     <div className="mt-5">
       {/* Balance visual */}
+
       <div className="flex items-end justify-center gap-8 mb-5">
         {[
           { label: "Candidate A", score: 87 },
           { label: "Candidate B", score: 85 },
         ].map((c, i) => (
-          <motion.div
-            key={c.label}
-            initial={{ opacity: 0, y: 6 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.3 + i * 0.1 }}
-            className="flex flex-col items-center gap-1.5"
-          >
-            <span className="text-[22px] font-bold" style={{ color: "#10b981" }}>
-              {c.score}
-            </span>
-            <div
-              className="w-16 h-7 rounded-lg"
-              style={{
-                background: "rgba(16,185,129,0.07)",
-                border: "1px solid rgba(16,185,129,0.18)",
-              }}
-            />
-            <span className="text-[9px] text-white/28">{c.label}</span>
-          </motion.div>
+          <>
+            <motion.div
+              key={c.label}
+              initial={{ opacity: 0, y: 6 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 + i * 0.1 }}
+              className="flex flex-col items-center gap-1.5"
+            >
+              <span className="text-[22px] font-bold" style={{ color: "#10b981" }}>
+                {c.score}
+              </span>
+              <div
+                className="w-16 h-7 rounded-lg"
+                style={{
+                  background: "rgba(16,185,129,0.07)",
+                  border: "1px solid rgba(16,185,129,0.18)",
+                }}
+              />
+              <span className="text-[9px] text-white/28">{c.label}</span>
+            </motion.div>
+            
+            {/* Divider - only show between candidates */}
+            {i === 0 && (
+              <div className="flex flex-col items-center gap-0.5 pb-2">
+                <div className="w-px h-10" style={{ background: "rgba(16,185,129,0.22)" }} />
+                <span style={{ color: "rgba(16,185,129,0.45)", fontSize: "30px" }}>⚖</span>
+              </div>
+            )}
+          </>
         ))}
-
-        {/* Divider */}
-        <div className="flex flex-col items-center gap-0.5 pb-2">
-          <div className="w-px h-10" style={{ background: "rgba(16,185,129,0.22)" }} />
-          <span style={{ color: "rgba(16,185,129,0.45)", fontSize: "15px" }}>⚖</span>
-        </div>
       </div>
+
 
       {/* Criteria list */}
       <p
@@ -383,7 +389,7 @@ function ReportIllustration() {
   return (
     <div className="mt-5">
       <div
-        className="rounded-xl overflow-hidden"
+        className="rounded-sm overflow-hidden"
         style={{ border: "1px solid rgba(14,165,233,0.15)" }}
       >
         {/* Header */}
@@ -571,7 +577,7 @@ function BentoCard({
           {title}
         </h3>
 
-        <p style={{ color: "rgba(148,163,184,0.55)", fontSize: "13px", lineHeight: "1.65" }}>
+        <p className="text-sm" >
           {desc}
         </p>
 
@@ -624,20 +630,20 @@ const CARDS: Omit<BentoCardProps, "index">[] = [
     visual: <BiasIllustration />,
   },
   {
-    title: "Comparative Insights",
-    desc: "Side-by-side candidate comparisons with detailed score rationale so your whole team stays aligned.",
-    accentColor: "#f472b6",
-    glowColor: "rgba(236,72,153,0.12)",
-    colSpan: "col-span-1",
-    visual: <ComparativeIllustration />,
-  },
-  {
     title: "Shareable Reports",
     desc: "Export clean, professional PDF reports for every evaluation — ready to share with hiring managers in one click.",
     accentColor: "#38bdf8",
     glowColor: "rgba(14,165,233,0.12)",
     colSpan: "col-span-1 md:col-span-2 lg:col-span-2",
     visual: <ReportIllustration />,
+  },
+  {
+    title: "Comparative Insights",
+    desc: "Side-by-side candidate comparisons with detailed score rationale so your whole team stays aligned.",
+    accentColor: "#f472b6",
+    glowColor: "rgba(236,72,153,0.12)",
+    colSpan: "col-span-1",
+    visual: <ComparativeIllustration />,
   },
 ];
 
