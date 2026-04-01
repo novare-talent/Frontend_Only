@@ -1,6 +1,7 @@
 export const NAV_LINKS = [
   { label: "How It Works", href: "#how-it-works" },
   { label: "For Companies", href: "#for-companies" },
+  { label: "IIT Placements", href: "/iit-placements" },
   { label: "Testimonials", href: "#testimonials" },
   { label: "Team", href: "#team" },
   { label: "FAQs", href: "#faqs" },
