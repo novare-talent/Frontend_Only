@@ -26,7 +26,7 @@ export function RankingsScreen({ sessionId, refreshTrigger = 0 }: RankingsScreen
   const [hasInitialized, setHasInitialized] = useState(false);
   const [removalRefreshTrigger, setRemovalRefreshTrigger] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [showError, setShowError] = useState(false);
+  const [showErrorBanner, setShowErrorBanner] = useState(false);
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [selectedCandidates, setSelectedCandidates] = useState<Set<string>>(new Set());
   const { startTour } = useDriverGuide("rankings", rankingsGuide, false);
@@ -45,7 +45,7 @@ export function RankingsScreen({ sessionId, refreshTrigger = 0 }: RankingsScreen
         setIsLoading(true);
       }
       setError(null);
-      setShowError(false);
+      setShowErrorBanner(false);
       
       const response = await fetchRankings(sessionId as string);
       
@@ -59,7 +59,7 @@ export function RankingsScreen({ sessionId, refreshTrigger = 0 }: RankingsScreen
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load rankings';
       setError(message);
-      setShowError(true);
+      setShowErrorBanner(true);
       console.error('❌ Rankings load error:', message);
       
       if (!hasInitialized && candidates.length === 0) {
@@ -156,7 +156,7 @@ export function RankingsScreen({ sessionId, refreshTrigger = 0 }: RankingsScreen
   return (
     <>
       {/* Error Banner */}
-      {showError && error && (
+      {showErrorBanner && error && (
         <div className="mb-6 flex items-start justify-between rounded-xl border border-red-500/50 bg-red-500/10 p-4 backdrop-blur-xl">
           <div className="flex items-start gap-3">
             <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-300" />
@@ -166,7 +166,7 @@ export function RankingsScreen({ sessionId, refreshTrigger = 0 }: RankingsScreen
             </div>
           </div>
           <button
-            onClick={() => setShowError(false)}
+            onClick={() => setShowErrorBanner(false)}
             className="flex-shrink-0 text-white/70 hover:text-white"
             aria-label="Dismiss error"
           >
