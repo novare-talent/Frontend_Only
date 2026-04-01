@@ -5,10 +5,14 @@ import { STEPS } from "./constants";
 import GlowOrb from "@/components/landing/effects/GlowOrb";
 import SectionHeader from "@/components/landing/ui/SectionHeader";
 import GlowButton from "@/components/landing/ui/GlowButton";
+import ParticleCanvas from "@/components/landing/effects/ParticleCanvas";
 
 export function HowItWorksSection() {
   return (
     <section className="relative py-28 px-6 overflow-hidden" style={{ background: "rgba(124,58,237,0.025)" }}>
+            <div className="absolute inset-0 opacity-90">
+              <ParticleCanvas />
+            </div>
       <GlowOrb className="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" color="rgba(124,58,237,0.07)" size="900px" parallaxIntensity={20} />
 
       {/* Top / bottom border lines */}

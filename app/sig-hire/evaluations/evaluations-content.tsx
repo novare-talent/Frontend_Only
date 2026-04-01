@@ -4,10 +4,11 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AssignmentEvaluationScreen } from "@/components/Sig-Hire/evaluations-table";
 import { useMultiSession } from "@/context/MultiSessionContext";
-import { Loader, AlertCircle, HelpCircle } from "lucide-react";
+import { Loader, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useDriverGuide } from "@/hooks/useDriverGuide";
 import { evaluationsGuide } from "@/lib/driver-config";
+import { PageHeader } from "@/components/Sig-Hire/PageHeader";
 
 export function EvaluationsContent() {
   const searchParams = useSearchParams();
@@ -90,28 +91,12 @@ export function EvaluationsContent() {
   }
 
   return (
-    <div className="px-6 py-4">
-      <div className="flex justify-end mb-4">
-        <button
-          onClick={startTour}
-          className="p-2 rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-glass-bg)] hover:border-[var(--color-lavender)]/50 transition-colors"
-          title="Start Guide"
-        >
-          <HelpCircle className="w-5 h-5 text-[var(--color-lavender)]" />
-        </button>
-      </div>
-      <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="space-y-2">
-          {currentSessionId && (
-            <p className="text-sm text-blue-900">
-              <strong>Session:</strong> <span className="font-mono text-xs">{currentSessionId}</span>
-            </p>
-          )}
-          <p className="text-sm text-blue-900">
-            <strong>Job ID:</strong> <span className="font-mono text-xs">{jobId}</span>
-          </p>
-        </div>
-      </div>
+    <div className="max-w-7xl mx-auto">
+      <PageHeader
+        title="Assignment Evaluations"
+        description={`Reviewing submissions for Job ID: ${jobId.substring(0, 12)}...${currentSessionId ? ` • Session: ${currentSessionId.substring(0, 8)}...` : ''}`}
+        onHelpClick={startTour}
+      />
 
       <AssignmentEvaluationScreen jobId={jobId} />
     </div>

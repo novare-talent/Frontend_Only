@@ -15,9 +15,11 @@ import { createClient } from "@/utils/supabase/client";
 import { bulkCreateAssignments } from "@/app/actions/assignments";
 import { createCandidateMappings } from "@/app/actions/candidates";
 import { fetchRankings, type Candidate } from "@/lib/ranking-api";
-import { AlertCircle, CheckCircle, Loader, HelpCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader } from "lucide-react";
 import { useDriverGuide } from "@/hooks/useDriverGuide";
 import { assignmentsGuide } from "@/lib/driver-config";
+import { PageHeader } from "@/components/Sig-Hire/PageHeader";
+import { showSuccess, showInfo } from "@/lib/swal";
 
 interface SectionCardsProps {
   sessionId?: string;
@@ -371,15 +373,11 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
   };
   return (
     <>
-      <div className="flex justify-end mb-4">
-        <button
-          onClick={startTour}
-          className="p-2 rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-glass-bg)] hover:border-[var(--color-lavender)]/50 transition-colors"
-          title="Start Guide"
-        >
-          <HelpCircle className="w-5 h-5 text-[var(--color-lavender)]" />
-        </button>
-      </div>
+      <PageHeader
+        title="Create Assignment"
+        description="Generate and send assignments to selected candidates"
+        onHelpClick={startTour}
+      />
       <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:h-fit-content *:data-[slot=card]:shadow-s lg:px-6 @xl/main:grid-cols-2 @4xl/main:grid-cols-3">
       
       {/* Error Message */}
@@ -808,10 +806,9 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
                         <p className="text-xs text-muted-foreground">{item.email}</p>
                       </div>
                       <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(item.link);
-                          // Show toast or feedback
-                          alert('Link copied to clipboard!');
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(item.link);
+                          await showSuccess('Link copied to clipboard!');
                         }}
                         className="px-3 py-1 text-xs bg-primary text-white rounded hover:bg-primary/90 transition-colors whitespace-nowrap"
                       >
@@ -819,9 +816,9 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
                       </button>
                     </div>
                     <div className="bg-white p-2 rounded text-xs font-mono text-muted-foreground break-all hover:bg-blue-50 cursor-pointer"
-                         onClick={() => {
-                           navigator.clipboard.writeText(item.link);
-                           alert('Link copied to clipboard!');
+                         onClick={async () => {
+                           await navigator.clipboard.writeText(item.link);
+                           await showSuccess('Link copied to clipboard!');
                          }}>
                       {item.link}
                     </div>

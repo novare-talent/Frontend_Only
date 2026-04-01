@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { History } from "lucide-react";
+import { History, Sparkles } from "lucide-react";
 import ChromeButton from "@/components/Sig-Hire/ChromeButton";
 import { MOCK_CANDIDATES } from "./constants";
 import { Particles } from "@/components/ui/particles";
@@ -75,12 +75,12 @@ export function HeroSection({ onStartHiring, isLoading, sessions, onViewSessions
           transition={{ duration: 0.55, delay: 0.15 }}
           className="flex items-center justify-center gap-2 mb-3"
         >
-          <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-mono tracking-[0.18em] uppercase" style={{
+          <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-mono tracking-[0.18em] uppercase backdrop-blur-2xl" style={{
             background: "rgba(124,58,237,0.12)",
             border: "1px solid rgba(124,58,237,0.3)",
             color: "#C4B5FD",
           }}>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#C4B5FD] animate-pulse" style={{ boxShadow: "0 0 6px rgba(196,181,253,0.8)" }} />
+            {/* <span className="w-1.5 h-1.5 rounded-full bg-[#C4B5FD] animate-pulse" style={{ boxShadow: "0 0 6px rgba(196,181,253,0.8)" }} /> */}
             AI-Powered Recruitment
           </span>
         </motion.div>
@@ -90,7 +90,7 @@ export function HeroSection({ onStartHiring, isLoading, sessions, onViewSessions
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.28 }}
-          className="syne mb-3 mx-auto"
+          className="syne mb-3 pb-2 mx-auto"
           style={{
             fontSize: "clamp(40px, 5vw, 72px)",
             fontWeight: 800,
@@ -103,7 +103,7 @@ export function HeroSection({ onStartHiring, isLoading, sessions, onViewSessions
             maxWidth: "900px",
           }}
         >
-          Hire Smarter with AI-Powered Ranking
+          Hire Smarter with <br />AI-Powered Ranking
         </motion.h1>
 
         {/* Description */}
@@ -130,30 +130,27 @@ export function HeroSection({ onStartHiring, isLoading, sessions, onViewSessions
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.58 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-20"
+          className="flex flex-col sm:flex-row items-center justify-center gap-12 mb-20"
         >
           <ChromeButton
             onClick={onStartHiring}
             disabled={isLoading}
-            className="scale-125"
+            className="scale-[1.15] w-48"
           >
+                            <Sparkles size={16} className="mr-2" />
+
             Start Hiring
           </ChromeButton>
 
           {sessions?.length > 0 && (
-            <button
+            <ChromeButton
               onClick={onViewSessions}
-              className="flex items-center gap-2 text-sm h-11 px-5 rounded-xl transition-all"
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.09)",
-                color: "rgba(196,181,253,0.75)",
-                cursor: "pointer",
-              }}
+              variant="secondary"
+              className="scale-[1.15] w-48 "
             >
-              <History className="w-4 h-4" />
+              <History className="w-4 h-4 mr-2" />
               Past Sessions ({sessions.length})
-            </button>
+            </ChromeButton>
           )}
         </motion.div>
 

@@ -5,6 +5,7 @@ import { X, ChevronDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { removeQuery } from '@/lib/ranking-api';
 import { createClient } from '@/utils/supabase/client';
+import { showError } from '@/lib/swal';
 
 interface Query {
   id: string;
@@ -107,7 +108,7 @@ export function QueriesManagement({
       }
     } catch (error) {
       console.error('Failed to remove query:', error);
-      alert(`Failed to remove query: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      await showError(`Failed to remove query: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setRemovingQueryId(null);
     }

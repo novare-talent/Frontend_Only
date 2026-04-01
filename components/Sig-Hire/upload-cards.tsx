@@ -7,9 +7,9 @@ import { uploadSessionData, waitForSessionReady, initializeSession } from "@/lib
 import { useSession } from "@/context/SessionContext";
 import { useMultiSession } from "@/context/MultiSessionContext";
 import { createSigHireJob } from "@/app/actions/jobs";
-import { HelpCircle } from "lucide-react";
 import { useDriverGuide } from "@/hooks/useDriverGuide";
 import { uploadsGuide } from "@/lib/driver-config";
+import { PageHeader } from "@/components/Sig-Hire/PageHeader";
 import {
   Card,
   CardDescription,
@@ -144,23 +144,11 @@ export function SectionCards() {
         onRetry={handleContinue}
       />
 
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Welcome to SigHyre
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            Upload your job description and candidate information to get started
-          </p>
-        </div>
-        <button
-          onClick={startTour}
-          className="rounded-lg border border-border bg-card p-2 transition-colors hover:border-primary/50 hover:bg-accent"
-          title="Start Guide"
-        >
-          <HelpCircle className="h-5 w-5 text-primary" />
-        </button>
-      </div>
+      <PageHeader
+        title="Welcome to SigHyre"
+        description="Upload your job description and candidate information to get started"
+        onHelpClick={startTour}
+      />
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Job Description Card */}

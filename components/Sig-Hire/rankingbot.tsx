@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   Card,
@@ -6,11 +6,11 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
-import { IconSend } from "@tabler/icons-react"
+import { IconSend } from "@tabler/icons-react";
 import { submitQuery } from "@/lib/ranking-api";
 
 type Message = {
@@ -26,7 +26,11 @@ interface RankingBotCardProps {
   onQuerySubmitted?: () => void;
 }
 
-export function RankingBotCard({ className = "", sessionId, onQuerySubmitted }: RankingBotCardProps) {
+export function RankingBotCard({
+  className = "",
+  sessionId,
+  onQuerySubmitted,
+}: RankingBotCardProps) {
   const [messages, setMessages] = useState<Message[]>([
     { id: "1", text: "Hi, how can I help you today?", from: "bot" },
   ]);
@@ -49,7 +53,10 @@ export function RankingBotCard({ className = "", sessionId, onQuerySubmitted }: 
         id: (messageIdCounterRef.current++).toString(),
         text: "⚠️ No active session. Please start by uploading your candidates and job description.",
         from: "bot",
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       };
       setMessages((m) => [...m, errorMsg]);
       return;
@@ -59,7 +66,10 @@ export function RankingBotCard({ className = "", sessionId, onQuerySubmitted }: 
       id: (messageIdCounterRef.current++).toString(),
       text: trimmed,
       from: "user",
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      time: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     };
 
     setMessages((m) => [...m, userMsg]);
@@ -71,7 +81,10 @@ export function RankingBotCard({ className = "", sessionId, onQuerySubmitted }: 
       id: processingMsgId,
       text: "Processing...",
       from: "bot",
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      time: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     };
     setMessages((m) => [...m, processingMsg]);
     setIsProcessing(true);
@@ -79,30 +92,41 @@ export function RankingBotCard({ className = "", sessionId, onQuerySubmitted }: 
     // Call the ranking API with the query
     try {
       await submitQuery(sessionId, trimmed);
-      
+
       // Trigger rankings refresh which will fetch updated results
       if (onQuerySubmitted) {
         onQuerySubmitted();
       }
-      
+
       // Replace processing message with success message
       const botMsg: Message = {
         id: processingMsgId,
         text: ` Query processed! Rankings updated based on: ${trimmed}`,
         from: "bot",
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       };
-      setMessages((m) => m.map((msg) => (msg.id === processingMsgId ? botMsg : msg)));
+      setMessages((m) =>
+        m.map((msg) => (msg.id === processingMsgId ? botMsg : msg)),
+      );
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to process query";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to process query";
       // Replace processing message with error message
       const botMsg: Message = {
         id: processingMsgId,
         text: `⚠️ Error: ${errorMessage}`,
         from: "bot",
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       };
-      setMessages((m) => m.map((msg) => (msg.id === processingMsgId ? botMsg : msg)));
+      setMessages((m) =>
+        m.map((msg) => (msg.id === processingMsgId ? botMsg : msg)),
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -117,7 +141,8 @@ export function RankingBotCard({ className = "", sessionId, onQuerySubmitted }: 
 
   return (
     <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:h-fit-content *:data-[slot=card]:shadow-s lg:px-6 @xl/main:grid-cols-2 @4xl/main:grid-cols-3">
-        <Card className={`@container/card relative overflow-hidden rounded-3xl
+      <Card
+        className={`@container/card relative overflow-hidden rounded-md
   bg-gradient-to-br from-purple-50 via-white to-indigo-50
   border border-purple-100
   shadow-[0_20px_40px_-20px_rgba(124,58,237,0.50)]
@@ -125,66 +150,71 @@ export function RankingBotCard({ className = "", sessionId, onQuerySubmitted }: 
   dark:bg-gradient-to-br dark:from-neutral-900/90 dark:via-neutral-900/70 dark:to-neutral-950
   dark:border-white/10
   dark:shadow-[0_0_80px_-20px_rgba(124,58,237,0.45)]
-w-full flex flex-rol ${className}`}>
-          <CardHeader>
-            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-primary">Ranking Bot</CardTitle>
-            <CardDescription>Use this to find what candidates you&apos;re looking for!</CardDescription>
-          </CardHeader>
-          {/* Messages area */}
-          <div className="px-6 pb-0 h-[30vh] overflow-hidden bg-card border border-primary/30 m-2 rounded-sm">
-            <div
-              className="h-full bg-transparent rounded-md border border-transparent overflow-y-auto p-3 space-y-3"
-              role="log"
-              aria-live="polite"
-            >
-              {messages.map((m) => (
+w-full flex flex-rol ${className}`}
+      >
+        <CardHeader>
+          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-primary">
+            Ranking Bot
+          </CardTitle>
+          <CardDescription>
+            Use this to find what candidates you&apos;re looking for!
+          </CardDescription>
+        </CardHeader>
+        {/* Messages area */}
+        <div className="px-6 pb-0 h-[30vh] overflow-hidden bg-card border border-primary/30 m-2 rounded-sm">
+          <div
+            className="h-full bg-transparent rounded-md border border-transparent overflow-y-auto p-3 space-y-3"
+            role="log"
+            aria-live="polite"
+          >
+            {messages.map((m) => (
+              <div
+                key={m.id}
+                className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}
+              >
                 <div
-                  key={m.id}
-                  className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}
+                  className={
+                    m.from === "user"
+                      ? "max-w-[80%] bg-primary text-white px-4 py-2 rounded-md rounded-br-none shadow-sm"
+                      : "max-w-[80%] bg-card px-4 py-2 rounded-md rounded-bl-none text-muted-foreground border"
+                  }
                 >
-                  <div
-                    className={
-                      m.from === "user"
-                        ? "max-w-[80%] bg-primary text-white px-4 py-2 rounded-2xl rounded-br-none shadow-sm"
-                        : "max-w-[80%] bg-card px-4 py-2 rounded-2xl rounded-bl-none text-muted-foreground border"
-                    }
-                  >
-                    <div className="whitespace-pre-wrap text-sm">{m.text}</div>
-                    <div className="text-[11px] text-muted-foreground mt-1 text-right">
-                      {m.time}
-                    </div>
+                  <div className="whitespace-pre-wrap text-sm">{m.text}</div>
+                  <div className="text-[11px] text-muted-foreground mt-1 text-right">
+                    {m.time}
                   </div>
                 </div>
-              ))}
-              {/* dummy element to scroll into view */}
-              <div ref={messagesEndRef} />
-            </div>
+              </div>
+            ))}
+            {/* dummy element to scroll into view */}
+            <div ref={messagesEndRef} />
           </div>
-          {/* Input area */}
-          <CardFooter className="px-4 py-3 border-t">
-            <div className="w-full flex items-end gap-3">
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Type your message..."
-                disabled={isProcessing}
-                className="flex-1 min-h-[36px] max-h-28 resize-none rounded-md border border-input border-primary/30 bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Chat message"
-              />
-              <Button
-                variant="default"
-                onClick={sendMessage}
-                disabled={isProcessing}
-                className="ml-auto"
-                aria-label="Send message"
-              >
-                {isProcessing ? "..." : <IconSend className="h-5 w-5" />}
-              </Button>
-            </div>
-          </CardFooter>
-        </Card>
+        </div>
+        {/* Input area */}
+        <CardFooter className="px-4 py-3 border-t">
+          <div className="w-full flex items-end gap-3">
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type your message..."
+              disabled={isProcessing}
+              className="flex-1 min-h-[36px] max-h-28 resize-none rounded-md border border-input border-primary/30 bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Chat message"
+            />
+            <Button
+              variant="default"
+              onClick={sendMessage}
+              disabled={isProcessing}
+              className="ml-auto"
+              aria-label="Send message"
+            >
+              {isProcessing ? "..." : <IconSend className="h-5 w-5" />}
+            </Button>
+          </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

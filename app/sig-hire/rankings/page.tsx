@@ -4,6 +4,9 @@ import { useSearchParams } from "next/navigation";
 import { useSession } from "@/context/SessionContext";
 import { RankingsScreen } from "@/components/Sig-Hire/rankings-screen";
 import { RankingBotCard } from "@/components/Sig-Hire/rankingbot";
+import { SigHireFooter } from "@/components/Sig-Hire/footer";
+import GlowOrb from "@/components/landing/effects/GlowOrb";
+import { Particles } from "@/components/ui/particles";
 
 function RankingsContent() {
   const searchParams = useSearchParams();
@@ -20,6 +23,9 @@ function RankingsContent() {
     if (urlSessionId) {
       setSessionId(urlSessionId);
     }
+    
+    // Scroll to top when page loads
+    window.scrollTo(0, 0);
   }, [urlSessionId, setSessionId]);
 
   const handleQuerySubmitted = () => {
@@ -28,29 +34,52 @@ function RankingsContent() {
 
   if (!isHydrated) {
     return (
-      <div className="px-6 py-4">
-        <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-lavender)]"></div>
       </div>
     );
   }
 
   return (
-    <main className="relative min-h-screen bg-background">
-      <div className="container mx-auto max-w-[1600px] px-4 pt-24 pb-12 sm:px-6 lg:px-8 lg:pt-28">
+    <main className="relative min-h-screen overflow-hidden">
+      {/* Background Effects - Fixed positioning */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <Particles
+          className="absolute inset-0"
+          quantity={100}
+          ease={80}
+          color="#8566ff"
+          refresh
+        />
+        <GlowOrb
+          className="absolute bottom-0 left-1/4 -translate-x-1/2"
+          color="rgba(124, 58, 237, 0.4)"
+          size="1200px"
+          parallaxIntensity={20}
+        />
+        <GlowOrb
+          className="absolute top-0 right-1/4 translate-x-1/2"
+          color="rgba(124, 58, 237, 0.4)"
+          size="1200px"
+          parallaxIntensity={20}
+        />
+      </div>
+      
+      {/* Content */}
+      <div className="relative z-10 px-6 pt-32 pb-12 max-w-[1600px] mx-auto">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
           <div className="flex flex-col gap-6">
             <RankingsScreen sessionId={sessionId} refreshTrigger={refreshKey} />
           </div>
 
           <aside className="flex">
-            <div className="w-full lg:sticky lg:top-28 lg:h-fit" data-tour="ranking-bot">
+            <div className="w-full lg:sticky lg:top-32 lg:h-fit" data-tour="ranking-bot">
               <RankingBotCard className="h-[min(70vh,800px)]" sessionId={sessionId} onQuerySubmitted={handleQuerySubmitted} />
             </div>
           </aside>
         </div>
       </div>
+      <SigHireFooter />
     </main>
   );
 }
