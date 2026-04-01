@@ -58,7 +58,7 @@ function InsightsContent() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="relative p-6 rounded-md border border-[var(--color-glass-border)] bg-[var(--color-glass-bg)] backdrop-blur-xl overflow-hidden"
+              className="relative p-6 rounded-md border border-glass-border bg-glass-bg backdrop-blur-xl overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-lavender)]/10 via-transparent to-transparent pointer-events-none" />
               <div className="relative z-10">
@@ -78,7 +78,7 @@ function InsightsContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="relative text-center py-20 p-12 rounded-3xl border border-[var(--color-glass-border)] bg-[var(--color-glass-bg)] backdrop-blur-xl overflow-hidden"
+          className="relative text-center py-20 p-12 rounded-3xl border border-glass-border bg-glass-bg backdrop-blur-xl overflow-hidden"
         >
           <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-lavender)]/10 via-transparent to-transparent pointer-events-none" />
           <div className="relative z-10">
@@ -97,7 +97,13 @@ function InsightsContent() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+    <Suspense fallback={
+      <div className="relative min-h-screen overflow-hidden" style={{ background: "#0a0118" }}>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="w-8 h-8 rounded-full border-2 border-[rgba(124,58,237,0.3)] border-t-[#7c3aed] animate-spin" />
+        </div>
+      </div>
+    }>
       <InsightsContent />
     </Suspense>
   );

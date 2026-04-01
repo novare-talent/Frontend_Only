@@ -42,6 +42,11 @@ export function Navbar() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
   
   const currentSessionId = searchParams.get('session_id') || sessionId;
   const sessionDisplay = currentSessionId ? 
@@ -102,7 +107,7 @@ export function Navbar() {
         }}
       >
         <div className={cn(
-          "flex items-center justify-between w-full h-16 px-6 rounded-full backdrop-blur-lg border",
+          "flex items-center justify-between w-full h-16 px-6 rounded-md backdrop-blur-lg border",
           "transition-all duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]",
           scrolled 
             ? "bg-neutral-950/80 border-white/20 shadow-[0_0_24px_rgba(34,42,53,0.06),0_1px_1px_rgba(0,0,0,0.05),0_0_0_1px_rgba(34,42,53,0.04),0_0_4px_rgba(34,42,53,0.08),0_16px_68px_rgba(47,48,55,0.05),0_1px_0_rgba(255,255,255,0.1)_inset]"
@@ -130,7 +135,7 @@ export function Navbar() {
                   href={href}
                   data-tour={item.tourId}
                   className={cn(
-                    "text-sm transition-colors duration-200 px-3 py-1.5 rounded-full relative whitespace-nowrap",
+                    "text-sm transition-colors duration-200 px-3 py-1.5 rounded-md relative whitespace-nowrap",
                     isActive ? "text-white bg-white/10" : "text-white/70 hover:text-white hover:bg-white/5"
                   )}
                 >
@@ -143,8 +148,8 @@ export function Navbar() {
           {/* Right Section - Fixed Width */}
           <div className="flex items-center gap-3 justify-end flex-shrink-0" style={{ width: "180px" }}>
             {!isHomePage && sessionDisplay && (
-              <div className="text-xs px-3 py-2 rounded-full glass border border-white/10 text-white/90 flex items-center gap-1 whitespace-nowrap">
-                <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+              <div className="text-xs px-3 py-2 rounded-md glass border border-white/10 text-white/90 flex items-center gap-1 whitespace-nowrap">
+                <span className="w-2 h-2 rounded-md bg-purple-500 animate-pulse" />
                 {sessionDisplay}
               </div>
             )}
@@ -167,22 +172,21 @@ export function Navbar() {
       {/* Mobile header - Floating Pill */}
       <motion.header
         initial={{ y: -20, opacity: 0 }}
-        animate={{ 
-          y: scrolled ? 20 : 0, 
+        animate={{
+          y: scrolled ? 20 : 0,
           opacity: 1
         }}
         transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-        className="fixed top-5 left-4 right-4 z-40 lg:hidden mx-auto"
-        style={{ 
+        className="fixed top-0 left-1/2 -translate-x-1/2 z-40 lg:hidden"
+        style={{
           width: scrolled ? "90%" : "calc(100% - 2rem)",
-          maxWidth: scrolled ? "90%" : "100%",
-          transition: "width 0.6s cubic-bezier(0.25, 0.1, 0.25, 1), max-width 0.6s cubic-bezier(0.25, 0.1, 0.25, 1)"
+          transition: "width 0.6s cubic-bezier(0.25, 0.1, 0.25, 1)"
         }}
       >
         <div className={cn(
-          "flex items-center justify-between px-6 h-16 rounded-full border shadow-lg backdrop-blur-lg",
+          "flex items-center justify-between px-4 sm:px-6 h-14 rounded-md border backdrop-blur-lg",
           "transition-all duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]",
-          scrolled
+          scrolled || mobileOpen
             ? "bg-neutral-950/80 border-white/20 shadow-[0_0_24px_rgba(34,42,53,0.06),0_1px_1px_rgba(0,0,0,0.05),0_0_0_1px_rgba(34,42,53,0.04),0_0_4px_rgba(34,42,53,0.08),0_16px_68px_rgba(47,48,55,0.05),0_1px_0_rgba(255,255,255,0.1)_inset]"
             : "border-transparent"
         )}>
@@ -204,46 +208,64 @@ export function Navbar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-30 bg-[var(--color-bg-primary)]/95 backdrop-blur-xl lg:hidden"
+            className="fixed inset-0 z-50 bg-[var(--color-bg-primary)]/95 backdrop-blur-xl lg:hidden flex flex-col"
           >
-            <div className="flex flex-col items-center justify-center h-full gap-8">
+            {/* Close button row */}
+            <div className="flex items-center justify-between px-6 h-14 shrink-0">
+              <Link href="/sig-hire" className="text-xl font-extrabold gradient-text" onClick={() => setMobileOpen(false)}>
+                SigHyre
+              </Link>
+              <button onClick={() => setMobileOpen(false)} className="text-white p-2">
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Nav links */}
+            <div className="flex flex-col items-center justify-center flex-1 gap-5 px-6 pb-10">
               {navItems.map((item, i) => {
+                const isActive = pathname === item.href || (item.href !== "/sig-hire" && pathname.startsWith(item.href));
                 const shouldAddSessionId = ['/sig-hire/uploads', '/sig-hire/rankings', '/sig-hire/assignments', '/sig-hire/evaluations'].includes(item.href);
                 const href = shouldAddSessionId && currentSessionId ? `${item.href}?session_id=${currentSessionId}` : item.href;
 
                 return (
                   <motion.div
                     key={item.href}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.1 }}
+                    transition={{ delay: i * 0.06 }}
                   >
                     <Link
                       href={href}
                       onClick={() => setMobileOpen(false)}
-                      className="text-2xl font-medium text-white hover:text-[var(--color-lavender)] transition-colors"
+                      className={cn(
+                        "text-xl font-medium transition-colors",
+                        isActive ? "text-white" : "text-white/60 hover:text-white"
+                      )}
                     >
                       {item.label}
                     </Link>
                   </motion.div>
                 );
               })}
+
               {!isHomePage && sessionDisplay && (
-                <div className="text-sm px-4 py-2 rounded-full glass border border-white/10 text-white/90 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+                <div className="mt-2 text-sm px-4 py-2 rounded-md glass border border-white/10 text-white/90 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-md bg-purple-500 animate-pulse" />
                   Session: {sessionDisplay}
                 </div>
               )}
               {isHomePage && (
-                <ChromeButton 
-                  onClick={() => { handleStartHiring(); setMobileOpen(false); }} 
-                  disabled={isLoading}
-                  variant="primary"
-                  className="flex items-center gap-2"
-                >
-                  <Sparkles size={16} />
-                  {isLoading ? "Starting..." : "Start Hiring"}
-                </ChromeButton>
+                <div className="mt-2">
+                  <ChromeButton
+                    onClick={() => { handleStartHiring(); setMobileOpen(false); }}
+                    disabled={isLoading}
+                    variant="primary"
+                    className="flex items-center gap-2"
+                  >
+                    <Sparkles size={16} />
+                    {isLoading ? "Starting..." : "Start Hiring"}
+                  </ChromeButton>
+                </div>
               )}
             </div>
           </motion.div>

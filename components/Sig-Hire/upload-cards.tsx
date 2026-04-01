@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
@@ -10,12 +9,8 @@ import { createSigHireJob } from "@/app/actions/jobs";
 import { useDriverGuide } from "@/hooks/useDriverGuide";
 import { uploadsGuide } from "@/lib/driver-config";
 import { PageHeader } from "@/components/Sig-Hire/PageHeader";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import ChromeButton from "@/components/Sig-Hire/ChromeButton";
+import { FileText, Users, Upload } from "lucide-react";
 
 export function SectionCards() {
   const router = useRouter();
@@ -31,10 +26,39 @@ export function SectionCards() {
   const [jobFile, setJobFile] = useState<File | null>(null);
   const [candidatesCSV, setCandidatesCSV] = useState("");
   const [candidatesFile, setCandidatesFile] = useState<File | null>(null);
-  
+  const [isDragOverJob, setIsDragOverJob] = useState(false);
+  const [isDragOverCandidates, setIsDragOverCandidates] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingMessage, setLoadingMessage] = useState("Processing your data...");
+
+  const handleJobDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOverJob(false);
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    const ext = file.name.toLowerCase();
+    if (!ext.endsWith(".pdf") && !ext.endsWith(".doc") && !ext.endsWith(".docx")) {
+      setError("Only .pdf, .doc, .docx files are allowed for job description");
+      return;
+    }
+    setJobFile(file);
+  };
+
+  const handleCandidatesDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOverCandidates(false);
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith(".csv")) {
+      setError("Only CSV files are allowed for candidates");
+      return;
+    }
+    setCandidatesFile(file);
+  };
 
   // Save sessionId to context if from URL
   useEffect(() => {
@@ -152,116 +176,166 @@ export function SectionCards() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Job Description Card */}
-        <Card 
-          data-tour="job-upload" 
-          className="flex flex-col overflow-hidden rounded-3xl border-border bg-card shadow-lg transition-shadow hover:shadow-xl"
+        <div
+          data-tour="job-upload"
+          className="relative flex flex-col overflow-hidden rounded-md border border-glass-border bg-glass-bg backdrop-blur-xl transition-all duration-300 hover:border-lavender/50"
         >
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-semibold text-primary">
-              Job Description
-            </CardTitle>
-            <CardDescription>
-              Upload or write your job description below
-            </CardDescription>
-          </CardHeader>
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-lavender)]/10 via-transparent to-transparent pointer-events-none" />
 
-          <div className="flex flex-1 flex-col gap-4 p-6 pt-0">
+          <div className="relative z-10 p-6 pb-4 flex items-center gap-3 border-b border-white/5">
+            <div className="w-9 h-9 rounded-md flex items-center justify-center shrink-0" style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.25)" }}>
+              <FileText className="w-4 h-4" style={{ color: "var(--color-lavender)" }} />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-white leading-tight">Job Description</h3>
+              <p className="text-xs text-white/40 mt-0.5">Upload or write your job description</p>
+            </div>
+          </div>
+
+          <div className="relative z-10 flex flex-col gap-4 p-6">
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-foreground">
+              <label className="text-xs font-medium text-white/60 uppercase tracking-wider">
                 Write Job Description
               </label>
               <textarea
-                className="min-h-[240px] w-full rounded-lg border border-input bg-background p-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="min-h-[200px] w-full rounded-lg p-3 text-sm text-white/80 placeholder-white/25 outline-none resize-none transition-colors"
+                style={{
+                  background: "rgba(0,0,0,0.25)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                }}
+                onFocus={e => e.currentTarget.style.borderColor = "rgba(124,58,237,0.5)"}
+                onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"}
                 placeholder="Type the job description here..."
                 value={jobDescription}
                 onChange={(e) => setJobDescription(e.target.value)}
               />
             </div>
 
-            <div className="relative py-2">
+            <div className="relative py-1">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border" />
+                <span className="w-full border-t border-white/8" />
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or</span>
+              <div className="relative flex justify-center">
+                <span className="px-3 text-[11px] uppercase tracking-widest text-white/25" style={{ background: "transparent" }}>or</span>
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-foreground">
+              <label className="text-xs font-medium text-white/60 uppercase tracking-wider">
                 Upload Document or PDF
               </label>
-              <input
-                type="file"
-                className="w-full cursor-pointer rounded-lg border border-input bg-background p-2 text-sm transition-colors file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:border-primary/50"
-                onChange={(e) => setJobFile(e.target.files?.[0] || null)}
-                accept=".pdf,.doc,.docx"
-              />
+              <label
+                className="flex flex-col items-center justify-center gap-2 w-full cursor-pointer rounded-lg px-4 py-5 transition-all duration-200 text-center"
+                style={{
+                  background: isDragOverJob ? "rgba(124,58,237,0.1)" : "rgba(0,0,0,0.2)",
+                  border: `2px dashed ${isDragOverJob ? "rgba(124,58,237,0.6)" : "rgba(255,255,255,0.1)"}`,
+                }}
+                onDragOver={e => { e.preventDefault(); e.stopPropagation(); setIsDragOverJob(true); }}
+                onDragLeave={e => { e.preventDefault(); e.stopPropagation(); setIsDragOverJob(false); }}
+                onDrop={handleJobDrop}
+              >
+                <Upload className="w-5 h-5" style={{ color: isDragOverJob ? "var(--color-lavender)" : "rgba(255,255,255,0.25)" }} />
+                <span className="text-sm truncate max-w-full" style={{ color: jobFile ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.3)" }}>
+                  {jobFile ? jobFile.name : isDragOverJob ? "Drop file here" : "Drag & drop or click to upload (.pdf, .doc, .docx)"}
+                </span>
+                <input
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => setJobFile(e.target.files?.[0] || null)}
+                  accept=".pdf,.doc,.docx"
+                />
+              </label>
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Candidates Card */}
-        <Card 
-          data-tour="resume-upload" 
-          className="flex flex-col overflow-hidden rounded-3xl border-border bg-card shadow-lg transition-shadow hover:shadow-xl"
+        <div
+          data-tour="resume-upload"
+          className="relative flex flex-col overflow-hidden rounded-md border border-glass-border bg-glass-bg backdrop-blur-xl transition-all duration-300 hover:border-lavender/50"
         >
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-semibold text-primary">
-              Candidates
-            </CardTitle>
-            <CardDescription>
-              Upload or enter your candidate details below
-            </CardDescription>
-          </CardHeader>
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-lavender)]/10 via-transparent to-transparent pointer-events-none" />
 
-          <div className="flex flex-1 flex-col gap-4 p-6 pt-0">
+          <div className="relative z-10 p-6 pb-4 flex items-center gap-3 border-b border-white/5">
+            <div className="w-9 h-9 rounded-md flex items-center justify-center shrink-0" style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.25)" }}>
+              <Users className="w-4 h-4" style={{ color: "var(--color-lavender)" }} />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-white leading-tight">Candidates</h3>
+              <p className="text-xs text-white/40 mt-0.5">Paste CSV data or upload a .csv file</p>
+            </div>
+          </div>
+
+          <div className="relative z-10 flex flex-col gap-4 p-6">
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-foreground">
-                Enter CSV of your job candidates
+              <label className="text-xs font-medium text-white/60 uppercase tracking-wider">
+                Enter CSV Data
               </label>
               <textarea
-                className="min-h-[240px] w-full rounded-lg border border-input bg-background p-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="min-h-[200px] w-full rounded-lg p-3 text-sm text-white/80 placeholder-white/25 outline-none resize-none transition-colors"
+                style={{
+                  background: "rgba(0,0,0,0.25)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                }}
+                onFocus={e => e.currentTarget.style.borderColor = "rgba(124,58,237,0.5)"}
+                onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"}
                 placeholder="Paste CSV data here (name, email, resume_url, etc.)..."
                 value={candidatesCSV}
                 onChange={(e) => setCandidatesCSV(e.target.value)}
               />
             </div>
 
-            <div className="relative py-2">
+            <div className="relative py-1">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border" />
+                <span className="w-full border-t border-white/8" />
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or</span>
+              <div className="relative flex justify-center">
+                <span className="px-3 text-[11px] uppercase tracking-widest text-white/25" style={{ background: "transparent" }}>or</span>
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-foreground">
-                Upload Document, CSV, PDF
+              <label className="text-xs font-medium text-white/60 uppercase tracking-wider">
+                Upload CSV
               </label>
-              <input
-                type="file"
-                className="w-full cursor-pointer rounded-lg border border-input bg-background p-2 text-sm transition-colors file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:border-primary/50"
-                onChange={(e) => setCandidatesFile(e.target.files?.[0] || null)}
-                accept=".csv,.pdf,.doc,.docx"
-              />
+              <label
+                className="flex flex-col items-center justify-center gap-2 w-full cursor-pointer rounded-lg px-4 py-5 transition-all duration-200 text-center"
+                style={{
+                  background: isDragOverCandidates ? "rgba(124,58,237,0.1)" : "rgba(0,0,0,0.2)",
+                  border: `2px dashed ${isDragOverCandidates ? "rgba(124,58,237,0.6)" : "rgba(255,255,255,0.1)"}`,
+                }}
+                onDragOver={e => { e.preventDefault(); e.stopPropagation(); setIsDragOverCandidates(true); }}
+                onDragLeave={e => { e.preventDefault(); e.stopPropagation(); setIsDragOverCandidates(false); }}
+                onDrop={handleCandidatesDrop}
+              >
+                <Upload className="w-5 h-5" style={{ color: isDragOverCandidates ? "var(--color-lavender)" : "rgba(255,255,255,0.25)" }} />
+                <span className="text-sm truncate max-w-full" style={{ color: candidatesFile ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.3)" }}>
+                  {candidatesFile ? candidatesFile.name : isDragOverCandidates ? "Drop CSV here" : "Drag & drop or click to upload (.csv)"}
+                </span>
+                <input
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => setCandidatesFile(e.target.files?.[0] || null)}
+                  accept=".csv"
+                />
+              </label>
             </div>
           </div>
-        </Card>
+        </div>
       </div>
 
+      {error && (
+        <p className="mt-4 text-sm text-red-400 text-center">{error}</p>
+      )}
+
       <div className="mt-8 flex justify-center">
-        <Button
-          variant="default"
-          size="lg"
-          className="min-w-[200px] transition-all duration-300"
+        <ChromeButton
           onClick={handleContinue}
           disabled={isLoading}
+          className="min-w-[200px]"
         >
-          Continue
-        </Button>
+          {isLoading ? "Processing..." : "Continue"}
+        </ChromeButton>
       </div>
     </>
   )

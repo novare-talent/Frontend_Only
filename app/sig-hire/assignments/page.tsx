@@ -39,7 +39,7 @@ function AssignmentsContent() {
       </div>
       
       {/* Content */}
-      <div className="relative z-10 px-6 py-24">
+      <div className="relative z-10 px-4 sm:px-6 py-24 max-w-7xl mx-auto">
         <SectionCards sessionId={sessionId || undefined} candidateIds={candidateIds} />
       </div>
       <SigHireFooter />
@@ -49,7 +49,13 @@ function AssignmentsContent() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<div className="px-6 py-4"><div className="flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div></div>}>
+    <Suspense fallback={
+      <div className="relative min-h-screen overflow-hidden" style={{ background: "#0a0118" }}>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="w-8 h-8 rounded-full border-2 border-[rgba(124,58,237,0.3)] border-t-[#7c3aed] animate-spin" />
+        </div>
+      </div>
+    }>
       <AssignmentsContent />
     </Suspense>
   );

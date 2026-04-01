@@ -66,7 +66,7 @@ export function HeroSection({ onStartHiring, isLoading, sessions, onViewSessions
       }} />
 
       {/* Hero content */}
-      <div className="relative z-10 text-center" style={{ paddingTop: "196px" }}>
+      <div className="relative z-10 text-center" style={{ paddingTop: "clamp(80px, 15vw, 196px)" }}>
 
         {/* Badge */}
         <motion.div
@@ -90,9 +90,9 @@ export function HeroSection({ onStartHiring, isLoading, sessions, onViewSessions
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.28 }}
-          className="syne mb-3 pb-2 mx-auto"
+          className="syne mb-3 pb-2 mx-auto px-4"
           style={{
-            fontSize: "clamp(40px, 5vw, 72px)",
+            fontSize: "clamp(32px, 6vw, 72px)",
             fontWeight: 800,
             letterSpacing: "-0.03em",
             lineHeight: "1.11",
@@ -111,18 +111,18 @@ export function HeroSection({ onStartHiring, isLoading, sessions, onViewSessions
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.42 }}
-          className="mx-auto mb-6"
+          className="mx-auto mb-6 px-4"
           style={{
             color: "#9b96b0",
-            fontSize: "20px",
+            fontSize: "clamp(15px, 3.5vw, 20px)",
             fontWeight: 400,
             letterSpacing: "-0.01em",
             lineHeight: "28px",
-            maxWidth: "620px",
+            maxWidth: "700px",
           }}
         >
           Sighyre analyzes resumes, ranks candidates by fit, flags potential risks,
-          and helps you make confident hiring decisions — in seconds, not hours.
+          and helps you make confident hiring decisions - in seconds, not hours.
         </motion.p>
 
         {/* CTAs */}
@@ -130,7 +130,7 @@ export function HeroSection({ onStartHiring, isLoading, sessions, onViewSessions
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.58 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-12 mb-20"
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-12 mb-12 sm:mb-20"
         >
           <ChromeButton
             onClick={onStartHiring}

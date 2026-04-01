@@ -220,18 +220,28 @@ function SessionsPageContent() {
 
   if (loading) {
     return (
-      <main className="relative min-h-screen">
+      <main className="relative min-h-screen overflow-hidden">
+        {/* Same background as loaded state */}
+        <div className="fixed inset-0 pointer-events-none z-0">
+          <Particles className="absolute inset-0" quantity={100} ease={80} color="#8566ff" refresh />
+          <GlowOrb className="absolute bottom-0 left-1/4 -translate-x-1/2" color="rgba(124, 58, 237, 0.4)" size="1200px" parallaxIntensity={20} />
+          <GlowOrb className="absolute top-0 right-1/4 translate-x-1/2" color="rgba(124, 58, 237, 0.4)" size="1200px" parallaxIntensity={20} />
+        </div>
+
         <div className="relative z-10 px-6 py-24 max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-12">
+          {/* PageHeader skeleton — matches flex-col sm:flex-row layout */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8 md:mb-12">
             <div>
-              <div className="h-12 w-96 bg-white/10 rounded-lg animate-pulse mb-3" />
-              <div className="h-6 w-80 bg-white/5 rounded-lg animate-pulse" />
+              <div className="h-9 md:h-12 w-72 bg-white/10 rounded-lg animate-pulse mb-2" />
+              <div className="h-5 w-64 bg-white/5 rounded-lg animate-pulse" />
             </div>
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 bg-white/10 rounded-lg animate-pulse" />
-              <div className="h-10 w-32 bg-white/10 rounded-lg animate-pulse" />
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="h-9 w-9 bg-white/10 rounded-lg animate-pulse" />
+              <div className="h-10 w-36 bg-white/10 rounded-full animate-pulse" />
             </div>
           </div>
+
+          {/* Session cards skeleton — matches real card markup exactly */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
               <div
@@ -240,20 +250,29 @@ function SessionsPageContent() {
               >
                 <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-lavender)]/10 via-transparent to-transparent pointer-events-none" />
                 <div className="relative z-10">
+                  {/* Title row */}
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex-1">
-                      <div className="h-7 w-48 bg-white/10 rounded-lg animate-pulse mb-2" />
-                      <div className="h-4 w-32 bg-white/5 rounded-lg animate-pulse" />
+                      <div className="h-7 w-44 bg-white/10 rounded-lg animate-pulse mb-2" />
+                      <div className="h-4 w-28 bg-white/5 rounded-lg animate-pulse" />
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="h-6 w-20 bg-white/10 rounded-full animate-pulse" />
                       <div className="h-6 w-11 bg-white/10 rounded-full animate-pulse" />
                     </div>
                   </div>
+                  {/* Meta rows (candidates / assignments) */}
                   <div className="space-y-3 mb-4">
-                    <div className="h-5 w-36 bg-white/5 rounded-lg animate-pulse" />
-                    <div className="h-5 w-40 bg-white/5 rounded-lg animate-pulse" />
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 bg-white/10 rounded animate-pulse" />
+                      <div className="h-4 w-32 bg-white/5 rounded-lg animate-pulse" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 bg-white/10 rounded animate-pulse" />
+                      <div className="h-4 w-36 bg-white/5 rounded-lg animate-pulse" />
+                    </div>
                   </div>
+                  {/* Action buttons */}
                   <div className="flex gap-2">
                     <div className="flex-1 h-9 bg-white/10 rounded-lg animate-pulse" />
                     <div className="h-9 w-16 bg-white/10 rounded-lg animate-pulse" />

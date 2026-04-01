@@ -73,7 +73,12 @@ export function EvaluationsContent() {
 
   if (!jobId) {
     return (
-      <div className="px-6 py-4">
+      <div className="max-w-7xl mx-auto">
+        <PageHeader
+          title="Assignment Evaluations"
+          description="Review and evaluate candidate assignment submissions"
+          onHelpClick={startTour}
+        />
         <Card className="border-red-200 bg-red-50">
           <CardContent className="pt-6 flex gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
@@ -89,6 +94,7 @@ export function EvaluationsContent() {
       </div>
     );
   }
+
 
   return (
     <div className="max-w-7xl mx-auto">

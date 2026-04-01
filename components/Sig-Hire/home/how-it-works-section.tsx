@@ -9,7 +9,7 @@ import ParticleCanvas from "@/components/landing/effects/ParticleCanvas";
 
 export function HowItWorksSection() {
   return (
-    <section className="relative py-28 px-6 overflow-hidden" style={{ background: "rgba(124,58,237,0.025)" }}>
+    <section className="relative py-16 md:py-28 px-4 sm:px-6 overflow-hidden" >
             <div className="absolute inset-0 opacity-90">
               <ParticleCanvas />
             </div>
@@ -25,7 +25,7 @@ export function HowItWorksSection() {
           <div className="relative">
             {/* Top row of empty cards with header overlay */}
             <div className="relative mb-3">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-1 relative z-0">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 relative z-0">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <EmptyCard key={`top-${i}`} />
                 ))}
@@ -41,7 +41,7 @@ export function HowItWorksSection() {
               </div>
             </div>
             {/* Middle row with step cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-1 relative z-0 mb-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-1 relative z-0 mb-3">
               {STEPS.map((step, i) => (
                 <StepCard key={i} {...step} index={i} />
               ))}
@@ -49,7 +49,7 @@ export function HowItWorksSection() {
             
             {/* Bottom row of empty cards with powered by overlay */}
             <div className="relative mb-3">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-1 relative z-0">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 relative z-0">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <EmptyCard key={`bottom-${i}`} />
                 ))}
@@ -76,12 +76,11 @@ export function HowItWorksSection() {
 function EmptyCard() {
   return (
     <div
-      className="aspect-square rounded-xl"
+      className="md:aspect-square rounded-xl min-h-[100px] md:min-h-[275px]"
       style={{
         background: "rgba(255,255,255,0.008)",
         border: "1px solid rgba(255,255,255,0.03)",
-        backdropFilter: "blur(4px)",
-        minHeight: "275px",
+        // backdropFilter: "blur(4px)",
       }}
     />
   );
@@ -99,13 +98,13 @@ function StepCard({ title, desc, index }: {
       <motion.div 
         animate={{ y: [0, -8, 0], x: [0, 4, 0] }}
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-2 left-2 w-10 h-12 rounded bg-white shadow-lg z-10"
+        className="absolute top-2 left-2 w-10 h-12 rounded-sm bg-white shadow-lg z-10"
         style={{ background: "linear-gradient(180deg, #fff 0%, #f8f9fa 100%)", border: "1px solid rgba(0,0,0,0.1)" }}
       >
         <div className="p-1.5 space-y-1">
-          <div className="h-1 bg-gray-300 rounded w-6" />
-          <div className="h-1 bg-gray-300 rounded w-5" />
-          <div className="h-1 bg-gray-300 rounded w-7" />
+          <div className="h-1 bg-gray-300 rounded-sm w-6" />
+          <div className="h-1 bg-gray-300 rounded-sm w-5" />
+          <div className="h-1 bg-gray-300 rounded-sm w-7" />
         </div>
       </motion.div>
       {/* Cursor */}
@@ -178,7 +177,7 @@ function StepCard({ title, desc, index }: {
           transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
           className="flex items-center gap-1.5 p-1 rounded" style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)" }}
         >
-          <div className="w-4 h-4 rounded bg-green-500 flex items-center justify-center text-white text-[8px] font-bold">1</div>
+          <div className="w-4 h-4 rounded-sm bg-green-500 flex items-center justify-center text-white text-[8px] font-bold">1</div>
           <div className="flex-1 h-1 bg-green-400 rounded" />
           <div className="text-[8px] font-bold text-green-400">94</div>
         </motion.div>
@@ -189,7 +188,7 @@ function StepCard({ title, desc, index }: {
           transition={{ duration: 0.5, delay: 0.2, repeat: Infinity, repeatDelay: 2 }}
           className="flex items-center gap-1.5 p-1 rounded" style={{ background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)" }}
         >
-          <div className="w-4 h-4 rounded bg-purple-500 flex items-center justify-center text-white text-[8px] font-bold">2</div>
+          <div className="w-4 h-4 rounded-sm bg-purple-500 flex items-center justify-center text-white text-[8px] font-bold">2</div>
           <div className="flex-1 h-1 bg-purple-400 rounded" style={{ width: "70%" }} />
           <div className="text-[8px] font-bold text-purple-400">87</div>
         </motion.div>
@@ -200,7 +199,7 @@ function StepCard({ title, desc, index }: {
           transition={{ duration: 0.5, delay: 0.4, repeat: Infinity, repeatDelay: 2 }}
           className="flex items-center gap-1.5 p-1 rounded" style={{ background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.3)" }}
         >
-          <div className="w-4 h-4 rounded bg-amber-500 flex items-center justify-center text-white text-[8px] font-bold">3</div>
+          <div className="w-4 h-4 rounded-sm bg-amber-500 flex items-center justify-center text-white text-[8px] font-bold">3</div>
           <div className="flex-1 h-1 bg-amber-400 rounded" style={{ width: "50%" }} />
           <div className="text-[8px] font-bold text-amber-400">71</div>
         </motion.div>
@@ -257,8 +256,7 @@ function StepCard({ title, desc, index }: {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.13, duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
-      className="flex flex-col items-center text-center relative aspect-square"
-      style={{ minHeight: "275px" }}
+      className="flex flex-col items-center text-center relative md:aspect-square min-h-[200px] md:min-h-[275px]"
     >
       {/* Glass card body */}
       <motion.div

@@ -13,15 +13,15 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, onHelpClick, actions }: PageHeaderProps) {
   return (
-    <div className="flex justify-between items-center mb-12">
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8 md:mb-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
+        <h1 className="text-3xl md:text-5xl font-bold text-white mb-2">
           {title}
         </h1>
-        <p className="text-white/70 text-lg">
+        <p className="text-white/70 text-base sm:text-lg">
           {description}
         </p>
       </motion.div>
@@ -29,7 +29,7 @@ export function PageHeader({ title, description, onHelpClick, actions }: PageHea
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="flex items-center gap-3"
+        className="flex items-center gap-3 shrink-0"
       >
         {onHelpClick && (
           <button

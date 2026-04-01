@@ -2,24 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/client";
 import { bulkCreateAssignments } from "@/app/actions/assignments";
 import { createCandidateMappings } from "@/app/actions/candidates";
 import { fetchRankings, type Candidate } from "@/lib/ranking-api";
-import { AlertCircle, CheckCircle, Loader } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader, FileText, Users, Upload, ClipboardList, History, ExternalLink } from "lucide-react";
 import { useDriverGuide } from "@/hooks/useDriverGuide";
 import { assignmentsGuide } from "@/lib/driver-config";
 import { PageHeader } from "@/components/Sig-Hire/PageHeader";
-import { showSuccess, showInfo } from "@/lib/swal";
+import ChromeButton from "@/components/Sig-Hire/ChromeButton";
+import { showSuccess } from "@/lib/swal";
 
 interface SectionCardsProps {
   sessionId?: string;
@@ -38,10 +30,42 @@ interface PreviousAssignment {
   candidate_email?: string;
 }
 
+// ─── Reusable dark glass card shell ──────────────────────────────────────────
+function GlassCard({ children, className = "", ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={`relative overflow-hidden rounded-md border border-glass-border bg-glass-bg backdrop-blur-xl ${className}`}
+      {...props}
+    >
+      <div className="absolute inset-0 bg-linear-to-t from-lavender/10 via-transparent to-transparent pointer-events-none" />
+      {children}
+    </div>
+  );
+}
+
+function CardHead({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+  return (
+    <div className="relative z-10 p-6 pb-4 flex items-center gap-3 border-b border-white/5">
+      <div
+        className="w-9 h-9 rounded-md flex items-center justify-center shrink-0"
+        style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.25)" }}
+      >
+        {icon}
+      </div>
+      <div>
+        <h3 className="text-base font-semibold text-white leading-tight">{title}</h3>
+        <p className="text-xs text-white/40 mt-0.5">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
   const router = useRouter();
   const supabase = createClient();
   const [assignmentFile, setAssignmentFile] = useState<File | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [assignmentPrompt, setAssignmentPrompt] = useState("");
   const [candidates, setCandidates] = useState<any[]>([]);
   const [isCreating, setIsCreating] = useState(false);
@@ -58,319 +82,118 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
   const [isLoadingPrevious, setIsLoadingPrevious] = useState(false);
   const { startTour } = useDriverGuide("assignments", assignmentsGuide, false);
 
-  // Fetch job_id from sessionId (always, regardless of candidateIds)
   useEffect(() => {
     const fetchJobId = async () => {
       if (!sessionId) return;
-
       try {
-
-        // Get job_id from the jobs table using form_id = sessionId
         const { data: jobData, error: jobError } = await supabase
-          .from('jobs')
-          .select('job_id')
-          .eq('form_id', sessionId)
-          .single();
-
-        if (jobError) {
-          console.error('Job fetch error:', jobError);
-          return;
-        }
-
-        if (!jobData) {
-          console.error('Job not found for session:', sessionId);
-          return;
-        }
-
+          .from('jobs').select('job_id').eq('form_id', sessionId).single();
+        if (jobError || !jobData) { console.error('Job fetch error:', jobError); return; }
         setJobId(jobData.job_id);
-      } catch (err) {
-        console.error('Error fetching job ID:', err);
-      }
+      } catch (err) { console.error('Error fetching job ID:', err); }
     };
-
     fetchJobId();
   }, [sessionId]);
 
-  // Fetch candidate details only when candidateIds are provided
   useEffect(() => {
     const fetchCandidates = async () => {
       if (!sessionId || !candidateIds || candidateIds.length === 0) return;
-
       try {
-        const supabase = createClient();
-
-        // Fetch candidates from rankings using the same method as rankings display
         const rankingsResponse = await fetchRankings(sessionId);
-        
-        if (rankingsResponse.candidates && rankingsResponse.candidates.length > 0) {
-          // Filter to only selected candidate IDs
-          const selectedCandidates = rankingsResponse.candidates.filter(c => 
-            candidateIds.includes(c.cid)
-          );
-          
-          if (selectedCandidates.length > 0) {
-            setCandidates(selectedCandidates);
-          } else {
-            // Fallback if no matches found
-            console.warn('No selected candidates found in rankings');
-            setCandidates(
-              candidateIds.map((id) => ({
-                cid: id,
-                name: `Candidate ${id.substring(0, 8)}`,
-                email: 'email@example.com',
-                jd_score: 0,
-                total_score: 0,
-              } as Candidate))
-            );
-          }
+        if (rankingsResponse.candidates?.length > 0) {
+          const selected = rankingsResponse.candidates.filter(c => candidateIds.includes(c.cid));
+          setCandidates(selected.length > 0 ? selected : candidateIds.map(id => ({ cid: id, name: `Candidate ${id.substring(0, 8)}`, email: 'email@example.com', jd_score: 0, total_score: 0 } as Candidate)));
         } else {
-          console.warn('No candidates found in rankings response');
-          setCandidates(
-            candidateIds.map((id) => ({
-              cid: id,
-              name: `Candidate ${id.substring(0, 8)}`,
-              email: 'email@example.com',
-              jd_score: 0,
-              total_score: 0,
-            } as Candidate))
-          );
+          setCandidates(candidateIds.map(id => ({ cid: id, name: `Candidate ${id.substring(0, 8)}`, email: 'email@example.com', jd_score: 0, total_score: 0 } as Candidate)));
         }
       } catch (err) {
         console.error('Error fetching candidates:', err);
-        // Fallback: create basic candidate data with IDs
-        if (candidateIds) {
-          setCandidates(
-            candidateIds.map((id) => ({
-              cid: id,
-              name: `Candidate ${id.substring(0, 8)}`,
-              email: 'email@example.com',
-              jd_score: 0,
-              total_score: 0,
-            } as Candidate))
-          );
-        }
+        if (candidateIds) setCandidates(candidateIds.map(id => ({ cid: id, name: `Candidate ${id.substring(0, 8)}`, email: 'email@example.com', jd_score: 0, total_score: 0 } as Candidate)));
       }
     };
-
     fetchCandidates();
   }, [sessionId, candidateIds]);
 
-  // Fetch assignment template from Supabase if it exists
   useEffect(() => {
     const fetchAssignment = async () => {
       if (!jobId) return;
-
       try {
-        const supabase = createClient();
-
-        // Fetch assignment template (candidate_id = 00000000-0000-0000-0000-000000000000)
-        const { data, error } = await supabase
-          .from('assignments')
-          .select('assignment_json, assignment_pdf_url, job_id')
-          .eq('job_id', jobId)
-          .eq('candidate_id', '00000000-0000-0000-0000-000000000000')
-          .single();
-
+        const { data, error } = await supabase.from('assignments').select('assignment_json, assignment_pdf_url, job_id')
+          .eq('job_id', jobId).eq('candidate_id', '00000000-0000-0000-0000-000000000000').single();
         if (!error && data) {
-          // Parse assignment_json if it's a string
-          const assignmentData = typeof data.assignment_json === 'string'
-            ? JSON.parse(data.assignment_json)
-            : data.assignment_json;
-
-          setAssignmentData(assignmentData);
+          setAssignmentData(typeof data.assignment_json === 'string' ? JSON.parse(data.assignment_json) : data.assignment_json);
           setAssignmentId(jobId);
-          console.log('Assignment loaded from Supabase');
-        } else {
-          console.log('No assignment found for this job');
         }
-      } catch (err) {
-        console.error('Error fetching assignment:', err);
-      }
+      } catch (err) { console.error('Error fetching assignment:', err); }
     };
-
     fetchAssignment();
   }, [jobId]);
 
-  // Fetch previous assignments for any session viewing the assignments page
   useEffect(() => {
     const fetchPreviousAssignments = async () => {
       if (!jobId) return;
-
       setIsLoadingPrevious(true);
       try {
-        const supabase = createClient();
-
-        // Fetch all assignments for this job except the template
-        const { data, error } = await supabase
-          .from('assignments')
-          .select('*')
-          .eq('job_id', jobId)
-          .neq('candidate_id', '00000000-0000-0000-0000-000000000000')
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.error('Error fetching previous assignments:', error);
-          setPreviousAssignments([]);
-          return;
-        }
-
+        const { data, error } = await supabase.from('assignments').select('*')
+          .eq('job_id', jobId).neq('candidate_id', '00000000-0000-0000-0000-000000000000').order('created_at', { ascending: false });
+        if (error) { console.error('Error fetching previous assignments:', error); setPreviousAssignments([]); return; }
         setPreviousAssignments(data || []);
-      } catch (err) {
-        console.error('Error loading previous assignments:', err);
-        setPreviousAssignments([]);
-      } finally {
-        setIsLoadingPrevious(false);
-      }
+      } catch (err) { console.error('Error loading previous assignments:', err); setPreviousAssignments([]); }
+      finally { setIsLoadingPrevious(false); }
     };
-
     fetchPreviousAssignments();
   }, [jobId]);
 
+  const handleFileDrop = (e: React.DragEvent) => {
+    e.preventDefault(); e.stopPropagation(); setIsDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) setAssignmentFile(file);
+  };
+
   const handleCreateAssignment = async () => {
-    if (!assignmentFile && !assignmentPrompt) {
-      setError('Please upload a file or enter a prompt');
-      return;
-    }
-
-    if (!jobId) {
-      setError('Job not found');
-      return;
-    }
-
-    setIsCreating(true);
-    setError(null);
-
+    if (!assignmentFile && !assignmentPrompt) { setError('Please upload a file or enter a prompt'); return; }
+    if (!jobId) { setError('Job not found'); return; }
+    setIsCreating(true); setError(null);
     try {
-      // Call the Python API to create assignment
-      const response = await fetch(`http://3.111.81.83:8000/assignment/create/${jobId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to create assignment');
-      }
-
+      const response = await fetch(`http://3.111.81.83:8000/assignment/create/${jobId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+      if (!response.ok) { const d = await response.json(); throw new Error(d.detail || 'Failed to create assignment'); }
       const data = await response.json();
-      setAssignmentData(data);
-      setAssignmentId(jobId);
-      setSuccess('Assignment created successfully!');
-      setError(null);
-      
-      // Auto send if candidates are selected and we have assignment
-      if (candidates.length > 0) {
-        setTimeout(() => handleSendAssignments(), 1500);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create assignment');
-      setIsCreating(false);
-    }
+      setAssignmentData(data); setAssignmentId(jobId); setSuccess('Assignment created successfully!'); setError(null);
+      if (candidates.length > 0) setTimeout(() => handleSendAssignments(), 1500);
+    } catch (err) { setError(err instanceof Error ? err.message : 'Failed to create assignment'); setIsCreating(false); }
   };
 
   const handleGenerateAssignment = async () => {
-    if (!jobId) {
-      setError('Job not found');
-      return;
-    }
-
-    setIsGenerating(true);
-    setError(null);
-
+    if (!jobId) { setError('Job not found'); return; }
+    setIsGenerating(true); setError(null);
     try {
-      // Call the Next.js API proxy to generate assignment from job description
-      const response = await fetch(`/api/assignment/create/${jobId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate assignment');
-      }
-
+      const response = await fetch(`/api/assignment/create/${jobId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+      if (!response.ok) { const d = await response.json(); throw new Error(d.error || 'Failed to generate assignment'); }
       const data = await response.json();
-      setAssignmentData(data);
-      setAssignmentId(jobId);
-      setSuccess('Assignment generated successfully from job description!');
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate assignment');
-    } finally {
-      setIsGenerating(false);
-    }
+      setAssignmentData(data); setAssignmentId(jobId); setSuccess('Assignment generated from job description!'); setError(null);
+    } catch (err) { setError(err instanceof Error ? err.message : 'Failed to generate assignment'); }
+    finally { setIsGenerating(false); }
   };
 
   const handleSendAssignments = async () => {
-    if (!jobId || candidates.length === 0) {
-      setError('Job or candidates not found');
-      return;
-    }
-
-    setIsSending(true);
-    setError(null);
-
+    if (!jobId || candidates.length === 0) { setError('Job or candidates not found'); return; }
+    setIsSending(true); setError(null);
     try {
-      // Step 1: Create candidate mappings (generates UUIDs for candidates)
-      const mappingResult = await createCandidateMappings({
-        job_id: jobId,
-        session_id: sessionId || '',
-        candidates: candidates.map(c => ({
-          cid: c.cid,
-          name: c.name || `Candidate`,
-          email: c.email || 'unknown@example.com',
-        })),
-      });
-
-      if (!mappingResult.success) {
-        setError(mappingResult.error || 'Failed to create candidate mappings');
-        setIsSending(false);
-        return;
-      }
-
-      // Step 2: Get the generated UUIDs from mappings
+      const mappingResult = await createCandidateMappings({ job_id: jobId, session_id: sessionId || '', candidates: candidates.map(c => ({ cid: c.cid, name: c.name || 'Candidate', email: c.email || 'unknown@example.com' })) });
+      if (!mappingResult.success) { setError(mappingResult.error || 'Failed to create candidate mappings'); setIsSending(false); return; }
       const candidateUUIDs = mappingResult.mappings.map((m: any) => m.candidate_id);
-
-      // Step 3: Create assignments with the UUID-mapped candidates
-      const result = await bulkCreateAssignments({
-        job_id: jobId,
-        session_id: sessionId || '',
-        candidate_ids: candidateUUIDs,
-      });
-
-      if (!result.success) {
-        setError(result.error || 'Failed to send assignments');
-        setIsSending(false);
-        return;
-      }
-
-      // Step 4: Generate submission links for candidates using their UUIDs
+      const result = await bulkCreateAssignments({ job_id: jobId, session_id: sessionId || '', candidate_ids: candidateUUIDs });
+      if (!result.success) { setError(result.error || 'Failed to send assignments'); setIsSending(false); return; }
       const links = mappingResult.mappings.map((mapping: any) => {
         const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-        const submissionLink = `${baseUrl}/submission?job_id=${jobId}&candidate_id=${mapping.candidate_id}`;
-        
-        return {
-          candidateId: mapping.candidate_id,
-          rankingCid: mapping.ranking_cid,
-          name: mapping.name || `Candidate`,
-          email: mapping.email || 'unknown@example.com',
-          link: submissionLink
-        };
+        return { candidateId: mapping.candidate_id, rankingCid: mapping.ranking_cid, name: mapping.name || 'Candidate', email: mapping.email || 'unknown@example.com', link: `${baseUrl}/submission?job_id=${jobId}&candidate_id=${mapping.candidate_id}` };
       });
-
-      setSubmissionLinks(links);
-      setShowSentOverlay(true);
-      setSuccess(`Successfully sent assignments to ${candidateUUIDs.length} candidate(s)!`);
-      
-      // Redirect to evaluations page after 4 seconds
-      setTimeout(() => {
-        router.push(`/sig-hire/evaluations?assignment_id=${jobId}&session_id=${sessionId}`);
-      }, 4000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send assignments');
-      setIsSending(false);
-    }
+      setSubmissionLinks(links); setShowSentOverlay(true); setSuccess(`Sent assignments to ${candidateUUIDs.length} candidate(s)!`);
+      setTimeout(() => { router.push(`/sig-hire/evaluations?assignment_id=${jobId}&session_id=${sessionId}`); }, 4000);
+    } catch (err) { setError(err instanceof Error ? err.message : 'Failed to send assignments'); setIsSending(false); }
   };
+
+  // ─── Render ─────────────────────────────────────────────────────────────────
   return (
     <>
       <PageHeader
@@ -378,448 +201,365 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
         description="Generate and send assignments to selected candidates"
         onHelpClick={startTour}
       />
-      <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:h-fit-content *:data-[slot=card]:shadow-s lg:px-6 @xl/main:grid-cols-2 @4xl/main:grid-cols-3">
-      
-      {/* Error Message */}
+
+      {/* Error Banner */}
       {error && (
-        <Card className="col-span-full border-red-200 bg-red-50">
-          <CardHeader className="flex flex-row items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-            <CardTitle className="text-red-900">{error}</CardTitle>
-          </CardHeader>
-        </Card>
+        <div className="mb-6 flex items-center gap-3 px-4 py-3 rounded-md border border-red-500/20 bg-red-500/10 text-red-300">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <p className="text-sm">{error}</p>
+        </div>
       )}
 
-      {/* Success Message */}
+      {/* Success Banner */}
       {success && (
-        <Card className="col-span-full border-green-200 bg-green-50">
-          <CardHeader className="flex flex-row items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-            <CardTitle className="text-green-900">{success}</CardTitle>
-          </CardHeader>
-        </Card>
+        <div className="mb-6 flex items-center gap-3 px-4 py-3 rounded-md border border-green-500/20 bg-green-500/10 text-green-300">
+          <CheckCircle className="w-4 h-4 shrink-0" />
+          <p className="text-sm">{success}</p>
+        </div>
       )}
 
-      {/* Card 1: Assignment Creation */}
-<Card data-tour="assignment-form" className="@container/card relative overflow-hidden rounded-3xl
-  bg-gradient-to-br from-purple-50 via-white to-indigo-50
-  border border-purple-100
-  shadow-[0_20px_40px_-20px_rgba(124,58,237,0.50)]
-  transition-all duration-500
-  dark:bg-gradient-to-br dark:from-neutral-900/90 dark:via-neutral-900/70 dark:to-neutral-950
-  dark:border-white/10
-  dark:shadow-[0_0_80px_-20px_rgba(124,58,237,0.45)]
-  col-span-1
-">
-  <CardHeader>
-    <CardTitle className="text-2xl text-primary font-semibold tabular-nums @[250px]/card:text-2xl">
-      Assignment
-    </CardTitle>
-    <CardDescription>Upload or generate your assignment below</CardDescription>
-  </CardHeader>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-  <div className="flex flex-col gap-4">
+        {/* ── Card 1: Assignment Creation ──────────────────────────────────── */}
+        <GlassCard data-tour="assignment-form">
+          <CardHead
+            icon={<ClipboardList className="w-4 h-4" style={{ color: "var(--color-lavender)" }} />}
+            title="Assignment"
+            description="Upload or generate your assignment"
+          />
+          <div className="relative z-10 flex flex-col gap-4 p-6">
+            {/* File upload */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-medium text-white/60 uppercase tracking-wider">
+                Upload Document or PDF
+              </label>
+              <label
+                className="flex flex-col items-center justify-center gap-2 w-full cursor-pointer rounded-lg px-4 py-5 transition-all duration-200 text-center"
+                style={{
+                  background: isDragOver ? "rgba(124,58,237,0.1)" : "rgba(0,0,0,0.2)",
+                  border: `2px dashed ${isDragOver ? "rgba(124,58,237,0.6)" : "rgba(255,255,255,0.1)"}`,
+                }}
+                onDragOver={e => { e.preventDefault(); e.stopPropagation(); setIsDragOver(true); }}
+                onDragLeave={e => { e.preventDefault(); e.stopPropagation(); setIsDragOver(false); }}
+                onDrop={handleFileDrop}
+              >
+                <Upload className="w-5 h-5" style={{ color: isDragOver ? "var(--color-lavender)" : "rgba(255,255,255,0.25)" }} />
+                <span className="text-sm truncate max-w-full" style={{ color: assignmentFile ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.3)" }}>
+                  {assignmentFile ? assignmentFile.name : isDragOver ? "Drop file here" : "Drag & drop or click to upload"}
+                </span>
+                <input type="file" className="hidden" onChange={e => setAssignmentFile(e.target.files?.[0] || null)} />
+              </label>
+            </div>
 
-    {/* Document Upload Section */}
-    <div className="flex flex-col gap-2 w-full px-6">
-      <label className="text-md font-medium text-primary">Upload Document or PDF</label>
-      <input
-        type="file"
-        className="w-full rounded-md border border-primary/30 bg-card p-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-white cursor-pointer"
-        onChange={(e) => setAssignmentFile(e.target.files?.[0] || null)}
-      />
-    </div>
-
-                <div className="p-3 text-muted-foreground font-thin text-center">OR</div>
-
-    {/* Text Box Section */}
-    <div className="flex flex-col gap-2 w-full px-6">
-      <label className="text-m font-medium text-primary">Enter prompt </label>
-      <textarea
-        className="w-full min-h-40 rounded-md border border-primary/30 bg-card p-3 text-sm outline-none focus:ring-2 focus:ring-primary"
-        placeholder="Type the job description here..."
-        value={assignmentPrompt}
-        onChange={(e) => setAssignmentPrompt(e.target.value)}
-      />
-    </div> 
-    <div className="flex gap-2 justify-center">
-        {!assignmentData ? (
-          <>
-            <Button
-              variant="default"
-              size="lg"
-              className="gap-2 transition-all duration-300 cursor-pointer"
-              onClick={handleGenerateAssignment}
-              disabled={isGenerating || !jobId}
-            >
-              {isGenerating ? (
-                <>
-                  <Loader className="w-4 h-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                'Generate Assignment'
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="gap-2 transition-all duration-300 cursor-pointer"
-              onClick={handleCreateAssignment}
-              disabled={isCreating || isSending}
-            >
-              {isCreating ? (
-                <>
-                  <Loader className="w-4 h-4 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                'Submit Custom'
-              )}
-            </Button>
-          </>
-        ) : (
-          <Button
-            variant="default"
-            size="lg"
-            className="mx-auto block gap-2 transition-all duration-300 cursor-pointer"
-            onClick={handleSendAssignments}
-            disabled={isSending || candidates.length === 0}
-          >
-            {isSending ? (
-              <>
-                <Loader className="w-4 h-4 animate-spin" />
-                Sending...
-              </>
-            ) : (
-              `Send to ${candidates.length} Candidate${candidates.length !== 1 ? 's' : ''}`
-            )}
-          </Button>
-        )}
-    </div>   
- </div>
-</Card>
-
-      {candidates.length > 0 && (
-        <Card data-tour="candidate-select" className="@container/card relative overflow-hidden rounded-3xl col-span-1
-  bg-gradient-to-br from-purple-50 via-white to-indigo-50
-  border border-purple-100
-  shadow-[0_20px_40px_-20px_rgba(124,58,237,0.50)]
-  transition-all duration-500
-  dark:bg-gradient-to-br dark:from-neutral-900/90 dark:via-neutral-900/70 dark:to-neutral-950
-  dark:border-white/10
-  dark:shadow-[0_0_80px_-20px_rgba(124,58,237,0.45)]
-">
-        <CardHeader>
-            <CardTitle className="text-2xl text-primary font-semibold tabular-nums @[250px]/card:text-2xl">
-            Selected Candidates ({candidates.length})
-            </CardTitle>
-            <CardDescription>Ready to receive assignment</CardDescription>
-        </CardHeader>
-        <div className="flex flex-col gap-3 px-6 pb-6">
-          {candidates.map((candidate) => (
-            <div key={candidate.cid} className="p-3 rounded-lg bg-muted/50 border border-muted">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <p className="font-medium text-sm">{candidate.name}</p>
-                  <p className="text-xs text-muted-foreground">{candidate.email || 'No email'}</p>
-                </div>
-                {candidate.total_score && (
-                  <div className="text-right ml-4">
-                    <p className="text-xs text-primary font-semibold">
-                      {(candidate.total_score).toFixed(1)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Score</p>
-                  </div>
-                )}
+            {/* Divider */}
+            <div className="relative py-1">
+              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/8" /></div>
+              <div className="relative flex justify-center">
+                <span className="px-3 text-[11px] uppercase tracking-widest text-white/25">or</span>
               </div>
             </div>
-          ))}
-        </div>
-      </Card>
-      )}
 
-      {/* Assignment Preview - Full Width */}
-<Card className="@container/card relative overflow-hidden rounded-3xl col-span-full
-  bg-gradient-to-br from-purple-50 via-white to-indigo-50
-  border border-purple-100
-  shadow-[0_20px_40px_-20px_rgba(124,58,237,0.50)]
-  transition-all duration-500
-  dark:bg-gradient-to-br dark:from-neutral-900/90 dark:via-neutral-900/70 dark:to-neutral-950
-  dark:border-white/10
-  dark:shadow-[0_0_80px_-20px_rgba(124,58,237,0.45)]
-">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-2xl text-primary font-semibold">
-                    Assignment Preview
-                  </CardTitle>
-                  <CardDescription className="text-sm mt-2">{assignmentData ? 'Generated & Ready' : 'Pending Generation'}</CardDescription>
-                </div>
-                {assignmentData?.assignment_pdf_url && (
-                  <a
-                    href={assignmentData.assignment_pdf_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-                  >
-                    Download PDF
-                  </a>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-6">
-              {assignmentData ? (
+            {/* Prompt */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Enter Prompt</label>
+              <textarea
+                className="w-full min-h-[140px] rounded-lg p-3 text-sm text-white/80 placeholder-white/25 outline-none resize-none transition-colors"
+                style={{ background: "rgba(0,0,0,0.25)", border: "1px solid rgba(255,255,255,0.07)" }}
+                onFocus={e => (e.currentTarget.style.borderColor = "rgba(124,58,237,0.5)")}
+                onBlur={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)")}
+                placeholder="Describe the assignment for candidates..."
+                value={assignmentPrompt}
+                onChange={e => setAssignmentPrompt(e.target.value)}
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-wrap gap-3 pt-1">
+              {!assignmentData ? (
                 <>
-                  {/* Assignment Metadata */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase">Title</label>
-                      <p className="text-sm font-semibold text-foreground truncate">{assignmentData.title}</p>
+                  <ChromeButton onClick={handleGenerateAssignment} disabled={isGenerating || !jobId} className="flex items-center gap-2">
+                    {isGenerating ? <><Loader className="w-4 h-4 animate-spin" />Generating...</> : "Generate Assignment"}
+                  </ChromeButton>
+                  <button
+                    onClick={handleCreateAssignment}
+                    disabled={isCreating || isSending}
+                    className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-white/70 border border-white/10 transition-colors hover:border-white/20 hover:text-white disabled:opacity-40"
+                    style={{ background: "rgba(255,255,255,0.05)" }}
+                  >
+                    {isCreating ? <><Loader className="w-4 h-4 animate-spin" />Submitting...</> : "Submit Custom"}
+                  </button>
+                </>
+              ) : (
+                <ChromeButton onClick={handleSendAssignments} disabled={isSending || candidates.length === 0} className="flex items-center gap-2">
+                  {isSending ? <><Loader className="w-4 h-4 animate-spin" />Sending...</> : `Send to ${candidates.length} Candidate${candidates.length !== 1 ? 's' : ''}`}
+                </ChromeButton>
+              )}
+            </div>
+          </div>
+        </GlassCard>
+
+        {/* ── Card 2: Selected Candidates ───────────────────────────────────── */}
+        {candidates.length > 0 && (
+          <GlassCard data-tour="candidate-select">
+            <CardHead
+              icon={<Users className="w-4 h-4" style={{ color: "var(--color-lavender)" }} />}
+              title={`Selected Candidates (${candidates.length})`}
+              description="Ready to receive assignment"
+            />
+            <div className="relative z-10 flex flex-col gap-2 p-6">
+              {candidates.map(candidate => (
+                <div
+                  key={candidate.cid}
+                  className="flex items-center justify-between px-3 py-2.5 rounded-lg"
+                  style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.06)" }}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white/80 truncate">{candidate.name}</p>
+                    <p className="text-xs text-white/35 truncate">{candidate.email || 'No email'}</p>
+                  </div>
+                  {candidate.total_score > 0 && (
+                    <div className="ml-4 text-right shrink-0">
+                      <p className="text-xs font-semibold" style={{ color: "var(--color-lavender)" }}>{candidate.total_score.toFixed(1)}</p>
+                      <p className="text-[10px] text-white/30">Score</p>
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase">Difficulty</label>
+                  )}
+                </div>
+              ))}
+            </div>
+          </GlassCard>
+        )}
+
+        {/* ── Card 3: Assignment Preview ────────────────────────────────────── */}
+        <GlassCard className="lg:col-span-2">
+          <div className="relative z-10 p-6 pb-4 flex items-center justify-between gap-3 border-b border-white/5">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-md flex items-center justify-center shrink-0" style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.25)" }}>
+                <FileText className="w-4 h-4" style={{ color: "var(--color-lavender)" }} />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-white leading-tight">Assignment Preview</h3>
+                <p className="text-xs text-white/40 mt-0.5">{assignmentData ? "Generated & Ready" : "Pending Generation"}</p>
+              </div>
+            </div>
+            {assignmentData?.assignment_pdf_url && (
+              <a href={assignmentData.assignment_pdf_url} target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-white/70 border border-white/10 transition-colors hover:border-white/20 hover:text-white"
+                style={{ background: "rgba(255,255,255,0.05)" }}
+              >
+                <ExternalLink className="w-3 h-3" /> Download PDF
+              </a>
+            )}
+          </div>
+
+          <div className="relative z-10 p-6">
+            {assignmentData ? (
+              <div className="flex flex-col gap-6">
+                {/* Metadata */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {assignmentData.title && (
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest text-white/30 mb-1">Title</p>
+                      <p className="text-sm font-semibold text-white/80 truncate">{assignmentData.title}</p>
+                    </div>
+                  )}
+                  {assignmentData.difficulty !== undefined && (
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest text-white/30 mb-1">Difficulty</p>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-foreground">{assignmentData.difficulty}/10</span>
+                        <span className="text-sm font-semibold text-white/80">{assignmentData.difficulty}/10</span>
                         <div className="flex gap-0.5">
                           {[...Array(10)].map((_, i) => (
-                            <div
-                              key={i}
-                              className={`h-2 w-2 rounded-full ${i < assignmentData.difficulty ? 'bg-primary' : 'bg-muted'}`}
-                            />
+                            <div key={i} className="h-1.5 w-1.5 rounded-full" style={{ background: i < assignmentData.difficulty ? "var(--color-lavender)" : "rgba(255,255,255,0.1)" }} />
                           ))}
                         </div>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Required Skills */}
-                  {assignmentData.required_skills && assignmentData.required_skills.length > 0 && (
-                    <div className="space-y-2">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase">Required Skills</label>
-                      <div className="flex flex-wrap gap-2">
-                        {assignmentData.required_skills.map((skill: string) => (
-                          <span
-                            key={skill}
-                            className="px-3 py-1 bg-primary/15 text-primary text-xs font-medium rounded-full border border-primary/30"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
                   )}
-
-                  {/* Problem Statement */}
-                  {assignmentData.problem_statement && (
-                    <div className="space-y-2">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase">Problem Statement</label>
-                      <p className="text-sm text-foreground leading-relaxed line-clamp-4">
-                        {assignmentData.problem_statement}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Requirements */}
-                  {assignmentData.requirements && assignmentData.requirements.length > 0 && (
-                    <div className="space-y-2">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase">Requirements</label>
-                      <ul className="list-disc list-inside space-y-1">
-                        {assignmentData.requirements.slice(0, 3).map((req: string, idx: number) => (
-                          <li key={idx} className="text-sm text-foreground">
-                            {req}
-                          </li>
-                        ))}
-                        {assignmentData.requirements.length > 3 && (
-                          <li className="text-sm text-muted-foreground italic">
-                            +{assignmentData.requirements.length - 3} more requirements
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Evaluation Criteria */}
-                  {assignmentData.evaluation_criteria && assignmentData.evaluation_criteria.length > 0 && (
-                    <div className="space-y-2">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase">Evaluation Criteria</label>
-                      <ul className="list-disc list-inside space-y-1">
-                        {assignmentData.evaluation_criteria.map((criteria: string, idx: number) => (
-                          <li key={idx} className="text-sm text-foreground">
-                            {criteria}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Input/Output */}
-                  {assignmentData.input_output && (
-                    <div className="space-y-2">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase">Input / Output</label>
-                      <div className="bg-muted/50 p-3 rounded-lg text-xs font-mono text-foreground overflow-auto max-h-20">
-                        {assignmentData.input_output}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* PDF Preview */}
-                  {assignmentData.assignment_pdf_url && (
-                    <div className="space-y-2">
-                      <label className="text-xs font-semibold text-muted-foreground uppercase">PDF Preview</label>
-                      <div className="border border-muted rounded-lg overflow-hidden bg-white">
-                        <iframe
-                          src={assignmentData.assignment_pdf_url}
-                          className="w-full h-96 border-0"
-                          title="Assignment PDF"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-sm text-muted-foreground">No assignment created yet. Create or generate one below.</p>
                 </div>
-              )}
-            </CardContent>
-            {assignmentId && (
-              <CardFooter className="border-t bg-muted/30 text-xs text-muted-foreground">
-                <p>Assignment ID: <span className="font-mono font-semibold text-foreground">{assignmentId}</span></p>
-              </CardFooter>
-            )}
-          </Card>
 
-      {/* Previous Assignments Section */}
-      {previousAssignments.length > 0 && (
-        <Card className="@container/card relative overflow-hidden rounded-3xl col-span-full
-  bg-gradient-to-br from-blue-50 via-white to-cyan-50
-  border border-blue-100
-  shadow-[0_20px_40px_-20px_rgba(59,130,246,0.50)]
-  transition-all duration-500
-  dark:bg-gradient-to-br dark:from-neutral-900/90 dark:via-neutral-900/70 dark:to-neutral-950
-  dark:border-white/10
-  dark:shadow-[0_0_80px_-20px_rgba(59,130,246,0.45)]
-">
-              <CardHeader>
-                <CardTitle className="text-2xl text-blue-600 font-semibold">
-                  Previous Assignments ({previousAssignments.length})
-                </CardTitle>
-                <CardDescription>View and manage assignments sent to candidates</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isLoadingPrevious ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader className="w-5 h-5 animate-spin text-blue-600 mr-2" />
-                    <p className="text-muted-foreground">Loading assignments...</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {previousAssignments.map((assignment, idx) => {
-                      const hasSubmission = !!assignment.submission_file_url;
-                      const hasEvaluation = !!assignment.evaluation_report;
-                      
-                      return (
-                        <div
-                          key={`${assignment.candidate_id}-${idx}`}
-                          className="p-4 border border-blue-100 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50 hover:shadow-md transition-shadow"
-                        >
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-sm text-foreground">Assignment #{idx + 1}</h4>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Candidate ID: <span className="font-mono text-xs">{assignment.candidate_id.substring(0, 12)}...</span>
-                              </p>
-                              {assignment.created_at && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Sent: {new Date(assignment.created_at).toLocaleDateString()}
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex flex-col items-end gap-2">
-                              <div className="flex gap-2">
-                                {hasSubmission && (
-                                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
-                                    ✓ Submitted
-                                  </span>
-                                )}
-                                {hasEvaluation && (
-                                  <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full font-medium">
-                                    ✓ Evaluated
-                                  </span>
-                                )}
-                                {!hasSubmission && (
-                                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">
-                                    ⏳ Pending
-                                  </span>
-                                )}
-                              </div>
-                              {assignment.assignment_pdf_url && (
-                                <a
-                                  href={assignment.assignment_pdf_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded transition-colors"
-                                >
-                                  View PDF
-                                </a>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                {/* Required Skills */}
+                {assignmentData.required_skills?.length > 0 && (
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-white/30 mb-2">Required Skills</p>
+                    <div className="flex flex-wrap gap-2">
+                      {assignmentData.required_skills.map((skill: string) => (
+                        <span key={skill} className="px-2.5 py-1 text-xs rounded-full" style={{ background: "rgba(124,58,237,0.15)", color: "var(--color-lavender)", border: "1px solid rgba(124,58,237,0.25)" }}>
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+
+                {/* Problem Statement */}
+                {assignmentData.problem_statement && (
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-white/30 mb-2">Problem Statement</p>
+                    <p className="text-sm text-white/60 leading-relaxed line-clamp-4">{assignmentData.problem_statement}</p>
+                  </div>
+                )}
+
+                {/* Requirements */}
+                {assignmentData.requirements?.length > 0 && (
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-white/30 mb-2">Requirements</p>
+                    <ul className="space-y-1.5">
+                      {assignmentData.requirements.slice(0, 3).map((req: string, idx: number) => (
+                        <li key={idx} className="flex items-start gap-2 text-sm text-white/60">
+                          <span className="mt-1.5 w-1 h-1 rounded-full shrink-0" style={{ background: "var(--color-lavender)" }} />
+                          {req}
+                        </li>
+                      ))}
+                      {assignmentData.requirements.length > 3 && (
+                        <li className="text-sm text-white/30 italic pl-3">+{assignmentData.requirements.length - 3} more requirements</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Evaluation Criteria */}
+                {assignmentData.evaluation_criteria?.length > 0 && (
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-white/30 mb-2">Evaluation Criteria</p>
+                    <ul className="space-y-1.5">
+                      {assignmentData.evaluation_criteria.map((criteria: string, idx: number) => (
+                        <li key={idx} className="flex items-start gap-2 text-sm text-white/60">
+                          <span className="mt-1.5 w-1 h-1 rounded-full shrink-0" style={{ background: "rgba(16,185,129,0.8)" }} />
+                          {criteria}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Input/Output */}
+                {assignmentData.input_output && (
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-white/30 mb-2">Input / Output</p>
+                    <div className="rounded-lg p-3 text-xs font-mono text-white/60 overflow-auto max-h-24" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                      {assignmentData.input_output}
+                    </div>
+                  </div>
+                )}
+
+                {/* PDF iframe */}
+                {assignmentData.assignment_pdf_url && (
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-white/30 mb-2">PDF Preview</p>
+                    <div className="rounded-lg overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.06)" }}>
+                      <iframe src={assignmentData.assignment_pdf_url} className="w-full h-96 border-0" title="Assignment PDF" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <ClipboardList className="w-10 h-10 mx-auto mb-3 text-white/15" />
+                <p className="text-sm text-white/30">No assignment created yet. Generate or submit one above.</p>
+              </div>
+            )}
+          </div>
+
+          {assignmentId && (
+            <div className="relative z-10 px-6 py-3 border-t border-white/5">
+              <p className="text-[11px] text-white/25">Assignment ID: <span className="font-mono text-white/40">{assignmentId}</span></p>
+            </div>
           )}
-      
-      {/* Assignment Sent Overlay */}
+        </GlassCard>
+
+        {/* ── Card 4: Previous Assignments ─────────────────────────────────── */}
+        {previousAssignments.length > 0 && (
+          <GlassCard className="lg:col-span-2">
+            <CardHead
+              icon={<History className="w-4 h-4" style={{ color: "var(--color-lavender)" }} />}
+              title={`Previous Assignments (${previousAssignments.length})`}
+              description="View and manage assignments sent to candidates"
+            />
+            <div className="relative z-10 p-6">
+              {isLoadingPrevious ? (
+                <div className="flex items-center justify-center py-8 gap-2">
+                  <Loader className="w-5 h-5 animate-spin text-white/40" />
+                  <p className="text-sm text-white/40">Loading assignments...</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {previousAssignments.map((assignment, idx) => {
+                    const hasSubmission = !!assignment.submission_file_url;
+                    const hasEvaluation = !!assignment.evaluation_report;
+                    return (
+                      <div key={`${assignment.candidate_id}-${idx}`} className="flex items-start justify-between gap-4 px-4 py-3 rounded-lg transition-colors"
+                        style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.06)" }}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-white/70">Assignment #{idx + 1}</p>
+                          <p className="text-xs text-white/30 font-mono mt-0.5">{assignment.candidate_id.substring(0, 12)}...</p>
+                          {assignment.created_at && (
+                            <p className="text-xs text-white/25 mt-0.5">{new Date(assignment.created_at).toLocaleDateString()}</p>
+                          )}
+                        </div>
+                        <div className="flex flex-col items-end gap-2 shrink-0">
+                          <div className="flex gap-1.5">
+                            {hasSubmission && <span className="px-2 py-0.5 text-[10px] rounded-full bg-green-500/15 text-green-400 border border-green-500/20">✓ Submitted</span>}
+                            {hasEvaluation && <span className="px-2 py-0.5 text-[10px] rounded-full bg-purple-500/15 text-purple-400 border border-purple-500/20">✓ Evaluated</span>}
+                            {!hasSubmission && <span className="px-2 py-0.5 text-[10px] rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20">⏳ Pending</span>}
+                          </div>
+                          {assignment.assignment_pdf_url && (
+                            <a href={assignment.assignment_pdf_url} target="_blank" rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-[10px] px-2 py-1 rounded transition-colors text-white/40 border border-white/8 hover:text-white/70 hover:border-white/15"
+                              style={{ background: "rgba(255,255,255,0.04)" }}
+                            >
+                              <ExternalLink className="w-3 h-3" /> View PDF
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </GlassCard>
+        )}
+      </div>
+
+      {/* ── Assignment Sent Overlay ────────────────────────────────────────── */}
       {showSentOverlay && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <CardContent className="pt-8">
-              <div className="flex flex-col items-center text-center gap-4 mb-6">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-10 h-10 text-green-600" />
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="relative overflow-hidden rounded-md border border-glass-border bg-glass-bg backdrop-blur-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="absolute inset-0 bg-linear-to-t from-lavender/10 via-transparent to-transparent pointer-events-none" />
+            <div className="relative z-10 p-8">
+              {/* Success header */}
+              <div className="flex flex-col items-center text-center gap-3 mb-8">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)" }}>
+                  <CheckCircle className="w-8 h-8 text-green-400" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-foreground mb-2">Assignments Sent!</h2>
-                  <p className="text-muted-foreground">
-                    {submissionLinks.length} assignment{submissionLinks.length !== 1 ? 's' : ''} sent successfully.
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Share the links below with candidates to submit their solutions.
-                  </p>
+                  <h2 className="text-xl font-bold text-white mb-1">Assignments Sent!</h2>
+                  <p className="text-sm text-white/50">{submissionLinks.length} assignment{submissionLinks.length !== 1 ? 's' : ''} sent successfully.</p>
+                  <p className="text-xs text-white/35 mt-1">Share the links below with candidates.</p>
                 </div>
               </div>
 
-              {/* Submission Links */}
+              {/* Submission links */}
               <div className="space-y-3 mb-6">
                 {submissionLinks.map((item, idx) => (
-                  <div key={idx} className="p-4 border rounded-lg bg-muted/50 space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <p className="font-semibold text-sm text-foreground">{item.name}</p>
-                        <p className="text-xs text-muted-foreground">{item.email}</p>
+                  <div key={idx} className="rounded-lg overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.07)" }}>
+                    <div className="flex items-center justify-between gap-2 px-4 py-3" style={{ background: "rgba(0,0,0,0.3)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                      <div>
+                        <p className="text-sm font-medium text-white/80">{item.name}</p>
+                        <p className="text-xs text-white/35">{item.email}</p>
                       </div>
-                      <button
-                        onClick={async () => {
-                          await navigator.clipboard.writeText(item.link);
-                          await showSuccess('Link copied to clipboard!');
-                        }}
-                        className="px-3 py-1 text-xs bg-primary text-white rounded hover:bg-primary/90 transition-colors whitespace-nowrap"
+                      <button onClick={async () => { await navigator.clipboard.writeText(item.link); await showSuccess('Copied!'); }}
+                        className="px-3 py-1 text-xs rounded-md font-medium text-white/70 border border-white/10 transition-colors hover:border-white/20 hover:text-white shrink-0"
+                        style={{ background: "rgba(124,58,237,0.15)" }}
                       >
                         Copy Link
                       </button>
                     </div>
-                    <div className="bg-white p-2 rounded text-xs font-mono text-muted-foreground break-all hover:bg-blue-50 cursor-pointer"
-                         onClick={async () => {
-                           await navigator.clipboard.writeText(item.link);
-                           await showSuccess('Link copied to clipboard!');
-                         }}>
+                    <div className="px-4 py-2.5 text-xs font-mono text-white/30 break-all cursor-pointer hover:text-white/50 transition-colors"
+                      style={{ background: "rgba(0,0,0,0.15)" }}
+                      onClick={async () => { await navigator.clipboard.writeText(item.link); await showSuccess('Copied!'); }}
+                    >
                       {item.link}
                     </div>
                   </div>
@@ -827,36 +567,30 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
               </div>
 
               {/* Instructions */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 space-y-2">
-                <p className="text-sm font-semibold text-blue-900">📋 How to share:</p>
-                <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• Click &quot;Copy Link&quot; for individual candidates</li>
-                  <li>• Share the link via email, SMS, or messaging app</li>
-                  <li>• Candidates can submit their code from the submission page</li>
+              <div className="rounded-lg px-4 py-3 mb-6" style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.15)" }}>
+                <p className="text-xs font-medium text-white/60 mb-1.5">How to share</p>
+                <ul className="text-xs text-white/40 space-y-1">
+                  <li>• Click &quot;Copy Link&quot; and send via email, SMS, or messaging</li>
+                  <li>• Candidates submit their solutions from the link</li>
                   <li>• Submissions are automatically evaluated</li>
                 </ul>
               </div>
 
               {/* Footer */}
               <div className="flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
-                  Redirecting to Evaluations in a few seconds...
-                </div>
-                <Button
-                  onClick={() => {
-                    router.push(`/sig-hire/evaluations?assignment_id=${jobId}&session_id=${sessionId}`);
-                  }}
-                  variant="default"
-                  size="sm"
+                <p className="text-xs text-white/30">Redirecting to Evaluations...</p>
+                <button
+                  onClick={() => router.push(`/sig-hire/evaluations?assignment_id=${jobId}&session_id=${sessionId}`)}
+                  className="px-4 py-2 rounded-md text-sm font-medium text-white transition-colors"
+                  style={{ background: "rgba(124,58,237,0.25)", border: "1px solid rgba(124,58,237,0.35)" }}
                 >
-                  Go to Evaluations Now
-                </Button>
+                  Go to Evaluations →
+                </button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
-    </div>
     </>
-  )
+  );
 }

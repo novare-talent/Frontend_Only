@@ -647,7 +647,7 @@ const CARDS: Omit<BentoCardProps, "index">[] = [
 
 export function FeaturesSection() {
   return (
-    <section className="relative py-28 px-4 sm:px-6">
+    <section className="relative py-16 md:py-28 px-4 sm:px-6">
       <GlowOrb
         className="-top-20 -left-20"
         color="rgba(124,58,237,0.1)"

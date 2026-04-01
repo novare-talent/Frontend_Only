@@ -34,9 +34,16 @@ function RankingsContent() {
 
   if (!isHydrated) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-lavender)]"></div>
-      </div>
+      <main className="relative min-h-screen overflow-hidden">
+        <div className="fixed inset-0 pointer-events-none z-0">
+          <Particles className="absolute inset-0" quantity={100} ease={80} color="#8566ff" refresh />
+          <GlowOrb className="absolute bottom-0 left-1/4 -translate-x-1/2" color="rgba(124, 58, 237, 0.4)" size="1200px" parallaxIntensity={20} />
+          <GlowOrb className="absolute top-0 right-1/4 translate-x-1/2" color="rgba(124, 58, 237, 0.4)" size="1200px" parallaxIntensity={20} />
+        </div>
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="w-8 h-8 rounded-full border-2 border-[rgba(124,58,237,0.3)] border-t-[#7c3aed] animate-spin" />
+        </div>
+      </main>
     );
   }
 
@@ -86,7 +93,13 @@ function RankingsContent() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<div className="px-6 py-4"><div className="flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div></div>}>
+    <Suspense fallback={
+      <div className="relative min-h-screen overflow-hidden" style={{ background: "#0a0118" }}>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="w-8 h-8 rounded-full border-2 border-[rgba(124,58,237,0.3)] border-t-[#7c3aed] animate-spin" />
+        </div>
+      </div>
+    }>
       <RankingsContent />
     </Suspense>
   );
