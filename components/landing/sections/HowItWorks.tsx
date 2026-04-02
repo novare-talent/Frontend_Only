@@ -76,7 +76,7 @@ function BentoCard({
 }) {
   return (
     <div
-      className={`relative rounded-2xl overflow-hidden border border-white/[0.06] bg-white/[0.03] group cursor-default transition-all duration-150 hover:border-white/[0.12] hover:bg-white/[0.05] flex flex-col justify-end p-7 ${className}`}
+      className={`relative rounded-md overflow-hidden border border-white/[0.06] bg-white/[0.03] group cursor-default transition-all duration-150 hover:border-white/[0.12] hover:bg-white/[0.05] flex flex-col justify-end p-7 ${className}`}
     >
       {/* Background glow blob */}
       <div

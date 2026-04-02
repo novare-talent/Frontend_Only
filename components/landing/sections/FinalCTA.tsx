@@ -5,7 +5,7 @@ import { DotPattern } from "@/components/landing/ui/dot-pattern";
 
 export default function FinalCTA() {
   return (
-    <section id="cta" className="relative overflow-hidden border border-white/10 bg-black/80 backdrop-blur-sm rounded-2xl mx-auto max-w-6xl m-8" style={{background: 'radial-gradient(ellipse at top, rgba(124, 58, 237, 0.6) 0%, transparent 70%)'}} >
+    <section id="cta" className="relative overflow-hidden border border-white/10 bg-black/80 backdrop-blur-sm rounded-md mx-auto max-w-6xl m-8" style={{background: 'radial-gradient(ellipse at top, rgba(124, 58, 237, 0.6) 0%, transparent 70%)'}} >
       <DotPattern
         width={20}
         height={20}

@@ -19,7 +19,7 @@ function TestimonialCard({
   image?: string;
 }) {
   return (
-    <div className="glass rounded-2xl p-6 w-80 shrink-0">
+    <div className="glass rounded-md p-6 w-80 shrink-0">
 
       <Quote size={20} className="text-[var(--color-violet-accent)] opacity-40 mb-4" />
       <p className="text-sm text-white leading-relaxed mb-6 line-clamp-5">

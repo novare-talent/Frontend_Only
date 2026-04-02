@@ -69,7 +69,7 @@ export default function Zenhyre() {
               <StaggerItem key={card.title}>
                 <div
                   className={`
-                    relative rounded-2xl p-8 h-full flex flex-col overflow-hidden
+                    relative rounded-md p-8 h-full flex flex-col overflow-hidden
                     transition-all duration-500 group cursor-pointer
                     ${isDark
                       ? "bg-[var(--color-violet-accent)]/10 border border-[var(--color-violet-accent)]/20 hover:border-[var(--color-violet-accent)]/50 hover:bg-[var(--color-violet-accent)]/15"

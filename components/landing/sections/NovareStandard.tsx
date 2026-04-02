@@ -72,7 +72,7 @@ export default function NovareStandard() {
                         </div>
 
                         {/* Card */}
-                        <div className="flex-1 rounded-xl border border-white/5 bg-[rgba(15,15,30,0.4)] px-5 py-4 transition-all duration-300 group-hover:border-[rgba(124,58,237,0.2)] group-hover:bg-[rgba(124,58,237,0.04)] group-hover:shadow-[0_0_24px_rgba(124,58,237,0.06)]">
+                        <div className="flex-1 rounded-md border border-white/5 bg-[rgba(15,15,30,0.4)] px-5 py-4 transition-all duration-300 group-hover:border-[rgba(124,58,237,0.2)] group-hover:bg-[rgba(124,58,237,0.04)] group-hover:shadow-[0_0_24px_rgba(124,58,237,0.06)]">
                           <div className="flex items-center gap-2.5 mb-1.5">
                             <span className="text-[10px] font-sans text-[var(--color-violet-accent)] tracking-[0.15em]">
                               {step.step}
@@ -95,7 +95,7 @@ export default function NovareStandard() {
             {/* Certified badge */}
             <ScrollReveal delay={0.5}>
               <div className="relative ml-15 mt-2">
-                <div className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl border border-[rgba(124,58,237,0.3)] bg-[rgba(124,58,237,0.08)] shadow-[0_0_28px_rgba(124,58,237,0.12)]">
+                <div className="inline-flex items-center gap-3 px-4 py-2.5 rounded-sm border border-[rgba(124,58,237,0.3)] bg-[rgba(124,58,237,0.08)] shadow-[0_0_28px_rgba(124,58,237,0.12)]">
                   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--color-violet-accent)] to-[var(--color-indigo-accent)] flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(124,58,237,0.5)]">
                     <Shield size={14} className="text-white" />
                   </div>
@@ -123,7 +123,7 @@ export default function NovareStandard() {
                   loop
                   muted
                   playsInline
-                  className="w-full h-full object-cover rounded-xl"
+                  className="w-full h-full object-cover rounded-md"
                 />
                 {/* Bottom gradient fade */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-bg-primary)] via-transparent to-transparent opacity-40" />

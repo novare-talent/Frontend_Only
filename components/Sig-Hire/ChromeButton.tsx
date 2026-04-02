@@ -12,7 +12,7 @@ const ChromeButton = forwardRef<HTMLButtonElement, ChromeButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "relative px-1 py-1 rounded-md transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] cursor-pointer overflow-hidden",
+          "relative px-1 py-1 rounded-md transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] cursor-pointer overflow-hidden hover:scale-105",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           "active:scale-95",
           variant === "primary" &&

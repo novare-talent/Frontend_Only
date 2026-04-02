@@ -22,11 +22,11 @@ function FAQItem({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.5, delay: index * 0.05, ease: [0.25, 0.1, 0.25, 1] }}
-      className={`group relative glass rounded-xl overflow-hidden transition-all duration-300 cursor-pointer ${
+      className={`group relative glass rounded-md overflow-hidden transition-all duration-300 cursor-pointer ${
         isOpen 
           ? "border-[var(--color-violet-accent)]/50 shadow-[0_0_32px_rgba(124,58,237,0.15)] bg-gradient-to-br from-white/[0.08] to-white/[0.02]" 
           : "glass-hover"
