@@ -634,3 +634,126 @@ body {
 .button-secondary:active {
   transform: scale(0.95);
 }
+
+/* Gaming/Arena button variant - More flashy and gamified */
+.button-gaming {
+  --h-button: 48px;
+  --w-button: 140px;
+  --round: 0.75rem;
+  cursor: pointer;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: all 0.25s ease;
+  background: radial-gradient(
+      65.28% 65.28% at 50% 100%,
+      rgba(34, 211, 238, 0.9) 0%,
+      rgba(34, 211, 238, 0.4) 50%,
+      rgba(236, 72, 153, 0.6) 100%
+    ),
+    linear-gradient(135deg, #0ea5e9, #ec4899);
+  border-radius: var(--round);
+  border: 2px solid rgba(34, 211, 238, 0.6);
+  outline: none;
+  padding: 12px 18px;
+  box-shadow: 
+    0 0 20px rgba(34, 211, 238, 0.5),
+    0 0 40px rgba(236, 72, 153, 0.3),
+    inset 0 0 20px rgba(255, 255, 255, 0.1);
+  animation: gaming-pulse 2s ease-in-out infinite;
+}
+
+@keyframes gaming-pulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px rgba(34, 211, 238, 0.5),
+      0 0 40px rgba(236, 72, 153, 0.3),
+      inset 0 0 20px rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    box-shadow: 
+      0 0 30px rgba(34, 211, 238, 0.8),
+      0 0 60px rgba(236, 72, 153, 0.5),
+      inset 0 0 20px rgba(255, 255, 255, 0.2);
+  }
+}
+
+.button-gaming::before,
+.button-gaming::after {
+  content: "";
+  position: absolute;
+  inset: var(--space);
+  transition: all 0.5s ease-in-out;
+  border-radius: calc(var(--round) - var(--space));
+  z-index: 0;
+}
+
+.button-gaming::before {
+  --space: 1px;
+  background: linear-gradient(
+    177.95deg,
+    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+}
+
+.button-gaming::after {
+  --space: 2px;
+  background: radial-gradient(
+      65.28% 65.28% at 50% 100%,
+      rgba(34, 211, 238, 0.8) 0%,
+      rgba(236, 72, 153, 0.5) 100%
+    ),
+    linear-gradient(135deg, #0ea5e9, #ec4899);
+}
+
+.button-gaming:hover {
+  border-color: rgba(34, 211, 238, 0.9);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 
+    0 5px 25px rgba(34, 211, 238, 0.6),
+    0 10px 50px rgba(236, 72, 153, 0.4),
+    inset 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+.button-gaming:active {
+  transform: scale(0.95) translateY(0);
+}
+
+/* Enhanced points animation for gaming button */
+.button-gaming .points_wrapper .point {
+  animation: gaming-points infinite ease-in-out;
+}
+
+@keyframes gaming-points {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateY(-20px) scale(0.8);
+  }
+  85% {
+    opacity: 0;
+    transform: translateY(-55px) scale(0.3);
+  }
+  100% {
+    transform: translateY(-70px) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Beta badge styling */
+sup.beta {
+  font-size: 0.6em;
+  margin-left: -4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  display: inline-block;
+}

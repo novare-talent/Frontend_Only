@@ -6,7 +6,7 @@ interface GlowButtonProps {
   onClick?: () => void;
   className?: string;
   type?: 'button' | 'submit' | 'reset';
-  variant?: 'primary' | 'secondary';
+  variant?: 'primary' | 'secondary' | 'gaming';
   disabled?: boolean;
 }
 
@@ -25,7 +25,7 @@ export default function GlowButton({ children, href, onClick, className = '', ty
   );
 
   const buttonClasses = `
-    ${variant === 'secondary' ? 'button-secondary' : 'button'} relative inline-flex items-center justify-center 
+    ${variant === 'secondary' ? 'button-secondary' : variant === 'gaming' ? 'button-gaming' : 'button'} relative inline-flex items-center justify-center 
     cursor-pointer overflow-hidden transition-all duration-300 ease-out
     active:scale-95 ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}
   `.trim();
