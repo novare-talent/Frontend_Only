@@ -111,7 +111,7 @@ export default function IITPlacementsHub() {
         parallaxIntensity={25}
         parallaxInvert
       />
-      <Navbar />
+      <Navbar simplified />
 
       {/* JSON-LD */}
       <script
@@ -161,7 +161,7 @@ export default function IITPlacementsHub() {
             </p>
           </ScrollReveal>
           <ScrollReveal delay={0.3}>
-            <div className="mt-8 flex flex-col sm:flex-row gap-4">
+            <div className="mt-8 flex flex-col sm:flex-row gap-4 items-center justify-start">
               <a
                 href="#comparison-table"
                 className="glow-button text-white font-medium px-8 py-3.5 rounded-full inline-flex items-center gap-2"
@@ -169,12 +169,21 @@ export default function IITPlacementsHub() {
                 Compare All 23 IITs
                 <BarChart3 size={18} />
               </a>
-              <a
-                href="/Dashboard"
-                className="rounded-full px-8 py-3.5 border border-[var(--color-violet-accent)]/30 text-[var(--color-violet-accent)] hover:bg-[var(--color-violet-accent)]/10 transition-all duration-300 font-medium inline-flex items-center gap-2"
-              >
-                Hire IIT Talent
-              </a>
+              <div className="flex items-center gap-4">
+                <a
+                  href="/sign-up?role=recruiter"
+                  className="rounded-full px-8 py-3.5 border border-[var(--color-violet-accent)]/30 text-[var(--color-violet-accent)] hover:bg-[var(--color-violet-accent)]/10 transition-all duration-300 font-medium inline-flex items-center gap-2"
+                >
+                  Hire IIT Talent
+                </a>
+                <span className="text-[var(--color-lavender)] font-medium">or</span>
+                <a
+                  href="/sign-up"
+                  className="rounded-full px-8 py-3.5 border border-[var(--color-violet-accent)]/30 text-[var(--color-violet-accent)] hover:bg-[var(--color-violet-accent)]/10 transition-all duration-300 font-medium inline-flex items-center gap-2"
+                >
+                  Get Hired
+                </a>
+              </div>
             </div>
           </ScrollReveal>
         </div>

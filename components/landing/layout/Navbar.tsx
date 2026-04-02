@@ -10,7 +10,11 @@ import { NAV_LINKS, SOCIAL_LINKS } from "@/lib/constants";
 import GlowButton from "@/components/landing/ui/GlowButton";
 import { createClient } from "@/utils/supabase/client";
 
-export default function Navbar() {
+interface NavbarProps {
+  simplified?: boolean;
+}
+
+export default function Navbar({ simplified = false }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const router = useRouter();
 
@@ -46,25 +50,45 @@ export default function Navbar() {
       </motion.div>
 
       {/* Floating Glass Nav — center */}
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1], delay: 0.05 }}
-        className="fixed top-5 left-1/2 -translate-x-1/2 z-40 hidden lg:flex"
-      >
-        <nav className="flex items-center gap-1 px-4 h-14 rounded-full glass backdrop-blur-lg border border-white/10">
-        
-          {NAV_LINKS.map((link) => (
+      {!simplified && (
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1], delay: 0.05 }}
+          className="fixed top-5 left-1/2 -translate-x-1/2 z-40 hidden lg:flex"
+        >
+          <nav className="flex items-center gap-1 px-4 h-14 rounded-full glass backdrop-blur-lg border border-white/10">
+          
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="text-sm text-white hover:text-white/80 transition-colors duration-200 px-3 py-1.5 rounded-full hover:bg-white/5 whitespace-nowrap"
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+        </motion.div>
+      )}
+      
+      {simplified && (
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1], delay: 0.05 }}
+          className="fixed top-5 left-1/2 -translate-x-1/2 z-40 hidden lg:flex"
+        >
+          <nav className="flex items-center gap-1 px-4 h-14 rounded-full glass backdrop-blur-lg border border-white/10">
             <a
-              key={link.href}
-              href={link.href}
+              href="/"
               className="text-sm text-white hover:text-white/80 transition-colors duration-200 px-3 py-1.5 rounded-full hover:bg-white/5 whitespace-nowrap"
             >
-              {link.label}
+              Home
             </a>
-          ))}
-        </nav>
-      </motion.div>
+          </nav>
+        </motion.div>
+      )}
 
       {/* Floating Right — socials + apply */}
       <motion.div
@@ -125,19 +149,37 @@ export default function Navbar() {
             className="fixed inset-0 z-30 bg-[var(--color-bg-primary)]/95 backdrop-blur-xl lg:hidden"
           >
             <div className="flex flex-col items-center justify-center h-full gap-8">
-              {NAV_LINKS.map((link, i) => (
+              {!simplified && (
+                <>
+                  {NAV_LINKS.map((link, i) => (
+                    <motion.a
+                      key={link.href}
+                      href={link.href}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      onClick={() => setMobileOpen(false)}
+                      className="text-2xl font-medium text-white hover:text-[var(--color-lavender)] transition-colors"
+                    >
+                      {link.label}
+                    </motion.a>
+                  ))}
+                </>
+              )}
+              
+              {simplified && (
                 <motion.a
-                  key={link.href}
-                  href={link.href}
+                  href="/"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
+                  transition={{ delay: 0 }}
                   onClick={() => setMobileOpen(false)}
                   className="text-2xl font-medium text-white hover:text-[var(--color-lavender)] transition-colors"
                 >
-                  {link.label}
+                  Home
                 </motion.a>
-              ))}
+              )}
+              
               <a href="https://arena.novaretalent.com" target="_blank" rel="noopener noreferrer">
                 <GlowButton variant="gaming">
                   Try ArenaX<sup className="beta">beta</sup>
