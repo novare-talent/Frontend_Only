@@ -541,7 +541,7 @@ export function HowItWorksSection() {
         {/* ── Mobile < md ── */}
         <div className="lg:hidden flex flex-col gap-5">
           <div className="flex items-center justify-center px-2">
-            <SectionHeader tag="Process" title="How" titleAccent="Sighyre works"
+            <SectionHeader title="How" titleAccent="Sighyre works"
               description="No complex setup. No training required. Upload and let Sighyre do the heavy lifting." />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -566,7 +566,7 @@ export function HowItWorksSection() {
               {Array.from({ length:4 }).map((_,i) => <EmptyCard key={`t${i}`} />)}
             </div>
             <div className="absolute inset-0 z-30 flex items-center justify-center px-4">
-              <SectionHeader tag="Process" title="How" titleAccent="Sighyre works"
+              <SectionHeader title="How" titleAccent="Sighyre works"
                 description="No complex setup. No training required. Upload and let Sighyre do the heavy lifting." />
             </div>
           </div>

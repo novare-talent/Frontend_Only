@@ -131,7 +131,13 @@ export default function Hero() {
         </motion.div>
       </motion.div> */}
 
-            <SocialProofBar />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 1.1 }}
+      >
+        <SocialProofBar />
+      </motion.div>
 
       {/* Bottom fade overlay */}
       <div className="absolute bottom-0 left-0 right-0 h-20 bg-linear-to-t from-bg-primary to-transparent pointer-events-none" />

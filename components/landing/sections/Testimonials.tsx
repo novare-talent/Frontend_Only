@@ -68,7 +68,7 @@ export default function Testimonials() {
       <div className="section-padding">
 
         <SectionHeader
-          tag="Testimonials"
+          // tag="Testimonials"
           title="Trusted by those who"
           titleAccent="matter most"
         />

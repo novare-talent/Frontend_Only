@@ -36,7 +36,7 @@ export default function WhyTheOnePercent() {
 
       <div className="section-padding relative z-10">
         <SectionHeader
-          tag="Why Novare"
+          // tag="Why Novare"
           title="From thousands, we find"
           titleAccent="the few."
           description="Most platforms give you volume. We give you precision."

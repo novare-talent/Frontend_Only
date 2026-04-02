@@ -37,7 +37,7 @@ export default function HowItWorks() {
       />
       <div className="section-padding relative z-10">
         <SectionHeader
-          tag="How It Works"
+          // tag="How It Works"
           title="How Novare finds"
           titleAccent="the top 1%"
           description="A rigorous, human-driven process that delivers quality over quantity."

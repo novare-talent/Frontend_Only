@@ -37,7 +37,7 @@ export default function Navbar({ simplified = false }: NavbarProps) {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-        className="fixed top-5 left-6 z-40 hidden lg:flex h-14 items-center"
+        className="fixed top-5 left-6 z-40 hidden xl:flex h-14 items-center"
       >
         <Link href="/" className="flex items-center gap-2">
           <Image
@@ -55,10 +55,10 @@ export default function Navbar({ simplified = false }: NavbarProps) {
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1], delay: 0.05 }}
-          className="fixed top-5 left-1/2 -translate-x-1/2 z-40 hidden lg:flex"
+          className="fixed top-5 left-1/2 -translate-x-1/2 z-40 hidden xl:flex"
         >
           <nav className="flex items-center gap-1 px-4 h-14 rounded-full glass backdrop-blur-lg border border-white/10">
-          
+
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
@@ -77,7 +77,7 @@ export default function Navbar({ simplified = false }: NavbarProps) {
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1], delay: 0.05 }}
-          className="fixed top-5 left-1/2 -translate-x-1/2 z-40 hidden lg:flex"
+          className="fixed top-5 left-1/2 -translate-x-1/2 z-40 hidden xl:flex"
         >
           <nav className="flex items-center gap-1 px-4 h-14 rounded-full glass backdrop-blur-lg border border-white/10">
             <Link
@@ -95,7 +95,7 @@ export default function Navbar({ simplified = false }: NavbarProps) {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1], delay: 0.1 }}
-        className="fixed top-5 right-6 z-40 hidden lg:flex items-center gap-3 h-14"
+        className="fixed top-5 right-6 z-40 hidden xl:flex items-center gap-3 h-14"
       >
         <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className="text-white hover:text-white/80 transition-colors">
           <Instagram size={18} />
@@ -122,7 +122,7 @@ export default function Navbar({ simplified = false }: NavbarProps) {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-        className="fixed top-5 left-4 right-4 z-40 lg:hidden"
+        className="fixed top-5 left-4 right-4 z-40 xl:hidden"
       >
         <div className="flex items-center justify-between px-6 h-14 rounded-full glass border border-white/10 shadow-lg">
           <a href="#" className="flex items-center gap-2">
@@ -146,7 +146,7 @@ export default function Navbar({ simplified = false }: NavbarProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-30 bg-[var(--color-bg-primary)]/95 backdrop-blur-xl lg:hidden"
+            className="fixed inset-0 z-30 bg-[var(--color-bg-primary)]/95 backdrop-blur-xl xl:hidden"
           >
             <div className="flex flex-col items-center justify-center h-full gap-8">
               {!simplified && (

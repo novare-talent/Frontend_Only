@@ -31,7 +31,7 @@ export default function NovareStandard() {
 
       <div className="section-padding">
         <SectionHeader
-          tag="The Novare Standard"
+          // tag="The Novare Standard"
           title="Rigorous by design,"
           titleAccent="elite by outcome."
           description="Every candidate passes a multi-stage evaluation before reaching your pipeline."

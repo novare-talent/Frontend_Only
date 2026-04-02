@@ -13,7 +13,6 @@ export function TestimonialsSection() {
       <GlowOrb className="bottom-0 left-0" color="rgba(99,102,241,0.07)" size="600px" parallaxIntensity={20} />
       <div className="max-w-6xl mx-auto">
         <SectionHeader
-          tag="Social Proof"
           title="Teams hiring smarter"
           titleAccent="with Sighyre"
         />

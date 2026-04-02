@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import { FileText, CheckCircle, EyeOff } from "lucide-react";
 import GlowOrb from "@/components/landing/effects/GlowOrb";
+import { Particles } from "@/components/ui/particles";
+import SectionHeader from "@/components/landing/ui/SectionHeader";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DESIGN TOKENS — same palette as HowItWorks
@@ -49,6 +51,7 @@ function RankingIllustration() {
 
   return (
     <div className="mt-5 space-y-2.5">
+    
       {/* Query bubble */}
       <motion.div
         initial={{ opacity: 0, y: 5 }}
@@ -538,6 +541,14 @@ function BentoCard({ title, desc, colSpan, index, visual }: BentoCardProps) {
         className="absolute inset-0 pointer-events-none"
         style={{ background: "radial-gradient(ellipse at 0% 0%, rgba(139,92,246,0.10) 0%, transparent 60%)" }}
       />
+              {/* Particles effect */}
+            <Particles
+              className="absolute inset-0"
+              quantity={10}
+              ease={80}
+              color="#fff"
+              refresh
+            />
       {/* Hover border */}
       <motion.div
         className="absolute inset-0 pointer-events-none rounded-sm"
@@ -626,50 +637,12 @@ export function FeaturesSection() {
       <GlowOrb className="-bottom-20 -right-20" color="rgba(99,102,241,0.08)" size="600px" parallaxIntensity={15} parallaxInvert />
 
       <div className="max-w-5xl mx-auto">
-
-        {/* ── Section heading ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="mb-14"
-        >
-          {/* Tag */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-5"
-            style={{ background: T.surface, border: `1px solid ${T.border}` }}>
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: T.p200 }} />
-            <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: T.p200 }}>
-              Capabilities
-            </span>
-          </div>
-
-          {/* Heading */}
-          <h2
-            className="font-bold leading-[1.1] tracking-tight mb-4"
-            style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", color: T.text }}
-          >
-            Everything you need to{" "}
-            <br className="hidden sm:block" />
-            shortlist{" "}
-            <span style={{
-              background: "linear-gradient(90deg, #a78bfa, #818cf8)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}>
-              better candidates
-            </span>
-          </h2>
-
-          {/* Description */}
-          <p
-            className="max-w-xl text-base md:text-lg leading-relaxed"
-            style={{ color: T.textDim }}
-          >
-            Every feature is designed to turn resume chaos into confident,
-            defensible hiring decisions.
-          </p>
-        </motion.div>
+        <SectionHeader
+          // tag="Capabilities"
+          title="Everything you need to shortlist"
+          titleAccent="better candidates"
+          description="Every feature is designed to turn resume chaos into confident, defensible hiring decisions."
+        />
 
         {/* ── Bento Grid ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">

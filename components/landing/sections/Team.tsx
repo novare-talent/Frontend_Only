@@ -20,14 +20,14 @@ export default function Team() {
       <div className="section-padding relative z-10">
         {/* Editorial left-aligned header */}
         <div className="mb-14 md:mb-20 max-w-xl">
-          <ScrollReveal>
+          {/* <ScrollReveal>
             <div className="flex items-center gap-3 mb-5">
               <div className="w-8 h-px bg-violet-accent" />
               <span className="text-[11px] tracking-[0.25em] uppercase text-violet-accent font-medium">
                 The Team
               </span>
             </div>
-          </ScrollReveal>
+          </ScrollReveal> */}
 
           <ScrollReveal delay={0.1}>
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.05]">
