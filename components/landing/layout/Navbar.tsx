@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Instagram } from "lucide-react";
 import Image from "next/image";
@@ -80,12 +80,12 @@ export default function Navbar({ simplified = false }: NavbarProps) {
           className="fixed top-5 left-1/2 -translate-x-1/2 z-40 hidden lg:flex"
         >
           <nav className="flex items-center gap-1 px-4 h-14 rounded-full glass backdrop-blur-lg border border-white/10">
-            <a
+            <Link
               href="/"
               className="text-sm text-white hover:text-white/80 transition-colors duration-200 px-3 py-1.5 rounded-full hover:bg-white/5 whitespace-nowrap"
             >
               Home
-            </a>
+            </Link>
           </nav>
         </motion.div>
       )}
@@ -168,16 +168,20 @@ export default function Navbar({ simplified = false }: NavbarProps) {
               )}
               
               {simplified && (
-                <motion.a
-                  href="/"
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0 }}
-                  onClick={() => setMobileOpen(false)}
-                  className="text-2xl font-medium text-white hover:text-[var(--color-lavender)] transition-colors"
+                  asChild
                 >
-                  Home
-                </motion.a>
+                  <Link
+                    href="/"
+                    onClick={() => setMobileOpen(false)}
+                    className="text-2xl font-medium text-white hover:text-[var(--color-lavender)] transition-colors"
+                  >
+                    Home
+                  </Link>
+                </motion.div>
               )}
               
               <a href="https://arena.novaretalent.com" target="_blank" rel="noopener noreferrer">
