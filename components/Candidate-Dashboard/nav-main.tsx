@@ -18,6 +18,9 @@ export function NavMain({
     title: string;
     url: string;
     icon?: LucideIcon | any;
+    external?: boolean;
+    gradient?: boolean;
+    badge?: string;
   }[];
   pathname: string;
 }) {
@@ -37,6 +40,25 @@ export function NavMain({
       <SidebarMenu>
         {items.map((item) => {
           const isActive = pathname === item.url;
+          const isExternal = item.external;
+          const hasGradient = item.gradient;
+
+          if (isExternal) {
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton 
+                  asChild 
+                  className={hasGradient ? "bg-gradient-to-r from-blue-500/80 via-purple-500/80 to-pink-500/80 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white hover:text-white active:bg-gradient-to-r active:from-blue-700 active:via-purple-700 active:to-pink-700 active:text-white" : ""}
+                >
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="cursor-pointer">
+                    {item.icon && <item.icon />}
+                    <span>{item.title}{item.badge ? <sup className="text-xs ml-1">{item.badge}</sup> : ""}</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          }
+
           return (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild isActive={isActive}>
