@@ -168,20 +168,13 @@ export default function Navbar({ simplified = false }: NavbarProps) {
               )}
               
               {simplified && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0 }}
-                  asChild
+                <Link
+                  href="/"
+                  onClick={() => setMobileOpen(false)}
+                  className="text-2xl font-medium text-white hover:text-[var(--color-lavender)] transition-colors"
                 >
-                  <Link
-                    href="/"
-                    onClick={() => setMobileOpen(false)}
-                    className="text-2xl font-medium text-white hover:text-[var(--color-lavender)] transition-colors"
-                  >
-                    Home
-                  </Link>
-                </motion.div>
+                  Home
+                </Link>
               )}
               
               <a href="https://arena.novaretalent.com" target="_blank" rel="noopener noreferrer">
