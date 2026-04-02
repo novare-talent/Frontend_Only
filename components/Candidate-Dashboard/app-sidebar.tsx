@@ -5,6 +5,8 @@ import {
   IconDashboard,
   IconFileDescription,
   IconListDetails,
+  IconTrendingUp,
+  IconSparkles,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/Candidate-Dashboard/nav-main";
@@ -13,6 +15,7 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -115,6 +118,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarContent>
         <NavMain items={data.navMain} pathname={pathname} /> {/* Pass pathname */}
+        
+        {/* IIT Placements & Try ArenaX Section */}
+        <SidebarGroup className="mt-4">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/iit-placements" className="cursor-pointer">
+                  <IconTrendingUp />
+                  <span>IIT Placements</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild className="bg-gradient-to-r from-blue-500/80 via-purple-500/80 to-pink-500/80 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white hover:text-white active:bg-gradient-to-r active:from-blue-700 active:via-purple-700 active:to-pink-700 active:text-white">
+                <a href="https://arena.novaretalent.com" target="_blank" rel="noopener noreferrer" className="cursor-pointer">
+                  <IconSparkles />
+                  <span>Try ArenaX<sup className="text-xs ml-1">beta</sup></span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter suppressHydrationWarning>
