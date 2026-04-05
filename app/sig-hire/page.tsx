@@ -87,7 +87,7 @@ function HomePageContent() {
 
       {/* Guide Button - Fixed position */}
       <div className="fixed bottom-6 right-6 z-50">
-        <GuideButton onClick={startTour} />
+        <GuideButton className="cursor-pointer" onClick={startTour} />
       </div>
 
       {/* Global styles */}

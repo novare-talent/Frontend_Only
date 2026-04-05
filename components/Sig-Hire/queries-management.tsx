@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { X, ChevronDown } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { removeQuery } from '@/lib/ranking-api';
 import { createClient } from '@/utils/supabase/client';
 import { showError } from '@/lib/swal';
@@ -126,28 +125,60 @@ export function QueriesManagement({
         <button
           onClick={() => setIsOpen(!isOpen)}
           disabled={isLoading || isLoadingQueries}
-          className="w-full px-4 py-2 bg-card border border-border rounded-lg hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between text-left transition-colors"
+          className="w-full px-4 py-2 rounded-lg flex items-center justify-between text-left transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          style={{
+            background: "rgba(0,0,0,0.25)",
+            border: "1px solid rgba(255,255,255,0.07)",
+          }}
+          onMouseEnter={(e) => {
+            if (!isLoading && !isLoadingQueries) {
+              e.currentTarget.style.borderColor = "rgba(124,58,237,0.3)";
+              e.currentTarget.style.background = "rgba(255,255,255,0.02)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)";
+            e.currentTarget.style.background = "rgba(0,0,0,0.25)";
+          }}
         >
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-muted-foreground">Queries:</span>
+            <span className="text-sm font-semibold text-white/60">Queries:</span>
             {hasQueries && (
-              <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+              <span 
+                className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium"
+                style={{
+                  background: "rgba(124,58,237,0.15)",
+                  border: "1px solid rgba(124,58,237,0.25)",
+                  color: "var(--color-lavender)"
+                }}
+              >
                 {queries.length}
-              </Badge>
+              </span>
             )}
             {!hasQueries && (
-              <span className="text-sm text-muted-foreground">No queries applied</span>
+              <span className="text-sm text-white/40">No queries applied</span>
             )}
           </div>
           <ChevronDown
             size={18}
-            className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            className="transition-transform"
+            style={{
+              transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+              color: 'rgba(255,255,255,0.5)'
+            }}
           />
         </button>
 
         {/* Dropdown Menu */}
         {isOpen && hasQueries && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+          <div 
+            className="absolute top-full left-0 right-0 mt-2 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto backdrop-blur-xl"
+            style={{
+              background: "rgba(10,1,24,0.95)",
+              border: "1px solid rgba(124,58,237,0.2)",
+              boxShadow: "0 8px 32px rgba(124,58,237,0.15)"
+            }}
+          >
             <div className="space-y-2 p-3">
               {queries.map((query) => {
                 const isRemoving = removingQueryId === query.id;
@@ -155,31 +186,70 @@ export function QueriesManagement({
                 return (
                   <div
                     key={query.id}
-                    className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors group"
+                    className="relative flex items-center gap-3 p-4 rounded-lg transition-all group overflow-hidden"
+                    style={{
+                      background: "rgba(124,58,237,0.08)",
+                      border: "1px solid rgba(124,58,237,0.2)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "rgba(124,58,237,0.12)";
+                      e.currentTarget.style.borderColor = "rgba(124,58,237,0.4)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "rgba(124,58,237,0.08)";
+                      e.currentTarget.style.borderColor = "rgba(124,58,237,0.2)";
+                    }}
                   >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate text-foreground">
+                    {/* Subtle gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--color-lavender)]/5 to-transparent pointer-events-none" />
+                    
+                    <div className="relative flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white/90 mb-1">
                         {query.text}
                       </p>
                       {query.intent && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Intent: <span className="font-semibold">{query.intent}</span>
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-white/40">Intent:</span>
+                          <span 
+                            className="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium"
+                            style={{
+                              background: "rgba(124,58,237,0.2)",
+                              border: "1px solid rgba(124,58,237,0.3)",
+                              color: "var(--color-lavender)"
+                            }}
+                          >
+                            {query.intent}
+                          </span>
+                        </div>
                       )}
                     </div>
                     <button
                       onClick={() => handleRemoveQuery(query.id, query.text)}
                       disabled={isRemoving}
-                      className="p-2 hover:bg-red-50 dark:hover:bg-red-950 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                      className="relative p-2 rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 cursor-pointer"
+                      style={{
+                        background: "rgba(239,68,68,0.1)",
+                        border: "1px solid rgba(239,68,68,0.2)",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isRemoving) {
+                          e.currentTarget.style.background = "rgba(239,68,68,0.2)";
+                          e.currentTarget.style.borderColor = "rgba(239,68,68,0.4)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "rgba(239,68,68,0.1)";
+                        e.currentTarget.style.borderColor = "rgba(239,68,68,0.2)";
+                      }}
                       title="Remove this query"
                       aria-label="Remove query"
                     >
                       {isRemoving ? (
                         <div className="animate-spin">
-                          <X size={16} className="text-red-600" />
+                          <X size={16} style={{ color: "rgb(252,165,165)" }} />
                         </div>
                       ) : (
-                        <X size={16} className="text-red-600 hover:text-red-700" />
+                        <X size={16} className="cursor-pointer" style={{ color: "rgb(252,165,165)" }} />
                       )}
                     </button>
                   </div>
@@ -192,7 +262,7 @@ export function QueriesManagement({
 
       {/* Empty State */}
       {!hasQueries && (
-        <p className="text-xs text-muted-foreground mt-2">
+        <p className="text-xs text-white/40 mt-2">
           Submit queries using the Ranking Bot to see them here
         </p>
       )}

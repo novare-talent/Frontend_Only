@@ -107,10 +107,10 @@ export function Navbar() {
         }}
       >
         <div className={cn(
-          "flex items-center justify-between w-full h-16 px-6 rounded-md backdrop-blur-lg border",
+          "flex items-center justify-between w-full h-16 px-6 rounded-md  border",
           "transition-all duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]",
           scrolled 
-            ? "bg-white-950/80 border-white/20 shadow-[0_0_24px_rgba(34,42,53,0.06),0_1px_1px_rgba(0,0,0,0.05),0_0_0_1px_rgba(34,42,53,0.04),0_0_4px_rgba(34,42,53,0.08),0_16px_68px_rgba(47,48,55,0.05),0_1px_0_rgba(255,255,255,0.1)_inset]"
+            ? "bg-white-950/80 border-white/20 shadow-[0_0_24px_rgba(34,42,53,0.06),0_1px_1px_rgba(0,0,0,0.05),0_0_0_1px_rgba(34,42,53,0.04),0_0_4px_rgba(34,42,53,0.08),0_16px_68px_rgba(47,48,55,0.05),0_1px_0_rgba(255,255,255,0.1)_inset] backdrop-blur-lg"
             : "border-transparent"
         )}>
           {/* Logo - Fixed Width */}
@@ -184,10 +184,10 @@ export function Navbar() {
         }}
       >
         <div className={cn(
-          "flex items-center justify-between px-4 sm:px-6 h-14 rounded-md border backdrop-blur-lg",
+          "flex items-center justify-between px-4 sm:px-6 h-14 rounded-md border ",
           "transition-all duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]",
           scrolled || mobileOpen
-            ? "bg-white-950/80 border-white/20 shadow-[0_0_24px_rgba(34,42,53,0.06),0_1px_1px_rgba(0,0,0,0.05),0_0_0_1px_rgba(34,42,53,0.04),0_0_4px_rgba(34,42,53,0.08),0_16px_68px_rgba(47,48,55,0.05),0_1px_0_rgba(255,255,255,0.1)_inset]"
+            ? "bg-white-950/80 border-white/20 shadow-[0_0_24px_rgba(34,42,53,0.06),0_1px_1px_rgba(0,0,0,0.05),0_0_0_1px_rgba(34,42,53,0.04),0_0_4px_rgba(34,42,53,0.08),0_16px_68px_rgba(47,48,55,0.05),0_1px_0_rgba(255,255,255,0.1)_inset] backdrop-blur-lg"
             : "border-transparent"
         )}>
           <Link href="/sig-hire" className="flex items-center gap-2">
