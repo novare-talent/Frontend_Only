@@ -1,11 +1,10 @@
 "use client"
 
 import { useState, useEffect, useCallback } from 'react';
-import { Loader, AlertCircle, CheckCircle, AlertTriangle, X } from 'lucide-react';
+import { Loader, AlertCircle, CheckCircle, AlertTriangle, X, FileText, Users, Award } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import ChromeButton from '@/components/Sig-Hire/ChromeButton';
 
 interface EvaluationTableProps {
   jobId?: string;
@@ -42,6 +41,36 @@ interface AIPlagiarismReport {
   red_flags: string[];
   confidence: string;
   explanation: string;
+}
+
+// Reusable GlassCard component
+function GlassCard({ children, className = "", ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={`relative overflow-hidden rounded-md border border-glass-border bg-glass-bg backdrop-blur-xl ${className}`}
+      {...props}
+    >
+      <div className="absolute inset-0 bg-linear-to-t from-lavender/10 via-transparent to-transparent pointer-events-none" />
+      {children}
+    </div>
+  );
+}
+
+function CardHead({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+  return (
+    <div className="relative z-10 p-6 pb-4 flex items-center gap-3 border-b border-white/5">
+      <div
+        className="w-9 h-9 rounded-md flex items-center justify-center shrink-0"
+        style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.25)" }}
+      >
+        {icon}
+      </div>
+      <div>
+        <h3 className="text-base font-semibold text-white leading-tight">{title}</h3>
+        <p className="text-xs text-white/40 mt-0.5">{description}</p>
+      </div>
+    </div>
+  );
 }
 
 export function AssignmentEvaluationScreen({ jobId }: EvaluationTableProps) {
@@ -255,161 +284,162 @@ export function AssignmentEvaluationScreen({ jobId }: EvaluationTableProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6">
-        {/* LEFT: Loading skeleton */}
-        <div className="space-y-4">
-          <div>
-            <h2 className="text-2xl font-semibold text-primary mb-1">Submissions</h2>
-            <p className="text-muted-foreground text-sm">Loading...</p>
+        <GlassCard>
+          <div className="relative z-10 p-6 space-y-4">
+            <div className="h-8 bg-white/5 rounded animate-pulse" />
+            <div className="space-y-2">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-20 bg-white/5 rounded-lg animate-pulse" />
+              ))}
+            </div>
           </div>
-          <div className="space-y-2">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-20 bg-muted rounded-lg animate-pulse" />
-            ))}
+        </GlassCard>
+        <GlassCard>
+          <div className="relative z-10 p-6 space-y-4">
+            <div className="h-32 bg-white/5 rounded-lg animate-pulse" />
+            <div className="h-64 bg-white/5 rounded-lg animate-pulse" />
           </div>
-        </div>
-        {/* RIGHT: Loading skeleton */}
-        <div className="space-y-4">
-          <div className="h-32 bg-muted rounded-lg animate-pulse" />
-          <div className="h-64 bg-muted rounded-lg animate-pulse" />
-        </div>
+        </GlassCard>
       </div>
     );
   }
 
   if (candidates.length === 0) {
     return (
-      <Card className="border-yellow-200 bg-yellow-50">
-        <CardContent className="pt-6">
-          <p className="text-yellow-900">No candidates found for this job.</p>
-        </CardContent>
-      </Card>
+      <GlassCard>
+        <div className="relative z-10 p-6 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-yellow-400 shrink-0" />
+          <p className="text-white/70">No candidates found for this job.</p>
+        </div>
+      </GlassCard>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Job Evaluation Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-semibold text-primary">Job Evaluations</h1>
-          {allEvaluated && (
-            <span className="bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-full">
-              ✓ ALL EVALUATED ({evaluatedCount}/{candidates.length})
-            </span>
-          )}
-          {!allEvaluated && evaluatedCount > 0 && (
-            <span className="bg-yellow-100 text-yellow-800 text-sm font-semibold px-3 py-1 rounded-full">
-              In Progress ({evaluatedCount}/{candidates.length})
-            </span>
-          )}
-        </div>
-        <Button
-          onClick={handleEvaluateAll}
-          disabled={evaluatingAllCandidates}
-          className="gap-2"
-          variant={allEvaluated ? "outline" : "default"}
-        >
-          {evaluatingAllCandidates ? (
-            <>
-              <Loader className="w-4 h-4 animate-spin" />
-              Evaluating...
-            </>
-          ) : (
-            allEvaluated ? "Re-Evaluate All" : "Evaluate All Candidates"
-          )}
-        </Button>
-      </div>
-
-      {/* Progress bar during evaluation */}
-      {evaluatingAllCandidates && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs text-primary">
-            <span>Evaluating all candidates…</span>
-            <span>{Math.round(progress)}%</span>
+      {/* Header with Evaluate All Button */}
+      <GlassCard>
+        <div className="relative z-10 p-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-md flex items-center justify-center" style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.25)" }}>
+              <Award className="w-5 h-5" style={{ color: "var(--color-lavender)" }} />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-white">Job Evaluations</h2>
+              <p className="text-xs text-white/40 mt-0.5">
+                {evaluatedCount}/{candidates.length} evaluated
+              </p>
+            </div>
+            {allEvaluated && (
+              <span className="ml-3 px-3 py-1 rounded-full text-xs font-semibold" style={{ background: "rgba(16,185,129,0.15)", color: "rgb(16,185,129)", border: "1px solid rgba(16,185,129,0.3)" }}>
+                ✓ ALL EVALUATED
+              </span>
+            )}
           </div>
-          <Progress value={progress} className="h-2" />
+          <ChromeButton
+            onClick={handleEvaluateAll}
+            disabled={evaluatingAllCandidates}
+            className="flex items-center gap-2"
+          >
+            {evaluatingAllCandidates ? (
+              <><Loader className="w-4 h-4 animate-spin" />Evaluating...</>
+            ) : (
+              allEvaluated ? "Re-Evaluate All" : "Evaluate All Candidates"
+            )}
+          </ChromeButton>
         </div>
+
+        {/* Progress bar */}
+        {evaluatingAllCandidates && (
+          <div className="relative z-10 px-6 pb-6">
+            <div className="flex items-center justify-between text-xs text-white/60 mb-2">
+              <span>Evaluating all candidates…</span>
+              <span>{Math.round(progress)}%</span>
+            </div>
+            <Progress value={progress} className="h-2" />
+          </div>
+        )}
+      </GlassCard>
+
+      {/* Error Banner */}
+      {error && (
+        <GlassCard>
+          <div className="relative z-10 p-6 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
+            <div>
+              <p className="font-semibold text-white">Error</p>
+              <p className="text-sm text-white/60">{error}</p>
+            </div>
+          </div>
+        </GlassCard>
       )}
 
       {/* Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6">
         {/* LEFT: Candidates List */}
-        <div className="space-y-4">
-          <div>
-            <h2 className="text-2xl font-semibold text-primary mb-1">Submissions</h2>
-            <p className="text-muted-foreground text-sm">
-              {candidates.length} candidate{candidates.length !== 1 ? 's' : ''} total | 
-              {submissions.size > 0 ? ` ${submissions.size} submitted` : ' No submissions yet'} | 
-              {evaluatedCount > 0 ? ` ${evaluatedCount} evaluated` : ' Not evaluated yet'}
-            </p>
-          </div>
+        <GlassCard className="flex flex-col">
+          <CardHead
+            icon={<Users className="w-4 h-4" style={{ color: "var(--color-lavender)" }} />}
+            title="Submissions"
+            description={`${candidates.length} candidate${candidates.length !== 1 ? 's' : ''} | ${submissions.size} submitted | ${evaluatedCount} evaluated`}
+          />
 
-        {error && (
-          <Card className="border-red-200 bg-red-50">
-            <CardContent className="pt-6 flex gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-              <div>
-                <p className="font-semibold text-red-900">Error</p>
-                <p className="text-sm text-red-800">{error}</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+          <div className="relative z-10 p-6 space-y-2 flex-1 overflow-y-auto" style={{ maxHeight: "600px" }}>
+            {candidates.map(candidate => {
+              const submission = submissions.get(candidate.candidate_id);
+              const hasSubmission = !!submission?.submission_file_url;
+              const hasEvaluation = !!submission?.evaluation_report;
+              const isSelected = selectedCandidate === candidate.candidate_id;
 
-        <div className="space-y-2">
-          {candidates.map(candidate => {
-            const submission = submissions.get(candidate.candidate_id);
-            const hasSubmission = !!submission?.submission_file_url;
-            const hasEvaluation = !!submission?.evaluation_report;
-            const isSelected = selectedCandidate === candidate.candidate_id;
-
-            return (
-              <button
-                key={candidate.candidate_id}
-                onClick={() => setSelectedCandidate(candidate.candidate_id)}
-                className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
-                  isSelected
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-primary/50'
-                } ${hasEvaluation ? 'bg-green-50/50' : hasSubmission ? 'bg-blue-50/50' : 'bg-yellow-50/50'}`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="font-semibold text-foreground">{candidate.name}</p>
-                    {candidate.email && candidate.email !== 'unknown@example.com' && (
-                      <p className="text-xs text-muted-foreground">{candidate.email}</p>
-                    )}
-                    {hasEvaluation && (
-                      <p className="text-xs text-green-600 font-medium mt-1">✓ Evaluated</p>
+              return (
+                <button
+                  key={candidate.candidate_id}
+                  onClick={() => setSelectedCandidate(candidate.candidate_id)}
+                  className={`w-full text-left p-4 rounded-lg transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-white/10 border-2'
+                      : 'bg-white/5 border-2 border-transparent hover:border-white/10'
+                  }`}
+                  style={{
+                    borderColor: isSelected ? "var(--color-lavender)" : undefined
+                  }}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="font-semibold text-white">{candidate.name}</p>
+                      {candidate.email && candidate.email !== 'unknown@example.com' && (
+                        <p className="text-xs text-white/40 mt-0.5">{candidate.email}</p>
+                      )}
+                      {hasEvaluation && (
+                        <p className="text-xs font-medium mt-1" style={{ color: "rgb(16,185,129)" }}>✓ Evaluated</p>
+                      )}
+                    </div>
+                    {hasEvaluation ? (
+                      <CheckCircle className="w-5 h-5 shrink-0" style={{ color: "rgb(16,185,129)" }} />
+                    ) : hasSubmission ? (
+                      <div className="w-5 h-5 rounded-full border-2 shrink-0" style={{ borderColor: "var(--color-lavender)" }} />
+                    ) : (
+                      <AlertTriangle className="w-4 h-4 text-yellow-400 shrink-0" />
                     )}
                   </div>
-                  {hasEvaluation ? (
-                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  ) : hasSubmission ? (
-                    <div className="w-5 h-5 rounded-full border-2 border-blue-600 flex-shrink-0" />
-                  ) : (
-                    <AlertTriangle className="w-4 h-4 text-yellow-600 flex-shrink-0" />
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+                </button>
+              );
+            })}
+          </div>
+        </GlassCard>
 
-      {/* RIGHT: Evaluation Details */}
-      <div className="space-y-4">
-        {selectedCandidateData && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">{selectedCandidateData.name}</CardTitle>
-              {selectedCandidateData.email && selectedCandidateData.email !== 'unknown@example.com' && (
-                <CardDescription>{selectedCandidateData.email}</CardDescription>
-              )}
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {selectedSubmission?.submission_file_url ? (
-                selectedSubmission?.evaluation_report ? (
+        {/* RIGHT: Evaluation Details */}
+        <div className="space-y-4">
+          {selectedCandidateData && (
+            <GlassCard className="flex flex-col">
+              <CardHead
+                icon={<FileText className="w-4 h-4" style={{ color: "var(--color-lavender)" }} />}
+                title={selectedCandidateData.name}
+                description={selectedCandidateData.email && selectedCandidateData.email !== 'unknown@example.com' ? selectedCandidateData.email : 'Evaluation Details'}
+              />
+              <div className="relative z-10 p-6 space-y-4">
+                {selectedSubmission?.submission_file_url ? (
+                  selectedSubmission?.evaluation_report ? (
                   // Display evaluation results
                   (() => {
                     const report = selectedSubmission.evaluation_report;
@@ -419,52 +449,52 @@ export function AssignmentEvaluationScreen({ jobId }: EvaluationTableProps) {
                     return (
                       <div className="space-y-4">
                         {/* Score */}
-                        <div className="text-center p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg border border-primary/20">
-                          <div className={`text-4xl font-bold ${
-                            aiReport.score >= 70 ? 'text-green-600' : 
-                            aiReport.score >= 40 ? 'text-yellow-600' : 
-                            'text-red-600'
+                        <div className="text-center p-6 rounded-lg" style={{ background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.3)" }}>
+                          <div className={`text-5xl font-bold ${
+                            aiReport.score >= 70 ? 'text-green-400' : 
+                            aiReport.score >= 40 ? 'text-yellow-400' : 
+                            'text-red-400'
                           }`}>
                             {aiReport.score}
                           </div>
-                          <p className="text-sm text-muted-foreground mt-1">Overall Score</p>
+                          <p className="text-sm text-white/40 mt-2">Overall Score</p>
                         </div>
 
                         {/* Verdict */}
-                        <div className={`px-3 py-2 rounded-lg text-center font-semibold text-sm ${
+                        <div className={`px-4 py-3 rounded-lg text-center font-semibold text-sm ${
                           aiReport.final_verdict === 'Hire' 
-                            ? 'bg-green-100 text-green-800' 
+                            ? 'bg-green-500/15 text-green-400 border border-green-500/30' 
                             : aiReport.final_verdict === 'Weak'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
+                            ? 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/30'
+                            : 'bg-red-500/15 text-red-400 border border-red-500/30'
                         }`}>
                           {aiReport.final_verdict}
                         </div>
 
                         {/* AI Plagiarism */}
                         {plagiarismReport.ai_plagiarism_score !== undefined && (
-                          <div className={`p-3 rounded-lg border ${
+                          <div className={`p-4 rounded-lg border ${
                             plagiarismReport.is_ai_generated
-                              ? 'border-red-200 bg-red-50'
-                              : 'border-green-200 bg-green-50'
+                              ? 'border-red-500/30 bg-red-500/10'
+                              : 'border-green-500/30 bg-green-500/10'
                           }`}>
-                            <p className="text-xs font-semibold text-muted-foreground mb-2">AI Plagiarism Detection</p>
+                            <p className="text-xs font-semibold text-white/40 mb-2">AI Plagiarism Detection</p>
                             <p className={`text-sm font-bold ${
-                              plagiarismReport.is_ai_generated ? 'text-red-700' : 'text-green-700'
+                              plagiarismReport.is_ai_generated ? 'text-red-400' : 'text-green-400'
                             }`}>
                               {plagiarismReport.ai_plagiarism_score}% {plagiarismReport.is_ai_generated ? '(AI Generated)' : '(Original)'}
                             </p>
-                            <p className="text-xs text-muted-foreground mt-2">{plagiarismReport.explanation}</p>
+                            <p className="text-xs text-white/50 mt-2">{plagiarismReport.explanation}</p>
                           </div>
                         )}
 
                         {/* Strengths */}
                         {aiReport.strengths && aiReport.strengths.length > 0 && (
                           <div>
-                            <p className="text-xs font-semibold text-green-700 mb-2">Strengths</p>
+                            <p className="text-xs font-semibold text-green-400 mb-2">Strengths</p>
                             <ul className="space-y-1">
                               {aiReport.strengths.map((s, i) => (
-                                <li key={i} className="text-xs text-green-700">+ {s}</li>
+                                <li key={i} className="text-xs text-green-400/80">+ {s}</li>
                               ))}
                             </ul>
                           </div>
@@ -473,10 +503,10 @@ export function AssignmentEvaluationScreen({ jobId }: EvaluationTableProps) {
                         {/* Weaknesses */}
                         {aiReport.weaknesses && aiReport.weaknesses.length > 0 && (
                           <div>
-                            <p className="text-xs font-semibold text-yellow-700 mb-2">Weaknesses</p>
+                            <p className="text-xs font-semibold text-yellow-400 mb-2">Weaknesses</p>
                             <ul className="space-y-1">
                               {aiReport.weaknesses.map((w, i) => (
-                                <li key={i} className="text-xs text-yellow-700">- {w}</li>
+                                <li key={i} className="text-xs text-yellow-400/80">- {w}</li>
                               ))}
                             </ul>
                           </div>
@@ -485,62 +515,57 @@ export function AssignmentEvaluationScreen({ jobId }: EvaluationTableProps) {
                         {/* Issues */}
                         {aiReport.issues && aiReport.issues.length > 0 && (
                           <div>
-                            <p className="text-xs font-semibold text-red-700 mb-2">Issues</p>
+                            <p className="text-xs font-semibold text-red-400 mb-2">Issues</p>
                             <ul className="space-y-1">
                               {aiReport.issues.map((issue, i) => (
-                                <li key={i} className="text-xs text-red-700">! {issue}</li>
+                                <li key={i} className="text-xs text-red-400/80">! {issue}</li>
                               ))}
                             </ul>
                           </div>
                         )}
 
-                        {/* Evaluation Report */}
-                        {selectedSubmission.evaluation_report && (
-                          <Button
-                            onClick={() => {
-                              console.log('View Evaluation Report clicked');
-                              setSelectedReport(selectedSubmission.evaluation_report);
-                              setReportModalTitle('Evaluation Report');
-                              setShowReportModal(true);
-                            }}
-                            variant="outline"
-                            size="sm"
-                            className="w-full"
-                          >
-                            View Evaluation Report
-                          </Button>
-                        )}
-
-                        {/* Assignment Details */}
-                        {selectedSubmission.assignment_json && (
-                          <Button
-                            onClick={() => {
-                              console.log('View Assignment clicked');
-                              setSelectedReport(selectedSubmission.assignment_json);
-                              setReportModalTitle('Assignment Details');
-                              setShowReportModal(true);
-                            }}
-                            variant="outline"
-                            size="sm"
-                            className="w-full"
-                          >
-                            View Assignment
-                          </Button>
-                        )}
+                        {/* Buttons */}
+                        <div className="space-y-2">
+                          {selectedSubmission.evaluation_report && (
+                            <button
+                              onClick={() => {
+                                setSelectedReport(selectedSubmission.evaluation_report);
+                                setReportModalTitle('Evaluation Report');
+                                setShowReportModal(true);
+                              }}
+                              className="w-full px-4 py-2.5 rounded-md text-sm font-medium text-white/70 border border-white/10 transition-colors hover:border-white/20 hover:text-white cursor-pointer"
+                              style={{ background: "rgba(255,255,255,0.05)" }}
+                            >
+                              View Evaluation Report
+                            </button>
+                          )}
+                          {selectedSubmission.assignment_json && (
+                            <button
+                              onClick={() => {
+                                setSelectedReport(selectedSubmission.assignment_json);
+                                setReportModalTitle('Assignment Details');
+                                setShowReportModal(true);
+                              }}
+                              className="w-full px-4 py-2.5 rounded-md text-sm font-medium text-white/70 border border-white/10 transition-colors hover:border-white/20 hover:text-white cursor-pointer"
+                              style={{ background: "rgba(255,255,255,0.05)" }}
+                            >
+                              View Assignment
+                            </button>
+                          )}
+                        </div>
                       </div>
                     );
                   })()
                 ) : (
                   // Evaluate button
-                  <Button
+                  <ChromeButton
                     onClick={() => handleEvaluate(selectedCandidate || '')}
                     disabled={evaluatingId === selectedCandidate}
-                    className="w-full"
-                    size="sm"
+                    className="w-full flex items-center justify-center gap-2"
                   >
                     {evaluatingId === selectedCandidate ? (
                       <>
-                        <Loader className="w-4 h-4 mr-2 animate-spin" />
+                        <Loader className="w-4 h-4 animate-spin" />
                         Evaluating...
                       </>
                     ) : selectedSubmission?.evaluation_report ? (
@@ -548,103 +573,105 @@ export function AssignmentEvaluationScreen({ jobId }: EvaluationTableProps) {
                     ) : (
                       "Evaluate Submission"
                     )}
-                  </Button>
+                  </ChromeButton>
                 )
               ) : (
-                <div className="text-center py-6 text-muted-foreground">
-                  <AlertTriangle className="w-8 h-8 mx-auto mb-2 text-yellow-600" />
-                  <p className="text-sm">No submission received yet.</p>
-                  <p className="text-xs text-muted-foreground mt-1">Waiting for candidate to submit code.</p>
+                <div className="text-center py-8">
+                  <AlertTriangle className="w-10 h-10 mx-auto mb-3 text-yellow-400" />
+                  <p className="text-sm text-white/60">No submission received yet.</p>
+                  <p className="text-xs text-white/40 mt-1">Waiting for candidate to submit code.</p>
                 </div>
               )}
-            </CardContent>
-          </Card>
-        )}
-      </div>
+              </div>
+            </GlassCard>
+          )}
+        </div>
       </div>
 
       {/* Report Modal */}
       {showReportModal && selectedReport && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="relative overflow-hidden rounded-md border border-glass-border bg-glass-bg backdrop-blur-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div className="absolute inset-0 bg-linear-to-t from-lavender/10 via-transparent to-transparent pointer-events-none" />
+            
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold text-purple-700">{reportModalTitle}</h2>
+            <div className="relative z-10 flex items-center justify-between p-6 border-b border-white/5">
+              <h2 className="text-lg font-semibold text-white">{reportModalTitle}</h2>
               <button
                 onClick={() => {
                   setShowReportModal(false);
                   setSelectedReport(null);
                 }}
-                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 text-white/70" />
               </button>
             </div>
 
             {/* Report Content */}
-            <div className="flex-1 overflow-auto p-6 bg-purple-50">
+            <div className="relative z-10 flex-1 overflow-auto p-6">
               {reportModalTitle === 'Evaluation Report' ? (
                 // Evaluation Report Display
                 <div className="space-y-6">
                   {/* AI Report */}
                   {selectedReport.ai_report && (
                     <div className="space-y-3">
-                      <h3 className="font-semibold text-lg text-primary">AI Evaluation</h3>
+                      <h3 className="font-semibold text-lg text-white">AI Evaluation</h3>
                       <div className="grid grid-cols-2 gap-4">
-                        <div className={`p-4 rounded-lg border-2 ${
-                          selectedReport.ai_report.score >= 70 ? 'bg-green-100 border-green-500' :
-                          selectedReport.ai_report.score >= 40 ? 'bg-yellow-100 border-yellow-500' :
-                          'bg-red-100 border-red-500'
+                        <div className={`p-4 rounded-lg border ${
+                          selectedReport.ai_report.score >= 70 ? 'bg-green-500/15 border-green-500/30' :
+                          selectedReport.ai_report.score >= 40 ? 'bg-yellow-500/15 border-yellow-500/30' :
+                          'bg-red-500/15 border-red-500/30'
                         }`}>
-                          <p className="text-sm text-gray-700">Score</p>
+                          <p className="text-sm text-white/60">Score</p>
                           <p className={`text-3xl font-bold ${
-                            selectedReport.ai_report.score >= 70 ? 'text-green-800' :
-                            selectedReport.ai_report.score >= 40 ? 'text-yellow-800' :
-                            'text-red-800'
+                            selectedReport.ai_report.score >= 70 ? 'text-green-400' :
+                            selectedReport.ai_report.score >= 40 ? 'text-yellow-400' :
+                            'text-red-400'
                           }`}>{selectedReport.ai_report.score}</p>
                         </div>
-                        <div className={`p-4 rounded-lg border-2 ${
-                          selectedReport.ai_report.final_verdict === 'Hire' ? 'bg-green-100 border-green-500' :
-                          selectedReport.ai_report.final_verdict === 'Weak' ? 'bg-yellow-100 border-yellow-500' :
-                          'bg-red-100 border-red-500'
+                        <div className={`p-4 rounded-lg border ${
+                          selectedReport.ai_report.final_verdict === 'Hire' ? 'bg-green-500/15 border-green-500/30' :
+                          selectedReport.ai_report.final_verdict === 'Weak' ? 'bg-yellow-500/15 border-yellow-500/30' :
+                          'bg-red-500/15 border-red-500/30'
                         }`}>
-                          <p className="text-sm text-gray-700">Verdict</p>
+                          <p className="text-sm text-white/60">Verdict</p>
                           <p className={`text-2xl font-bold ${
-                            selectedReport.ai_report.final_verdict === 'Hire' ? 'text-green-800' :
-                            selectedReport.ai_report.final_verdict === 'Weak' ? 'text-yellow-800' :
-                            'text-red-800'
+                            selectedReport.ai_report.final_verdict === 'Hire' ? 'text-green-400' :
+                            selectedReport.ai_report.final_verdict === 'Weak' ? 'text-yellow-400' :
+                            'text-red-400'
                           }`}>{selectedReport.ai_report.final_verdict}</p>
                         </div>
                       </div>
 
                       {selectedReport.ai_report.strengths && selectedReport.ai_report.strengths.length > 0 && (
-                        <div className="bg-green-100 p-4 rounded-lg border border-green-500">
-                          <p className="font-semibold text-green-900 mb-2">Strengths</p>
+                        <div className="bg-green-500/10 p-4 rounded-lg border border-green-500/30">
+                          <p className="font-semibold text-green-400 mb-2">Strengths</p>
                           <ul className="space-y-1 pl-4">
                             {selectedReport.ai_report.strengths.map((s: string, i: number) => (
-                              <li key={i} className="text-sm text-green-900">✓ {s}</li>
+                              <li key={i} className="text-sm text-green-400/80">✓ {s}</li>
                             ))}
                           </ul>
                         </div>
                       )}
 
                       {selectedReport.ai_report.weaknesses && selectedReport.ai_report.weaknesses.length > 0 && (
-                        <div className="bg-yellow-100 p-4 rounded-lg border border-yellow-500">
-                          <p className="font-semibold text-yellow-900 mb-2">Weaknesses</p>
+                        <div className="bg-yellow-500/10 p-4 rounded-lg border border-yellow-500/30">
+                          <p className="font-semibold text-yellow-400 mb-2">Weaknesses</p>
                           <ul className="space-y-1 pl-4">
                             {selectedReport.ai_report.weaknesses.map((w: string, i: number) => (
-                              <li key={i} className="text-sm text-yellow-900">⚠ {w}</li>
+                              <li key={i} className="text-sm text-yellow-400/80">⚠ {w}</li>
                             ))}
                           </ul>
                         </div>
                       )}
 
                       {selectedReport.ai_report.issues && selectedReport.ai_report.issues.length > 0 && (
-                        <div className="bg-red-100 p-4 rounded-lg border border-red-500">
-                          <p className="font-semibold text-red-900 mb-2">Issues</p>
+                        <div className="bg-red-500/10 p-4 rounded-lg border border-red-500/30">
+                          <p className="font-semibold text-red-400 mb-2">Issues</p>
                           <ul className="space-y-1 pl-4">
                             {selectedReport.ai_report.issues.map((issue: string, i: number) => (
-                              <li key={i} className="text-sm text-red-900">✕ {issue}</li>
+                              <li key={i} className="text-sm text-red-400/80">✕ {issue}</li>
                             ))}
                           </ul>
                         </div>
@@ -654,54 +681,54 @@ export function AssignmentEvaluationScreen({ jobId }: EvaluationTableProps) {
 
                   {/* Plagiarism Report */}
                   {selectedReport.ai_plagiarism_report && (
-                    <div className={`p-4 rounded-lg border-2 ${
+                    <div className={`p-4 rounded-lg border ${
                       selectedReport.ai_plagiarism_report.is_ai_generated
-                        ? 'border-red-500 bg-red-100'
-                        : 'border-green-500 bg-green-100'
+                        ? 'border-red-500/30 bg-red-500/10'
+                        : 'border-green-500/30 bg-green-500/10'
                     }`}>
                       <h3 className={`font-semibold mb-2 ${
-                        selectedReport.ai_plagiarism_report.is_ai_generated ? 'text-red-900' : 'text-green-900'
+                        selectedReport.ai_plagiarism_report.is_ai_generated ? 'text-red-400' : 'text-green-400'
                       }`}>AI Plagiarism Detection</h3>
                       <div className="space-y-2 text-sm">
-                        <p className="text-gray-800"><span className="font-semibold">Score:</span> {selectedReport.ai_plagiarism_report.ai_plagiarism_score}%</p>
-                        <p className="text-gray-800"><span className="font-semibold">Status:</span> {selectedReport.ai_plagiarism_report.is_ai_generated ? 'AI Generated' : 'Original'}</p>
-                        <p className="text-gray-800"><span className="font-semibold">Confidence:</span> {selectedReport.ai_plagiarism_report.confidence}</p>
+                        <p className="text-white/70"><span className="font-semibold">Score:</span> {selectedReport.ai_plagiarism_report.ai_plagiarism_score}%</p>
+                        <p className="text-white/70"><span className="font-semibold">Status:</span> {selectedReport.ai_plagiarism_report.is_ai_generated ? 'AI Generated' : 'Original'}</p>
+                        <p className="text-white/70"><span className="font-semibold">Confidence:</span> {selectedReport.ai_plagiarism_report.confidence}</p>
                         {selectedReport.ai_plagiarism_report.red_flags && selectedReport.ai_plagiarism_report.red_flags.length > 0 && (
                           <div>
-                            <p className="font-semibold text-gray-800">Red Flags:</p>
+                            <p className="font-semibold text-white/70">Red Flags:</p>
                             <ul className="pl-4 space-y-1">
                               {selectedReport.ai_plagiarism_report.red_flags.map((flag: string, i: number) => (
-                                <li key={i} className="text-gray-800">• {flag}</li>
+                                <li key={i} className="text-white/60">• {flag}</li>
                               ))}
                             </ul>
                           </div>
                         )}
-                        <p className="italic mt-2 text-gray-800">{selectedReport.ai_plagiarism_report.explanation}</p>
+                        <p className="italic mt-2 text-white/60">{selectedReport.ai_plagiarism_report.explanation}</p>
                       </div>
                     </div>
                   )}
 
                   {/* Syntax Report */}
                   {selectedReport.syntax_report && (
-                    <div className={`p-4 rounded-lg border-2 ${
+                    <div className={`p-4 rounded-lg border ${
                       selectedReport.syntax_report.syntax_ok
-                        ? 'border-green-500 bg-green-100'
-                        : 'border-red-500 bg-red-100'
+                        ? 'border-green-500/30 bg-green-500/10'
+                        : 'border-red-500/30 bg-red-500/10'
                     }`}>
                       <h3 className={`font-semibold mb-2 ${
-                        selectedReport.syntax_report.syntax_ok ? 'text-green-900' : 'text-red-900'
+                        selectedReport.syntax_report.syntax_ok ? 'text-green-400' : 'text-red-400'
                       }`}>Syntax Report</h3>
                       <div className="space-y-2 text-sm">
-                        <p className="text-gray-800"><span className="font-semibold">Status:</span> {selectedReport.syntax_report.syntax_ok ? '✓ Valid' : '✕ Errors Found'}</p>
+                        <p className="text-white/70"><span className="font-semibold">Status:</span> {selectedReport.syntax_report.syntax_ok ? '✓ Valid' : '✕ Errors Found'}</p>
                         {selectedReport.syntax_report.languages_detected && selectedReport.syntax_report.languages_detected.length > 0 && (
-                          <p className="text-gray-800"><span className="font-semibold">Languages:</span> {selectedReport.syntax_report.languages_detected.join(', ')}</p>
+                          <p className="text-white/70"><span className="font-semibold">Languages:</span> {selectedReport.syntax_report.languages_detected.join(', ')}</p>
                         )}
                         {selectedReport.syntax_report.errors && selectedReport.syntax_report.errors.length > 0 && (
                           <div>
-                            <p className="font-semibold text-gray-800">Errors:</p>
+                            <p className="font-semibold text-white/70">Errors:</p>
                             <ul className="pl-4 space-y-1">
                               {selectedReport.syntax_report.errors.map((error: string, i: number) => (
-                                <li key={i} className="text-xs text-gray-800">• {error}</li>
+                                <li key={i} className="text-xs text-white/60">• {error}</li>
                               ))}
                             </ul>
                           </div>
@@ -713,8 +740,8 @@ export function AssignmentEvaluationScreen({ jobId }: EvaluationTableProps) {
               ) : (
                 // Assignment Details Display
                 <div className="space-y-3">
-                  <h3 className="font-semibold text-lg text-primary">Assignment Details</h3>
-                  <pre className="bg-gray-900 p-4 rounded-lg border border-gray-700 overflow-auto text-xs text-green-400" style={{ maxHeight: '500px' }}>
+                  <h3 className="font-semibold text-lg text-white">Assignment Details</h3>
+                  <pre className="bg-black/40 p-4 rounded-lg border border-white/10 overflow-auto text-xs text-green-400" style={{ maxHeight: '500px' }}>
                     {JSON.stringify(selectedReport, null, 2)}
                   </pre>
                 </div>

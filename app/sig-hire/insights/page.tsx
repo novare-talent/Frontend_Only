@@ -46,7 +46,7 @@ function InsightsContent() {
           onHelpClick={startTour}
         />
 
-        <div data-tour="stats-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        {/* <div data-tour="stats-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {[
             { icon: Users, label: "Total Candidates", value: "0", color: "purple" },
             { icon: Target, label: "Shortlisted", value: "0", color: "blue" },
@@ -72,13 +72,13 @@ function InsightsContent() {
               </div>
             </motion.div>
           ))}
-        </div>
+        </div> */}
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="relative text-center py-20 p-12 rounded-3xl border border-glass-border bg-glass-bg backdrop-blur-xl overflow-hidden"
+          className="relative text-center py-20 p-12 rounded-md border border-glass-border bg-glass-bg backdrop-blur-xl overflow-hidden"
         >
           <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-lavender)]/10 via-transparent to-transparent pointer-events-none" />
           <div className="relative z-10">

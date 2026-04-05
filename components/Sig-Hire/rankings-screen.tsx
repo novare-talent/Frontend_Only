@@ -10,7 +10,8 @@ import { useRouter } from 'next/navigation';
 import { useDriverGuide } from '@/hooks/useDriverGuide';
 import { rankingsGuide } from '@/lib/driver-config';
 import { PageHeader } from '@/components/Sig-Hire/PageHeader';
-import { showError } from '@/lib/swal';
+import { showError, showConfirm } from '@/lib/swal';
+import ChromeButton from './ChromeButton';
 
 interface RankingsScreenProps {
   sessionId?: string | null;
@@ -27,7 +28,6 @@ export function RankingsScreen({ sessionId, refreshTrigger = 0 }: RankingsScreen
   const [removalRefreshTrigger, setRemovalRefreshTrigger] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showErrorBanner, setShowErrorBanner] = useState(false);
-  const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [selectedCandidates, setSelectedCandidates] = useState<Set<string>>(new Set());
   const { startTour } = useDriverGuide("rankings", rankingsGuide, false);
 
@@ -98,12 +98,16 @@ export function RankingsScreen({ sessionId, refreshTrigger = 0 }: RankingsScreen
     loadRankings(true);
   }, [loadRankings]);
 
-  const handleRestartSession = useCallback(() => {
+  const handleRestartSession = useCallback(async () => {
+    const confirmed = await showConfirm(
+      'Restart Session?',
+      "This will clear all rankings and queries. You'll need to upload new candidates and job description to continue."
+    );
+    if (!confirmed) return;
     clearSession();
     setCandidates([]);
     setError(null);
     setHasInitialized(false);
-    setShowRestartConfirm(false);
     setSelectedCandidates(new Set());
     router.push('/sig-hire/uploads');
   }, [clearSession, router]);
@@ -187,64 +191,38 @@ export function RankingsScreen({ sessionId, refreshTrigger = 0 }: RankingsScreen
             <button
               onClick={handleManualRefresh}
               disabled={isRefreshing}
-              className="flex items-center gap-2 rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-glass-bg)] px-3 py-2 text-white transition-colors hover:border-[var(--color-lavender)]/50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center gap-2 rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-glass-bg)] px-3 py-2 text-white transition-colors hover:border-[var(--color-lavender)]/50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
               aria-label="Refresh rankings"
             >
               <RotateCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               <span className="text-sm font-medium">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
             </button>
             
-            {selectedCandidates.size > 0 && (
-              <button
-                onClick={handleSendAssignments}
-                className="flex items-center gap-2 rounded-lg bg-[var(--color-lavender)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--color-lavender)]/90"
-                aria-label="Send assignments"
-              >
-                <Send className="h-4 w-4" />
-                Send Assignment ({selectedCandidates.size})
-              </button>
-            )}
+    
             
             <button
-              onClick={() => setShowRestartConfirm(true)}
-              className="flex items-center gap-2 rounded-lg border border-red-500/50 bg-[var(--color-glass-bg)] px-3 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-red-500/10"
+              onClick={handleRestartSession}
+              className="flex items-center gap-2 rounded-lg border border-red-500/50 bg-[var(--color-glass-bg)] px-3 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-red-500/10 cursor-pointer"
               aria-label="Restart session"
             >
               <RotateCcw className="h-4 w-4" />
               Restart
             </button>
+
+                    {selectedCandidates.size > 0 && (
+              <ChromeButton
+                onClick={handleSendAssignments}
+                // className="flex items-center gap-2 rounded-lg bg-[var(--color-lavender)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--color-lavender)]/90"
+                aria-label="Send assignments"
+              >
+                <Send className="h-4 w-4" />
+                Send Assignment ({selectedCandidates.size})
+              </ChromeButton>
+            )}
           </>
         }
       />
 
-      {/* Restart Confirmation Dialog */}
-      {showRestartConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-sm rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-glass-bg)] backdrop-blur-xl p-6 shadow-lg">
-            <h3 className="mb-2 text-lg font-semibold text-white">
-              Restart Session?
-            </h3>
-            <p className="mb-6 text-sm text-white/70">
-              This will clear all rankings and queries. You&apos;ll need to upload new candidates and job description to continue.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowRestartConfirm(false)}
-                className="rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-glass-bg)] px-4 py-2 text-white transition-colors hover:bg-white/5"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleRestartSession}
-                className="rounded-lg bg-red-500 px-4 py-2 text-white transition-colors hover:bg-red-500/90"
-              >
-                Restart Session
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
       <QueriesManagement 
         sessionId={sessionId} 
         onQueryRemoved={handleQueryRemoved}

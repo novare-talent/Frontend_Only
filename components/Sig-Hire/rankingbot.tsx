@@ -10,7 +10,63 @@ type Message = {
   text: string;
   from: "user" | "bot";
   time?: string;
+  loading?: boolean;
 };
+
+const PROCESSING_PHRASES = [
+  "Pondering",
+  "Thinking",
+  "Analyzing candidates",
+  "Reviewing rankings",
+  "Cross-referencing data",
+  "Evaluating profiles",
+  "Weighing factors",
+  "Crunching numbers",
+  "Consulting the oracle",
+  "Almost there",
+];
+
+function ProcessingIndicator() {
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  const [fade, setFade] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFade(false);
+      setTimeout(() => {
+        setPhraseIdx((i) => (i + 1) % PROCESSING_PHRASES.length);
+        setFade(true);
+      }, 200);
+    }, 1800);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="flex items-center gap-2 py-0.5">
+      <span
+        className="text-sm text-white/70"
+        style={{
+          opacity: fade ? 1 : 0,
+          transition: "opacity 0.2s ease",
+        }}
+      >
+        {PROCESSING_PHRASES[phraseIdx]}
+      </span>
+      <span className="flex gap-[3px] items-end pb-px">
+        {[0, 1, 2].map((i) => (
+          <span
+            key={i}
+            className="w-[5px] h-[5px] rounded-full animate-bounce"
+            style={{
+              background: "rgba(167,139,250,0.85)",
+              animationDelay: `${i * 0.18}s`,
+            }}
+          />
+        ))}
+      </span>
+    </div>
+  );
+}
 
 interface RankingBotCardProps {
   className?: string;
@@ -72,6 +128,7 @@ export function RankingBotCard({
     const processingMsg: Message = {
       id: processingMsgId,
       text: "Processing...",
+      loading: true,
       from: "bot",
       time: new Date().toLocaleTimeString([], {
         hour: "2-digit",
@@ -159,25 +216,29 @@ export function RankingBotCard({
           {messages.map((m) => (
             <div
               key={m.id}
-              className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}
+              className={`flex flex-col gap-1 ${m.from === "user" ? "items-end" : "items-start"}`}
             >
               <div
                 className={`max-w-[80%] px-4 py-2 rounded-md shadow-sm ${
-                  m.from === "user"
-                    ? "rounded-br-none"
-                    : "rounded-bl-none"
+                  m.from === "user" ? "rounded-br-none" : "rounded-bl-none"
                 }`}
                 style={{
                   background: m.from === "user" ? "linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)" : "rgba(255,255,255,0.05)",
                   border: m.from === "user" ? "1px solid rgba(124,58,237,0.3)" : "1px solid rgba(255,255,255,0.1)",
-                  color: "white"
+                  color: "white",
                 }}
               >
-                <div className="whitespace-pre-wrap text-sm">{m.text}</div>
-                <div className="text-[11px] mt-1 text-right" style={{ color: "rgba(255,255,255,0.5)" }}>
-                  {m.time}
-                </div>
+                {m.loading ? (
+                  <ProcessingIndicator />
+                ) : (
+                  <div className="whitespace-pre-wrap text-sm">{m.text}</div>
+                )}
               </div>
+              {m.time && (
+                <span className="text-[10px] px-1" style={{ color: "rgba(255,255,255,0.28)" }}>
+                  {m.time}
+                </span>
+              )}
             </div>
           ))}
           {/* dummy element to scroll into view */}

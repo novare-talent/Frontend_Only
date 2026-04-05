@@ -6,7 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 import { bulkCreateAssignments } from "@/app/actions/assignments";
 import { createCandidateMappings } from "@/app/actions/candidates";
 import { fetchRankings, type Candidate } from "@/lib/ranking-api";
-import { AlertCircle, CheckCircle, Loader, FileText, Users, Upload, ClipboardList, History, ExternalLink } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader, FileText, Users, Upload, ClipboardList, History, ExternalLink, X } from "lucide-react";
 import { useDriverGuide } from "@/hooks/useDriverGuide";
 import { assignmentsGuide } from "@/lib/driver-config";
 import { PageHeader } from "@/components/Sig-Hire/PageHeader";
@@ -76,6 +76,7 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
   const [jobId, setJobId] = useState<string>('');
   const [assignmentId, setAssignmentId] = useState<string>('');
   const [assignmentData, setAssignmentData] = useState<any>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [showSentOverlay, setShowSentOverlay] = useState(false);
   const [submissionLinks, setSubmissionLinks] = useState<Array<{candidateId: string; name: string; email: string; link: string}>>([]);
   const [previousAssignments, setPreviousAssignments] = useState<PreviousAssignment[]>([]);
@@ -218,119 +219,202 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* ── Card 1: Assignment Creation ──────────────────────────────────── */}
-        <GlassCard data-tour="assignment-form">
-          <CardHead
-            icon={<ClipboardList className="w-4 h-4" style={{ color: "var(--color-lavender)" }} />}
-            title="Assignment"
-            description="Upload or generate your assignment"
-          />
-          <div className="relative z-10 flex flex-col gap-4 p-6">
-            {/* File upload */}
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-medium text-white/60 uppercase tracking-wider">
-                Upload Document or PDF
-              </label>
+        <GlassCard data-tour="assignment-form" className="lg:col-span-2">
+          {/* Header */}
+          <div className="relative z-10 px-6 pt-5 pb-4 flex items-center justify-between border-b border-white/5">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0" style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.25)" }}>
+                <ClipboardList className="w-4 h-4" style={{ color: "var(--color-lavender)" }} />
+              </div>
+
+                   <div>
+                <h3 className="text-base font-semibold text-white leading-tight">Create Assignment</h3>
+                <p className="text-xs text-white/40 mt-0.5">Upload a document or describe it with a prompt</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="relative z-10 flex flex-col lg:flex-row min-h-[220px]">
+
+            {/* Left — upload zone */}
+            {assignmentFile ? (
+              <div
+                className="relative flex flex-col items-center justify-center gap-3 lg:w-[38%] p-8"
+                style={{ borderRight: "1px solid rgba(255,255,255,0.05)" }}
+              >
+                <div className="absolute inset-4 rounded-xl pointer-events-none" style={{ border: "1.5px dashed rgba(124,58,237,0.4)" }} />
+                <div className="relative w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)" }}>
+                  <FileText className="w-6 h-6" style={{ color: "var(--color-lavender)" }} />
+                </div>
+                <div className="relative text-center max-w-[180px]">
+                  <p className="text-sm font-semibold text-white/80 truncate">{assignmentFile.name}</p>
+                  <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>
+                    {assignmentFile.size < 1024 * 1024
+                      ? `${(assignmentFile.size / 1024).toFixed(1)} KB`
+                      : `${(assignmentFile.size / (1024 * 1024)).toFixed(1)} MB`}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setAssignmentFile(null)}
+                  className="relative flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs text-white/40 hover:text-white/70 transition-colors cursor-pointer"
+                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+                >
+                  <X className="w-3 h-3" /> Remove
+                </button>
+              </div>
+            ) : (
               <label
-                className="flex flex-col items-center justify-center gap-2 w-full cursor-pointer rounded-lg px-4 py-5 transition-all duration-200 text-center"
+                className="relative flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-200 lg:w-[38%] p-8 group"
                 style={{
-                  background: isDragOver ? "rgba(124,58,237,0.1)" : "rgba(0,0,0,0.2)",
-                  border: `2px dashed ${isDragOver ? "rgba(124,58,237,0.6)" : "rgba(255,255,255,0.1)"}`,
+                  background: isDragOver ? "rgba(124,58,237,0.07)" : "transparent",
+                  borderRight: "1px solid rgba(255,255,255,0.05)",
+                  borderBottom: "1px solid transparent",
                 }}
                 onDragOver={e => { e.preventDefault(); e.stopPropagation(); setIsDragOver(true); }}
                 onDragLeave={e => { e.preventDefault(); e.stopPropagation(); setIsDragOver(false); }}
                 onDrop={handleFileDrop}
               >
-                <Upload className="w-5 h-5" style={{ color: isDragOver ? "var(--color-lavender)" : "rgba(255,255,255,0.25)" }} />
-                <span className="text-sm truncate max-w-full" style={{ color: assignmentFile ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.3)" }}>
-                  {assignmentFile ? assignmentFile.name : isDragOver ? "Drop file here" : "Drag & drop or click to upload"}
-                </span>
+                {/* Dashed border inset */}
+                <div
+                  className="absolute inset-4 rounded-xl transition-all duration-200 pointer-events-none"
+                  style={{
+                    border: `1.5px dashed ${isDragOver ? "rgba(124,58,237,0.5)" : "rgba(255,255,255,0.07)"}`,
+                  }}
+                />
+                <div
+                  className="relative w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200"
+                  style={{
+                    background: isDragOver ? "rgba(124,58,237,0.2)" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${isDragOver ? "rgba(124,58,237,0.4)" : "rgba(255,255,255,0.08)"}`,
+                  }}
+                >
+                  <Upload className="w-5 h-5 transition-colors" style={{ color: isDragOver ? "var(--color-lavender)" : "rgba(255,255,255,0.25)" }} />
+                </div>
+                <div className="relative text-center">
+                  <p className="text-sm font-medium" style={{ color: isDragOver ? "rgba(167,139,250,0.9)" : "rgba(255,255,255,0.4)" }}>
+                    {isDragOver ? "Release to upload" : "Drop your file here"}
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.2)" }}>
+                    PDF, DOCX, TXT — or <span style={{ color: "rgba(167,139,250,0.6)" }}>browse</span>
+                  </p>
+                </div>
                 <input type="file" className="hidden" onChange={e => setAssignmentFile(e.target.files?.[0] || null)} />
               </label>
-            </div>
+            )}
 
-            {/* Divider */}
-            <div className="relative py-1">
-              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/8" /></div>
-              <div className="relative flex justify-center">
-                <span className="px-3 text-[11px] uppercase tracking-widest text-white/25">or</span>
-              </div>
-            </div>
-
-            {/* Prompt */}
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-medium text-white/60 uppercase tracking-wider">Enter Prompt</label>
+            {/* Right — prompt + actions */}
+            <div className="flex flex-col gap-4 p-6 flex-1">
+              <p className="text-sm text-white/60">Enter prompt</p>
               <textarea
-                className="w-full min-h-[140px] rounded-lg p-3 text-sm text-white/80 placeholder-white/25 outline-none resize-none transition-colors"
-                style={{ background: "rgba(0,0,0,0.25)", border: "1px solid rgba(255,255,255,0.07)" }}
-                onFocus={e => (e.currentTarget.style.borderColor = "rgba(124,58,237,0.5)")}
-                onBlur={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)")}
-                placeholder="Describe the assignment for candidates..."
+                className="flex-1 w-full rounded-lg p-4 text-sm text-white/80 placeholder-white/20 outline-none resize-none transition-colors leading-relaxed"
+                style={{
+                  minHeight: "120px",
+                  background: "rgba(0,0,0,0.2)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                }}
+                onFocus={e => (e.currentTarget.style.borderColor = "rgba(124,58,237,0.4)")}
+                onBlur={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)")}
+                placeholder="Describe the assignment — topics, difficulty level, expected deliverables..."
                 value={assignmentPrompt}
                 onChange={e => setAssignmentPrompt(e.target.value)}
               />
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-wrap gap-3 pt-1">
-              {!assignmentData ? (
-                <>
-                  <ChromeButton onClick={handleGenerateAssignment} disabled={isGenerating || !jobId} className="flex items-center gap-2">
-                    {isGenerating ? <><Loader className="w-4 h-4 animate-spin" />Generating...</> : "Generate Assignment"}
-                  </ChromeButton>
+              <div className="flex items-center gap-3">
+                {!assignmentData || isEditMode ? (
+                  <>
+                    <ChromeButton onClick={handleGenerateAssignment} disabled={isGenerating || !jobId} className="flex items-center gap-2">
+                      {isGenerating ? <><Loader className="w-4 h-4 animate-spin" />Generating...</> : "Generate Assignment"}
+                    </ChromeButton>
+                    <button
+                      onClick={handleCreateAssignment}
+                      disabled={isCreating || isSending}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium text-white/50 border border-white/8 transition-colors hover:border-white/15 hover:text-white/80 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                      style={{ background: "rgba(255,255,255,0.03)" }}
+                    >
+                      {isCreating ? <><Loader className="w-4 h-4 animate-spin" />Submitting...</> : "Submit Custom"}
+                    </button>
+                    {isEditMode && (
+                      <button
+                        onClick={() => setIsEditMode(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium text-white/50 border border-white/8 transition-colors hover:border-white/15 hover:text-white/80 cursor-pointer"
+                        style={{ background: "rgba(255,255,255,0.03)" }}
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </>
+                ) : (
                   <button
-                    onClick={handleCreateAssignment}
-                    disabled={isCreating || isSending}
-                    className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-white/70 border border-white/10 transition-colors hover:border-white/20 hover:text-white disabled:opacity-40"
-                    style={{ background: "rgba(255,255,255,0.05)" }}
+                    onClick={() => setIsEditMode(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium text-white/70 border border-white/10 transition-colors hover:border-white/20 hover:text-white cursor-pointer"
+                    style={{ background: "rgba(124,58,237,0.15)" }}
                   >
-                    {isCreating ? <><Loader className="w-4 h-4 animate-spin" />Submitting...</> : "Submit Custom"}
+                    Edit Assignment
                   </button>
-                </>
-              ) : (
-                <ChromeButton onClick={handleSendAssignments} disabled={isSending || candidates.length === 0} className="flex items-center gap-2">
-                  {isSending ? <><Loader className="w-4 h-4 animate-spin" />Sending...</> : `Send to ${candidates.length} Candidate${candidates.length !== 1 ? 's' : ''}`}
-                </ChromeButton>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </GlassCard>
 
         {/* ── Card 2: Selected Candidates ───────────────────────────────────── */}
-        {candidates.length > 0 && (
-          <GlassCard data-tour="candidate-select">
-            <CardHead
-              icon={<Users className="w-4 h-4" style={{ color: "var(--color-lavender)" }} />}
-              title={`Selected Candidates (${candidates.length})`}
-              description="Ready to receive assignment"
-            />
-            <div className="relative z-10 flex flex-col gap-2 p-6">
-              {candidates.map(candidate => (
-                <div
-                  key={candidate.cid}
-                  className="flex items-center justify-between px-3 py-2.5 rounded-lg"
-                  style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.06)" }}
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white/80 truncate">{candidate.name}</p>
-                    <p className="text-xs text-white/35 truncate">{candidate.email || 'No email'}</p>
-                  </div>
-                  {candidate.total_score > 0 && (
-                    <div className="ml-4 text-right shrink-0">
-                      <p className="text-xs font-semibold" style={{ color: "var(--color-lavender)" }}>{candidate.total_score.toFixed(1)}</p>
-                      <p className="text-[10px] text-white/30">Score</p>
+        <GlassCard data-tour="candidate-select" className="lg:col-span-1 flex flex-col">
+          <CardHead
+            icon={<Users className="w-4 h-4" style={{ color: "var(--color-lavender)" }} />}
+            title={`Selected Candidates (${candidates.length})`}
+            description={candidates.length > 0 ? "Ready to receive assignment" : "No candidates selected"}
+          />
+          {candidates.length > 0 ? (
+            <>
+              <div className="relative z-10 flex-1 overflow-y-auto p-6 pb-3" style={{ maxHeight: "195px" }}>
+                <div className="flex flex-col gap-2">
+                  {candidates.map(candidate => (
+                    <div
+                      key={candidate.cid}
+                      className="flex items-center justify-between px-3 py-2.5 rounded-lg"
+                      style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.06)" }}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-white/80 truncate">{candidate.name}</p>
+                        <p className="text-xs text-white/35 truncate">{candidate.email || 'No email'}</p>
+                      </div>
+                      {candidate.total_score > 0 && (
+                        <div className="ml-4 text-right shrink-0">
+                          <p className="text-xs font-semibold" style={{ color: "var(--color-lavender)" }}>{candidate.total_score.toFixed(1)}</p>
+                          <p className="text-[10px] text-white/30">Score</p>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  ))}
                 </div>
-              ))}
+              </div>
+              <div className="flex items-center justify-center relative z-10 p-3 border-t border-white/5">
+                <ChromeButton 
+                  onClick={handleSendAssignments} 
+                  disabled={isSending || !assignmentData || isEditMode} 
+                >
+                  {isSending ? (
+                    <><Loader className="w-4 h-4 animate-spin" />Sending...</>
+                  ) : (
+                    `Send to ${candidates.length} Candidate${candidates.length !== 1 ? 's' : ''}`
+                  )}
+                </ChromeButton>
+              </div>
+            </>
+          ) : (
+            <div className="relative z-10 text-center py-8 flex-1 flex flex-col items-center justify-center">
+              <Users className="w-10 h-10 mx-auto mb-3 text-white/15" />
+              <p className="text-sm text-white/40 mb-1">No candidates selected</p>
+              <p className="text-xs text-white/25">Go to the Ranking page to select candidates</p>
             </div>
-          </GlassCard>
-        )}
+          )}
+        </GlassCard>
 
         {/* ── Card 3: Assignment Preview ────────────────────────────────────── */}
-        <GlassCard className="lg:col-span-2">
+        <GlassCard className="lg:col-span-3">
           <div className="relative z-10 p-6 pb-4 flex items-center justify-between gap-3 border-b border-white/5">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-md flex items-center justify-center shrink-0" style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.25)" }}>
@@ -358,15 +442,15 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {assignmentData.title && (
                     <div>
-                      <p className="text-[10px] uppercase tracking-widest text-white/30 mb-1">Title</p>
-                      <p className="text-sm font-semibold text-white/80 truncate">{assignmentData.title}</p>
+                      <p className="text-xs uppercase tracking-widest text-white/30 mb-1">Title</p>
+                      <p className="text-base font-semibold text-white/80 truncate">{assignmentData.title}</p>
                     </div>
                   )}
                   {assignmentData.difficulty !== undefined && (
                     <div>
-                      <p className="text-[10px] uppercase tracking-widest text-white/30 mb-1">Difficulty</p>
+                      <p className="text-xs uppercase tracking-widest text-white/30 mb-1">Difficulty</p>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-white/80">{assignmentData.difficulty}/10</span>
+                        <span className="text-base font-semibold text-white/80">{assignmentData.difficulty}/10</span>
                         <div className="flex gap-0.5">
                           {[...Array(10)].map((_, i) => (
                             <div key={i} className="h-1.5 w-1.5 rounded-full" style={{ background: i < assignmentData.difficulty ? "var(--color-lavender)" : "rgba(255,255,255,0.1)" }} />
@@ -380,10 +464,10 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
                 {/* Required Skills */}
                 {assignmentData.required_skills?.length > 0 && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-white/30 mb-2">Required Skills</p>
+                    <p className="text-xs uppercase tracking-widest text-white/30 mb-2">Required Skills</p>
                     <div className="flex flex-wrap gap-2">
                       {assignmentData.required_skills.map((skill: string) => (
-                        <span key={skill} className="px-2.5 py-1 text-xs rounded-full" style={{ background: "rgba(124,58,237,0.15)", color: "var(--color-lavender)", border: "1px solid rgba(124,58,237,0.25)" }}>
+                        <span key={skill} className="px-3 py-1.5 text-sm rounded-full" style={{ background: "rgba(124,58,237,0.15)", color: "var(--color-lavender)", border: "1px solid rgba(124,58,237,0.25)" }}>
                           {skill}
                         </span>
                       ))}
@@ -394,19 +478,19 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
                 {/* Problem Statement */}
                 {assignmentData.problem_statement && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-white/30 mb-2">Problem Statement</p>
-                    <p className="text-sm text-white/60 leading-relaxed line-clamp-4">{assignmentData.problem_statement}</p>
+                    <p className="text-xs uppercase tracking-widest text-white/30 mb-2">Problem Statement</p>
+                    <p className="text-base text-white/60 leading-relaxed line-clamp-4">{assignmentData.problem_statement}</p>
                   </div>
                 )}
 
                 {/* Requirements */}
                 {assignmentData.requirements?.length > 0 && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-white/30 mb-2">Requirements</p>
-                    <ul className="space-y-1.5">
+                    <p className="text-xs uppercase tracking-widest text-white/30 mb-2">Requirements</p>
+                    <ul className="space-y-2">
                       {assignmentData.requirements.slice(0, 3).map((req: string, idx: number) => (
-                        <li key={idx} className="flex items-start gap-2 text-sm text-white/60">
-                          <span className="mt-1.5 w-1 h-1 rounded-full shrink-0" style={{ background: "var(--color-lavender)" }} />
+                        <li key={idx} className="flex items-start gap-2 text-base text-white/60">
+                          <span className="mt-2 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "var(--color-lavender)" }} />
                           {req}
                         </li>
                       ))}
@@ -420,11 +504,11 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
                 {/* Evaluation Criteria */}
                 {assignmentData.evaluation_criteria?.length > 0 && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-white/30 mb-2">Evaluation Criteria</p>
-                    <ul className="space-y-1.5">
+                    <p className="text-xs uppercase tracking-widest text-white/30 mb-2">Evaluation Criteria</p>
+                    <ul className="space-y-2">
                       {assignmentData.evaluation_criteria.map((criteria: string, idx: number) => (
-                        <li key={idx} className="flex items-start gap-2 text-sm text-white/60">
-                          <span className="mt-1.5 w-1 h-1 rounded-full shrink-0" style={{ background: "rgba(16,185,129,0.8)" }} />
+                        <li key={idx} className="flex items-start gap-2 text-base text-white/60">
+                          <span className="mt-2 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "rgba(16,185,129,0.8)" }} />
                           {criteria}
                         </li>
                       ))}
@@ -435,8 +519,8 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
                 {/* Input/Output */}
                 {assignmentData.input_output && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-white/30 mb-2">Input / Output</p>
-                    <div className="rounded-lg p-3 text-xs font-mono text-white/60 overflow-auto max-h-24" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <p className="text-xs uppercase tracking-widest text-white/30 mb-2">Input / Output</p>
+                    <div className="rounded-lg p-3 text-sm font-mono text-white/60 overflow-auto max-h-24" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.06)" }}>
                       {assignmentData.input_output}
                     </div>
                   </div>
@@ -445,7 +529,7 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
                 {/* PDF iframe */}
                 {assignmentData.assignment_pdf_url && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-widest text-white/30 mb-2">PDF Preview</p>
+                    <p className="text-xs uppercase tracking-widest text-white/30 mb-2">PDF Preview</p>
                     <div className="rounded-lg overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.06)" }}>
                       <iframe src={assignmentData.assignment_pdf_url} className="w-full h-96 border-0" title="Assignment PDF" />
                     </div>
@@ -469,7 +553,7 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
 
         {/* ── Card 4: Previous Assignments ─────────────────────────────────── */}
         {previousAssignments.length > 0 && (
-          <GlassCard className="lg:col-span-2">
+          <GlassCard className="lg:col-span-3">
             <CardHead
               icon={<History className="w-4 h-4" style={{ color: "var(--color-lavender)" }} />}
               title={`Previous Assignments (${previousAssignments.length})`}
