@@ -123,12 +123,12 @@ function CandidateRow({
           </div>
 
           {/* Avatar */}
-          <div
+          {/* <div
             className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-md"
             style={{ background: getAvatarGradient(index) }}
           >
             {getInitials(candidate.name)}
-          </div>
+          </div> */}
 
           {/* Name */}
           <div className="flex-1 min-w-0">
@@ -315,20 +315,19 @@ export function RankingsTable({
         >
           {allSelected && <Check className="w-3 h-3" style={{ color: '#a78bfa' }} />}
         </button>
-        <div className="w-8 shrink-0">
+        <div className="w-8 shrink-0 text-center">
           <span className="text-xs font-semibold uppercase tracking-widest text-white/75">Rank</span>
         </div>
-        <div className="w-9 shrink-0" />
         <div className="flex-1">
-          <span className="text-xs font-semibold uppercase tracking-widest text-white/75">Candidate</span>
+          <span className="text-xs font-semibold uppercase tracking-widest text-white/75">Name</span>
         </div>
         <div className="w-44 shrink-0">
           <span className="text-xs font-semibold uppercase tracking-widest text-white/75">Email</span>
         </div>
-        <div className="w-28 shrink-0">
+        <div className="w-28 shrink-0 text-center">
           <span className="text-xs font-semibold uppercase tracking-widest text-white/75">JD Score</span>
         </div>
-        <div className="w-28 shrink-0">
+        <div className="w-28 shrink-0 text-center">
           <span className="text-xs font-semibold uppercase tracking-widest text-white/75">Total Score</span>
         </div>
         <div className="w-4 shrink-0" />

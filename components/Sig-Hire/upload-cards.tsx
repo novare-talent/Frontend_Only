@@ -31,7 +31,7 @@ export function SectionCards() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loadingMessage, setLoadingMessage] = useState("Processing your data...");
+  const [loadingMessage, setLoadingMessage] = useState("Processing...");
 
   const handleJobDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -90,7 +90,7 @@ export function SectionCards() {
 
       // If no existing session, initialize a new one
       if (!activeSessionId) {
-        setLoadingMessage("Initializing session...");
+        setLoadingMessage("Setting things up...");
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
         
@@ -103,7 +103,7 @@ export function SectionCards() {
         setSessionId(activeSessionId);
       }
 
-      setLoadingMessage(`Session ID: ${activeSessionId}\n\nUploading files...`);
+      setLoadingMessage("Uploading your files...");
 
       // Upload data to API
       await uploadSessionData(
@@ -114,24 +114,31 @@ export function SectionCards() {
         candidatesFile
       );
 
-      setLoadingMessage(`Session ID: ${activeSessionId}\n\nProcessing files (1/8)...`);
+      const messages = [
+        "Analyzing job requirements...",
+        "Reading candidate profiles...",
+        "Extracting key qualifications...",
+        "Matching skills and experience...",
+        "Evaluating candidates...",
+        "Calculating compatibility scores...",
+        "Ranking results...",
+        "Almost there..."
+      ];
 
-      let checkCount = 1;
-      // Wait for session to be ready (max 5 checks with 2 second intervals)
+      let checkCount = 0;
+      // Wait for session to be ready (max 8 checks with 2 second intervals)
       await waitForSessionReady(
         activeSessionId,
         8,
         2000,
-        (status) => {
+        () => {
+          setLoadingMessage(messages[checkCount % messages.length]);
           checkCount++;
-          setLoadingMessage(
-            `Session ID: ${activeSessionId}\n\nProcessing files (${Math.min(checkCount, 8)}/8)...\nStatus: ${status}`
-          );
         }
       );
 
       // Create job record in jobs table
-      setLoadingMessage(`Session ID: ${activeSessionId}\n\nCreating job record...`);
+      setLoadingMessage("Finalizing...");
       
       const jobResult = await createSigHireJob({
         job_name: jobDescription || 'Uploaded Job',
