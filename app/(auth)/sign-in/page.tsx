@@ -3,8 +3,9 @@
 import { LoginForm } from "@/components/authForms/login-form";
 import Image from "next/image";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
+import { Suspense } from "react";
 
-export default function LoginPage() {
+function LoginContent() {
   const isChecking = useAuthRedirect();
 
   if (isChecking) {
@@ -18,6 +19,16 @@ export default function LoginPage() {
     );
   }
 
+  return (
+    <div className="flex min-h-screen items-center justify-center px-4 py-10">
+      <div className="w-full max-w-sm">
+        <LoginForm />
+      </div>
+    </div>
+  );
+}
+
+export default function LoginPage() {
   return (
     <div className="relative min-h-screen w-full">
       
@@ -33,11 +44,9 @@ export default function LoginPage() {
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex min-h-screen items-center justify-center px-4 py-10">
-        <div className="w-full max-w-sm">
-          <LoginForm />
-        </div>
-      </div>
+      <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center bg-black"><div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" /></div>}>
+        <LoginContent />
+      </Suspense>
       
     </div>
   );

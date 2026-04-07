@@ -226,12 +226,16 @@ export const FOOTER_LINKS = {
   company: [
     { label: "About", href: "#about" },
     { label: "Team", href: "#team" },
-    { label: "Careers", href: "mailto:info@novaretalent.com" },
+    { label: "How it works", href: "#how-it-works" },
+    { label: "Testimonial", href: "#testimonials" },
+    { label: "FAQs", href: "#faqs" },
   ],
   discover: [
     { label: "Zenhyre", href: "/Dashboard" },
-    { label: "For Recruiters", href: "/sign-up" },
-    { label: "For Students", href: "/sign-up" },
+    { label: "SigHyre", href: "/sig-hire" },
+    { label: "ArenaX", href: "https://arena.novaretalent.com" },
+    { label: "Career Navigator", href: "https://www.careernavigator4u.com" },
+    { label: "IIT Placements", href: "/iit-placements" },
   ],
   legal: [
     { label: "Terms of Service", href: "/Terms&Conditions.pdf" },

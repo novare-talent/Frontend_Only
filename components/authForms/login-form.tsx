@@ -74,6 +74,16 @@ export function LoginForm({
       return;
     }
 
+    // Check for redirect parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirect = urlParams.get("redirect");
+
+    if (redirect) {
+      router.push(redirect);
+      toast.success("Login successful!");
+      return;
+    }
+
     // 🧭 Redirect based on role
     if (profile.role === "client") {
       router.push("/client");

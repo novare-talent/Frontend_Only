@@ -527,7 +527,7 @@ const ILLUSTRATIONS = [
 /* ─── SECTION ───────────────────────────────────────────────────────── */
 export function HowItWorksSection() {
   return (
-    <section className="relative py-6 sm:py-8 md:py-10 px-4 sm:px-6 overflow-hidden">
+    <section className="relative py-6 sm:py-8 md:py-10 px-4 sm:px-6 overflow-hidden" id="how-it-works">
       <div className="absolute inset-0 opacity-90"><ParticleCanvas /></div>
       <GlowOrb className="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
         color="rgba(124,58,237,0.07)" size="900px" parallaxIntensity={20} />

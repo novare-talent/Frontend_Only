@@ -57,6 +57,7 @@
 
 import { MultiSessionProvider } from "@/context/MultiSessionContext";
 import { Navbar } from "@/components/Sig-Hire/navbar";
+import { AuthGuard } from "@/components/Sig-Hire/auth-guard";
 import { Suspense } from "react";
 
 export default function SigHireLayout({
@@ -66,12 +67,14 @@ export default function SigHireLayout({
 }) {
   return (
     <MultiSessionProvider>
-      <div className="relative min-h-screen">
-        <Suspense fallback={null}>
-          <Navbar />
-        </Suspense>
-        {children}
-      </div>
+      <AuthGuard>
+        <div className="relative min-h-screen">
+          <Suspense fallback={null}>
+            <Navbar />
+          </Suspense>
+          {children}
+        </div>
+      </AuthGuard>
     </MultiSessionProvider>
   );
 }

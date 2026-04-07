@@ -7,7 +7,6 @@ import { useSession } from "@/context/SessionContext";
 import { useMultiSession } from "@/context/MultiSessionContext";
 import { initializeSession } from "@/lib/ranking-api";
 import { createClient } from "@/utils/supabase/client";
-import Footer from "@/components/landing/layout/Footer";
 import { HeroSection } from "@/components/Sig-Hire/home/hero-section";
 import { StatsTicker } from "@/components/Sig-Hire/home/stats-ticker";
 import { FeaturesSection } from "@/components/Sig-Hire/home/features-section";
@@ -18,6 +17,7 @@ import { useDriverGuide } from "@/hooks/useDriverGuide";
 import { homeGuide } from "@/lib/driver-config";
 import { GuideButton } from "@/components/ui/guide-button";
 import { showSuccess, showError } from "@/lib/swal";
+import { SigHireFooter } from "@/components/Sig-Hire/footer";
 
 function HomePageContent() {
   const router = useRouter();
@@ -36,21 +36,23 @@ function HomePageContent() {
   }, [loadSessions]);
 
   const handleStartHiring = async () => {
-    // If there are existing sessions, just navigate to sessions page
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push("/sign-in?redirect=/sig-hire/sessions");
+      return;
+    }
+
     if (sessions && sessions.length > 0) {
       router.push("/sig-hire/sessions");
       return;
     }
 
-    // Otherwise, create a new session
     try {
       setIsLoading(true);
       setError(null);
       setLoadingMessage("Creating your session");
-
-      const supabase = createClient();
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) throw new Error("Please sign in to continue");
 
       console.log("Profile ID:", user.id);
       console.log("Initializing session...");
@@ -145,7 +147,7 @@ function HomePageContent() {
       <HowItWorksSection />
       {/* <TestimonialsSection /> */}
       <CTASection />
-      <Footer />
+      <SigHireFooter />
     </main>
   );
 }
