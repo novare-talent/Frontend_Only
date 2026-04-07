@@ -74,7 +74,7 @@ function RankingsContent() {
         </div>
 
         {/* Desktop: Two-column layout with sticky right sidebar */}
-        <div className="hidden lg:flex items-start px-6 pt-32">
+        <div className="hidden lg:flex items-start px-6 pt-36">
           {/* Left side - scrolls normally */}
           <div className="flex-1 min-w-0 pb-12">
             <div className="max-w-[1200px] mx-auto">

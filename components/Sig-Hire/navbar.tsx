@@ -11,18 +11,15 @@ import ChromeButton from "@/components/Sig-Hire/ChromeButton";
 import { useMultiSession } from "@/context/MultiSessionContext";
 import { initializeSession } from "@/lib/ranking-api";
 import { createClient } from "@/utils/supabase/client";
+import { WorkflowStepper } from "@/components/Sig-Hire/workflow-stepper";
 
 const navItems = [
-  { label: "Home", href: "/sig-hire", tourId: "nav-home" },
-  { label: "Sessions", href: "/sig-hire/sessions", tourId: "nav-sessions" },
-  { label: "Uploads", href: "/sig-hire/uploads", tourId: "nav-uploads" },
-  { label: "Rankings", href: "/sig-hire/rankings", tourId: "nav-rankings" },
-  { label: "Assignments", href: "/sig-hire/assignments", tourId: "nav-assignments" },
-  { label: "Evaluations", href: "/sig-hire/evaluations", tourId: "nav-evaluations" },
-  { label: "Insights", href: "/sig-hire/insights", tourId: "nav-insights" },
+  { label: "Home",     href: "/sig-hire",          tourId: "nav-home" },
+  { label: "Sessions", href: "/sig-hire/sessions",  tourId: "nav-sessions" },
+  { label: "Insights", href: "/sig-hire/insights",  tourId: "nav-insights" },
 ];
 
-const SESSION_AWARE_PATHS = [
+const WORKFLOW_PATHS = [
   "/sig-hire/uploads",
   "/sig-hire/rankings",
   "/sig-hire/assignments",
@@ -55,11 +52,11 @@ function NavbarInner() {
 
   const currentSessionId = searchParams.get("session_id") || sessionId;
   const sessionDisplay = currentSessionId
-    ? `${currentSessionId.substring(0, 8)}...`
+    ? `${currentSessionId.substring(0, 8)}…`
     : null;
 
   const buildHref = (item: (typeof navItems)[number]) =>
-    SESSION_AWARE_PATHS.includes(item.href) && currentSessionId
+    WORKFLOW_PATHS.includes(item.href) && currentSessionId
       ? `${item.href}?session_id=${currentSessionId}`
       : item.href;
 
@@ -113,7 +110,7 @@ function NavbarInner() {
   };
 
   const floatingStyles = {
-    width: scrolled ? "85%" : "100%",
+    width: scrolled ? "60%" : "100%",
     minWidth: "900px",
     maxWidth: scrolled ? "1400px" : "calc(100% - 3rem)",
     transition: "width 0.6s cubic-bezier(0.25, 0.1, 0.25, 1), max-width 0.6s cubic-bezier(0.25, 0.1, 0.25, 1)",
@@ -122,7 +119,7 @@ function NavbarInner() {
   const scrolledBarClass = cn(
     "transition-all duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]",
     scrolled
-      ? "bg-zinc-950/80 border-white/20 shadow-[0_0_24px_rgba(34,42,53,0.06),0_1px_1px_rgba(0,0,0,0.05),0_0_0_1px_rgba(34,42,53,0.04),0_0_4px_rgba(34,42,53,0.08),0_16px_68px_rgba(47,48,55,0.05),0_1px_0_rgba(255,255,255,0.1)_inset] backdrop-blur-lg"
+      ? "bg-white-950/10 border-white/20 shadow-[0_0_24px_rgba(34,42,53,0.06),0_1px_1px_rgba(0,0,0,0.05),0_0_0_1px_rgba(34,42,53,0.04),0_0_4px_rgba(34,42,53,0.08),0_16px_68px_rgba(47,48,55,0.05),0_1px_0_rgba(255,255,255,0.1)_inset] backdrop-blur-lg"
       : "border-transparent"
   );
 
@@ -136,61 +133,67 @@ function NavbarInner() {
         className="fixed top-0 left-1/2 -translate-x-1/2 z-40 hidden lg:flex"
         style={floatingStyles}
       >
-        <div className={cn("flex items-center justify-between w-full h-16 px-6 rounded-md border", scrolledBarClass)}>
-          {/* Logo */}
-          <div className="flex-shrink-0" style={{ width: "180px" }}>
-            <Link href="/sig-hire" className="flex items-center gap-2">
-              <span className="text-2xl font-extrabold gradient-text">SigHyre</span>
-            </Link>
-          </div>
-
-          {/* Nav Items */}
-          <nav className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={buildHref(item)}
-                data-tour={item.tourId}
-                className={cn(
-                  "text-sm transition-colors duration-200 px-3 py-1.5 rounded-md relative whitespace-nowrap",
-                  isActive(item.href)
-                    ? "text-white bg-white/10"
-                    : "text-white/70 hover:text-white hover:bg-white/5"
-                )}
-              >
-                {item.label}
+        <div className={cn("flex flex-col w-full rounded-md border", scrolledBarClass)}>
+          {/* Row 1: Logo + Nav + Session */}
+          <div className="flex items-center justify-between w-full h-16 px-6">
+            {/* Logo */}
+            <div className="flex-shrink-0" style={{ width: "180px" }}>
+              <Link href="/sig-hire" className="flex items-center gap-2">
+                <span className="text-2xl font-extrabold gradient-text">SigHyre</span>
               </Link>
-            ))}
-          </nav>
+            </div>
 
-          {/* Right Section */}
-          <div className="flex items-center gap-3 justify-end flex-shrink-0" style={{ width: "240px" }}>
-            {!isHomePage && sessionDisplay && (
-              <div className="text-xs px-3 py-2 rounded-md glass border border-white/10 text-white/90 flex items-center gap-1 whitespace-nowrap">
-                <span className="w-2 h-2 rounded-md bg-purple-500 animate-pulse" />
-                {sessionDisplay}
-              </div>
-            )}
-            {isHomePage && (
-              <ChromeButton
-                onClick={handleStartHiring}
-                disabled={isLoading}
-                variant="primary"
-                className="flex items-center gap-2 whitespace-nowrap"
-                data-tour="start-hiring-btn"
+            {/* Nav Items */}
+            <nav className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={buildHref(item)}
+                  data-tour={item.tourId}
+                  className={cn(
+                    "text-sm transition-colors duration-200 px-3 py-1.5 rounded-md relative whitespace-nowrap",
+                    isActive(item.href)
+                      ? "text-white bg-white/10"
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  )}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Right Section */}
+            <div className="flex items-center gap-3 justify-end flex-shrink-0" style={{ width: "240px" }}>
+              {WORKFLOW_PATHS.some((p) => pathname.startsWith(p)) && sessionDisplay && (
+                <div className="text-xs px-3 py-2 rounded-md glass border border-white/10 text-white/90 flex items-center gap-1 whitespace-nowrap">
+                  <span className="w-2 h-2 rounded-md bg-purple-500 animate-pulse" />
+                  {sessionDisplay}
+                </div>
+              )}
+              {isHomePage && (
+                <ChromeButton
+                  onClick={handleStartHiring}
+                  disabled={isLoading}
+                  variant="primary"
+                  className="flex items-center gap-2 whitespace-nowrap"
+                  data-tour="start-hiring-btn"
+                >
+                  <Sparkles size={16} />
+                  {isLoading ? "Starting..." : "Start Hiring"}
+                </ChromeButton>
+              )}
+              <button
+                onClick={handleLogout}
+                className="text-white/70 hover:text-white transition-colors p-2 rounded-md hover:bg-white/5 flex-shrink-0 cursor-pointer"
+                title="Logout"
               >
-                <Sparkles size={16} />
-                {isLoading ? "Starting..." : "Start Hiring"}
-              </ChromeButton>
-            )}
-            <button
-              onClick={handleLogout}
-              className="text-white/70 hover:text-white transition-colors p-2 rounded-md hover:bg-white/5 flex-shrink-0 cursor-pointer"
-              title="Logout"
-            >
-              <LogOut size={18} />
-            </button>
+                <LogOut size={18} />
+              </button>
+            </div>
           </div>
+
+          {/* Row 2: Workflow Stepper (only on workflow pages) */}
+          <WorkflowStepper />
         </div>
       </motion.div>
 
@@ -210,7 +213,7 @@ function NavbarInner() {
             "flex items-center justify-between px-4 sm:px-6 h-14 rounded-md border",
             "transition-all duration-[600ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]",
             scrolled || mobileOpen
-              ? "bg-zinc-950/80 border-white/20 shadow-[0_0_24px_rgba(34,42,53,0.06),0_1px_1px_rgba(0,0,0,0.05),0_0_0_1px_rgba(34,42,53,0.04),0_0_4px_rgba(34,42,53,0.08),0_16px_68px_rgba(47,48,55,0.05),0_1px_0_rgba(255,255,255,0.1)_inset] backdrop-blur-lg"
+              ? "bg-white-950/80 border-white/20 shadow-[0_0_24px_rgba(34,42,53,0.06),0_1px_1px_rgba(0,0,0,0.05),0_0_0_1px_rgba(34,42,53,0.04),0_0_4px_rgba(34,42,53,0.08),0_16px_68px_rgba(47,48,55,0.05),0_1px_0_rgba(255,255,255,0.1)_inset] backdrop-blur-lg"
               : "border-transparent"
           )}
         >
@@ -266,10 +269,13 @@ function NavbarInner() {
                 </motion.div>
               ))}
 
-              {!isHomePage && sessionDisplay && (
+              {/* Workflow step indicator — compact mobile version */}
+              <WorkflowStepper />
+
+              {WORKFLOW_PATHS.some((p) => pathname.startsWith(p)) && sessionDisplay && (
                 <div className="mt-2 text-sm px-4 py-2 rounded-md glass border border-white/10 text-white/90 flex items-center gap-2">
                   <span className="w-2 h-2 rounded-md bg-purple-500 animate-pulse" />
-                  Session: {sessionDisplay}
+                  {sessionDisplay}
                 </div>
               )}
 

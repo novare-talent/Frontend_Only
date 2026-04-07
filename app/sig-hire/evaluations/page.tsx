@@ -36,7 +36,7 @@ export default function Page() {
       {/* Content */}
       <Suspense
         fallback={
-          <div className="px-6 py-24 flex items-center justify-center min-h-screen">
+          <div className="px-6 py-24 lg:pt-36 flex items-center justify-center min-h-screen">
             <div className="flex flex-col items-center gap-4">
               <Loader className="w-8 h-8 animate-spin text-[var(--color-lavender)]" />
               <p className="text-white/70">Initializing...</p>
@@ -44,7 +44,7 @@ export default function Page() {
           </div>
         }
       >
-        <div className="relative z-10 px-6 py-24">
+        <div className="relative z-10 px-6 py-24 lg:pt-36">
           <EvaluationsContent />
         </div>
       </Suspense>

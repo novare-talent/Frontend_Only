@@ -5,16 +5,68 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { useMultiSession, SessionData } from "@/context/MultiSessionContext";
 import { motion } from "framer-motion";
-import {
-  Loader2,
-  Plus,
-  Trash2,
-  Eye,
-  BookOpen,
-  Calendar,
-  Users,
-  FileText,
-} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Loader2, Plus, Trash2, Users, ArrowRight } from "lucide-react";
+
+// Simple relative-time helper (no date-fns needed)
+function relativeDate(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString();
+}
+
+const STEP_LABELS = ["Upload", "Rank", "Assign", "Evaluate"];
+
+function getSessionStep(session: SessionData, assignmentsCount: number): number {
+  if (session.status === "initialized" || session.status === "failed") return 0;
+  if (session.status === "processing") return 1;
+  // ready
+  if (assignmentsCount > 0) return 2;
+  return 1;
+}
+
+interface StepProgressProps { currentStep: number }
+function SessionStepProgress({ currentStep }: StepProgressProps) {
+  return (
+    <div className="py-3 border-t border-b border-white/5 my-3">
+      <div className="flex items-start">
+        {STEP_LABELS.map((label, i) => (
+          <React.Fragment key={label}>
+            <div className="flex flex-col items-center gap-1 shrink-0">
+              <div className="relative flex items-center justify-center h-4">
+                {i === currentStep && (
+                  <span className="absolute w-4 h-4 rounded-full bg-violet-400/20 animate-ping" />
+                )}
+                <div className={cn(
+                  "w-2 h-2 rounded-full transition-colors relative z-10",
+                  i < currentStep  && "bg-violet-600",
+                  i === currentStep && "bg-violet-400 ring-2 ring-violet-400/40",
+                  i > currentStep  && "bg-white/15",
+                )} />
+              </div>
+              <span className={cn(
+                "text-[9px] whitespace-nowrap",
+                i === currentStep ? "text-white/80 font-medium" : "text-white/30"
+              )}>{label}</span>
+            </div>
+            {i < STEP_LABELS.length - 1 && (
+              <div className={cn(
+                "flex-1 h-px mt-2 mx-1",
+                i < currentStep ? "bg-violet-600/40" : "bg-white/8"
+              )} />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
+}
 import ChromeButton from "@/components/Sig-Hire/ChromeButton";
 import { useDriverGuide } from "@/hooks/useDriverGuide";
 import { sessionsGuide } from "@/lib/driver-config";
@@ -345,118 +397,130 @@ function SessionsPageContent() {
 
         {sessions && sessions.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sessions.map((session: SessionData, index: number) => (
-              <motion.div
-                key={session.session_id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                data-tour={index === 0 ? "session-card" : undefined}
-                className={`relative p-6 rounded-md border backdrop-blur-xl transition-all duration-300 hover:border-[var(--color-lavender)]/50 overflow-hidden ${
-                  currentSessionId === session.session_id
-                    ? "border-[var(--color-lavender)] bg-[var(--color-glass-bg)]"
-                    : "border-[var(--color-glass-border)] bg-[var(--color-glass-bg)]"
-                }`}
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-lavender)]/10 via-transparent to-transparent pointer-events-none" />
-                <div className="relative z-10">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-xl font-bold text-white mb-2">
-                        {session.job_name || "Untitled Job"}
-                      </h3>
-                      <div className="flex items-center gap-2 text-white/60 text-sm">
-                        <Calendar className="w-4 h-4" />
-                        {new Date(session.created_at).toLocaleDateString()}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-xs px-3 py-1 rounded-full border ${getStatusBadgeColor(session.status)}`}
-                      >
+            {sessions.map((session: SessionData, index: number) => {
+              const assignCount = assignmentsCounts[session.session_id] ?? 0;
+              const step = getSessionStep(session, assignCount);
+              const isActive = currentSessionId === session.session_id;
+              const isFailed = session.status === "failed";
+              const isProcessing = session.status === "processing";
+
+              const ctaLabel = (() => {
+                if (isFailed) return "Retry Upload";
+                if (isProcessing) return "Processing…";
+                if (step === 0) return "Upload Data";
+                if (step === 1) return "View Rankings";
+                return "Review Evaluations";
+              })();
+
+              const handleCta = () => {
+                if (isFailed || step === 0) {
+                  setCurrentSessionId(session.session_id);
+                  router.push(`/sig-hire/uploads?session_id=${session.session_id}`);
+                } else if (step === 1) {
+                  handleViewSession(session.session_id, session.status);
+                } else {
+                  handleViewAssignments(session.session_id);
+                }
+              };
+
+              return (
+                <motion.div
+                  key={session.session_id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  data-tour={index === 0 ? "session-card" : undefined}
+                  className={cn(
+                    "relative p-6 rounded-md border backdrop-blur-xl transition-all duration-300 overflow-hidden",
+                    isActive && "border-[var(--color-lavender)]",
+                    isFailed && !isActive && "border-red-500/30",
+                    !isActive && !isFailed && "border-[var(--color-glass-border)] hover:border-[var(--color-lavender)]/50",
+                    "bg-[var(--color-glass-bg)]"
+                  )}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-lavender)]/10 via-transparent to-transparent pointer-events-none" />
+                  <div className="relative z-10">
+
+                    {/* Header row: active pill + status badge + delete */}
+                    <div className="flex items-center gap-2 mb-3">
+                      {isActive && (
+                        <span className="flex items-center gap-1 text-[10px] font-medium text-violet-300 bg-violet-500/15 border border-violet-500/25 px-2 py-0.5 rounded-full">
+                          <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                          Active
+                        </span>
+                      )}
+                      <span className={cn(
+                        "text-[10px] px-2.5 py-0.5 rounded-full border",
+                        getStatusBadgeColor(session.status)
+                      )}>
                         {session.status}
                       </span>
                       <button
-                        onClick={() => setCurrentSessionId(session.session_id)}
-                        className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer"
-                        style={{
-                          backgroundColor:
-                            currentSessionId === session.session_id
-                              ? "var(--color-lavender)"
-                              : "rgba(255, 255, 255, 0.2)",
-                        }}
+                        onClick={() => handleDeleteSession(session.session_id)}
+                        className="ml-auto p-1 rounded-md text-white/30 hover:text-red-300 hover:bg-red-500/10 transition-colors cursor-pointer"
+                        title="Delete session"
                       >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            currentSessionId === session.session_id
-                              ? "translate-x-6"
-                              : "translate-x-1"
-                          }`}
-                        />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                  </div>
 
-                  <div className="space-y-3 mb-4">
-                    {session.candidates_count && (
-                      <div className="flex items-center gap-2 text-white/80">
-                        <Users className="w-4 h-4 text-[var(--color-lavender)]" />
-                        <span className="text-sm">
-                          {session.candidates_count} Candidates
-                        </span>
-                      </div>
-                    )}
-                    {assignmentsCounts[session.session_id] !== undefined && (
-                      <div className="flex items-center gap-2 text-white/80">
-                        <FileText className="w-4 h-4 text-[var(--color-lavender)]" />
-                        <span className="text-sm">
-                          {assignmentsCounts[session.session_id]} Assignments
-                        </span>
-                      </div>
-                    )}
-                    {session.error && (
-                      <div className="text-sm text-red-300 bg-red-500/10 p-3 rounded-lg border border-red-500/20">
-                        Error: {session.error}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex gap-2 flex-wrap">
-                    <button
-                      onClick={() =>
-                        handleViewSession(session.session_id, session.status)
-                      }
-                      disabled={
-                        session.status === "failed" ||
-                        session.status === "processing"
-                      }
-                      className="flex-1 px-3 py-2 text-sm rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <Eye className="w-4 h-4" />
-                      {session.status === "initialized" ? "Upload" : "Rankings"}
-                    </button>
-                    {assignmentsCounts[session.session_id] !== undefined &&
-                      assignmentsCounts[session.session_id] > 0 && (
-                        <button
-                          onClick={() =>
-                            handleViewAssignments(session.session_id)
-                          }
-                          className="px-3 py-2 text-sm rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all flex items-center gap-2 cursor-pointer"
-                        >
-                          <BookOpen className="w-4 h-4" />
-                          {assignmentsCounts[session.session_id]}
-                        </button>
+                    {/* Job name */}
+                    <h3 className="text-xl font-bold text-white leading-tight mb-1">
+                      {session.job_name || (
+                        <span className="text-white/60 italic font-normal text-base">New Session</span>
                       )}
+                    </h3>
+
+                    {/* Metadata row */}
+                    <div className="flex items-center gap-3 text-white/50 text-xs mb-1">
+                      <span>Started {relativeDate(session.created_at)}</span>
+                      {session.candidates_count ? (
+                        <>
+                          <span className="w-1 h-1 rounded-full bg-white/20" />
+                          <span className="flex items-center gap-1">
+                            <Users className="w-3 h-3" />
+                            {session.candidates_count} candidates
+                          </span>
+                        </>
+                      ) : null}
+                    </div>
+
+                    {/* Hint for new sessions */}
+                    {!session.job_name && session.status === "initialized" && (
+                      <p className="text-[11px] text-white/35 italic mb-2">
+                        Upload a job description to get started
+                      </p>
+                    )}
+
+                    {/* Error message */}
+                    {session.error && (
+                      <div className="text-xs text-red-300 bg-red-500/10 px-3 py-2 rounded-md border border-red-500/20 mb-2">
+                        {session.error}
+                      </div>
+                    )}
+
+                    {/* Step progress */}
+                    <SessionStepProgress currentStep={step} />
+
+                    {/* Primary CTA */}
                     <button
-                      onClick={() => handleDeleteSession(session.session_id)}
-                      className="px-3 py-2 text-sm rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/20 transition-all cursor-pointer"
+                      onClick={handleCta}
+                      disabled={isProcessing}
+                      className={cn(
+                        "w-full py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-all cursor-pointer",
+                        isProcessing
+                          ? "bg-white/5 text-white/30 cursor-not-allowed"
+                          : "bg-violet-600/80 hover:bg-violet-600 text-white"
+                      )}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {ctaLabel}
+                      {!isProcessing && <ArrowRight className="w-4 h-4" />}
                     </button>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         ) : (
           <motion.div

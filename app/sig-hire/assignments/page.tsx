@@ -39,7 +39,7 @@ function AssignmentsContent() {
       </div>
       
       {/* Content */}
-      <div className="relative z-10 px-4 sm:px-6 py-24 max-w-7xl mx-auto">
+      <div className="relative z-10 px-4 sm:px-6 py-24 lg:pt-36 max-w-7xl mx-auto">
         <SectionCards sessionId={sessionId || undefined} candidateIds={candidateIds} />
       </div>
       <SigHireFooter />

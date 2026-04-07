@@ -33,7 +33,7 @@ function UploadContent() {
       </div>
       
       {/* Content */}
-      <div className="relative z-10 px-6 py-24 max-w-7xl mx-auto">
+      <div className="relative z-10 px-6 py-24 lg:pt-36 max-w-7xl mx-auto">
         <SectionCards />
       </div>
       <SigHireFooter />

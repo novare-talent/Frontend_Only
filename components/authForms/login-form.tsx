@@ -4,9 +4,9 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import Image from "next/image";
 import Link from "next/link";
@@ -18,8 +18,15 @@ export function LoginForm({
   const [userInput, setUserInput] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [isEmailValid, setIsEmailValid] = useState(false);
+  const [isSigHire, setIsSigHire] = useState(false);
   const supabase = createClient();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const redirect = searchParams.get("redirect");
+    setIsSigHire(redirect?.includes("sig-hire") || false);
+  }, [searchParams]);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
@@ -104,21 +111,27 @@ export function LoginForm({
     >
       <div className="bg-card -m-px rounded-[calc(var(--radius)+.125rem)] border p-8 pb-6">
         <div>
-          <Link href="/" aria-label="go home">
-            <Image
-              src="/logoDark.svg"
-              alt="Logo"
-              width={160}
-              height={40}
-              className="block dark:hidden"
-            />
-            <Image
-              src="/logo.svg"
-              alt="Logo Dark"
-              width={160}
-              height={40}
-              className="hidden dark:block"
-            />
+          <Link href={isSigHire ? "/sig-hire" : "/"} aria-label="go home">
+            {isSigHire ? (
+              <span className="text-2xl font-extrabold gradient-text">SigHyre</span>
+            ) : (
+              <>
+                <Image
+                  src="/logoDark.svg"
+                  alt="Logo"
+                  width={160}
+                  height={40}
+                  className="block dark:hidden"
+                />
+                <Image
+                  src="/logo.svg"
+                  alt="Logo Dark"
+                  width={160}
+                  height={40}
+                  className="hidden dark:block"
+                />
+              </>
+            )}
           </Link>
           <h1 className="mb-1 mt-4 text-xl font-semibold text-foreground">Login to your account</h1>
           <p className="text-sm text-muted-foreground">Enter your email below to login to your account</p>

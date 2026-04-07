@@ -602,6 +602,21 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
                 </div>
               )}
             </div>
+
+            {/* Inline CTA: move to evaluations */}
+            <div className="relative z-10 flex items-center justify-between gap-4 px-6 py-3 border-t border-white/5">
+              <p className="text-sm text-white/50">
+                <span className="text-green-400 font-medium">✓ {previousAssignments.length} assignment{previousAssignments.length !== 1 ? "s" : ""} sent</span>
+                {" — track candidate submissions"}
+              </p>
+              <button
+                onClick={() => router.push(`/sig-hire/evaluations?assignment_id=${jobId}&session_id=${sessionId}`)}
+                className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-600/80 hover:bg-violet-600 text-white text-sm font-medium transition-colors cursor-pointer whitespace-nowrap"
+              >
+                Review Evaluations
+                <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+            </div>
           </GlassCard>
         )}
       </div>
