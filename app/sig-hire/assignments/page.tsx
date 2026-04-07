@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { SectionCards } from "@/components/Sig-Hire/assignment-cards";
 import { SigHireFooter } from "@/components/Sig-Hire/footer";
 import GlowOrb from "@/components/landing/effects/GlowOrb";
@@ -9,9 +9,20 @@ import { Particles } from "@/components/ui/particles";
 
 function AssignmentsContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const sessionId = searchParams.get('session_id');
   const candidatesParam = searchParams.get('candidates');
   const candidateIds = candidatesParam ? candidatesParam.split(',') : undefined;
+
+  useEffect(() => {
+    if (!sessionId) {
+      router.push('/sig-hire/sessions');
+    }
+  }, [sessionId, router]);
+
+  if (!sessionId) {
+    return null;
+  }
 
   return (
     <main className="relative min-h-screen overflow-hidden">
@@ -40,7 +51,7 @@ function AssignmentsContent() {
       
       {/* Content */}
       <div className="relative z-10 px-4 sm:px-6 py-24 lg:pt-36 max-w-7xl mx-auto">
-        <SectionCards sessionId={sessionId || undefined} candidateIds={candidateIds} />
+        <SectionCards sessionId={sessionId} candidateIds={candidateIds} />
       </div>
       <SigHireFooter />
     </main>

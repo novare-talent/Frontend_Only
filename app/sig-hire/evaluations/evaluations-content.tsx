@@ -1,6 +1,6 @@
 "use client"
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AssignmentEvaluationScreen } from "@/components/Sig-Hire/evaluations-table";
 import { useMultiSession } from "@/context/MultiSessionContext";
@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/Sig-Hire/PageHeader";
 
 export function EvaluationsContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const urlJobId = searchParams.get("job_id");
   const urlSessionId = searchParams.get("session_id");
   const { sessions, currentSessionId, setCurrentSessionId } = useMultiSession();
@@ -20,32 +21,31 @@ export function EvaluationsContent() {
   const { startTour } = useDriverGuide("evaluations", evaluationsGuide, false);
 
   useEffect(() => {
+    // Redirect to sessions if no session_id in URL
+    if (!urlSessionId) {
+      router.push('/sig-hire/sessions');
+      return;
+    }
+
     // 1. Check URL params first (job_id or assignment_id)
     if (urlJobId) {
       setJobId(urlJobId);
-      // If we have a session_id in URL, set it as active
-      if (urlSessionId) {
-        setCurrentSessionId(urlSessionId);
-      }
+      setCurrentSessionId(urlSessionId);
       localStorage.setItem("lastEvaluationJobId", urlJobId);
       setIsLoading(false);
       return;
     }
 
-    // 2. Check URL session_id or active session
-    const activeSessionId = urlSessionId || currentSessionId;
-    if (activeSessionId) {
-      // Set this as the active session
-      setCurrentSessionId(activeSessionId);
-      
-      // Find the session and get its job_id
-      const activeSession = sessions.find(s => s.session_id === activeSessionId);
-      if (activeSession?.job_id) {
-        setJobId(activeSession.job_id);
-        localStorage.setItem("lastEvaluationJobId", activeSession.job_id);
-        setIsLoading(false);
-        return;
-      }
+    // 2. Use URL session_id
+    setCurrentSessionId(urlSessionId);
+    
+    // Find the session and get its job_id
+    const activeSession = sessions.find(s => s.session_id === urlSessionId);
+    if (activeSession?.job_id) {
+      setJobId(activeSession.job_id);
+      localStorage.setItem("lastEvaluationJobId", activeSession.job_id);
+      setIsLoading(false);
+      return;
     }
 
     // 3. Check localStorage for previously stored job_id
@@ -58,7 +58,7 @@ export function EvaluationsContent() {
 
     // 4. No job_id available
     setIsLoading(false);
-  }, [urlJobId, urlSessionId, currentSessionId, sessions, setCurrentSessionId]);
+  }, [urlJobId, urlSessionId, sessions, setCurrentSessionId, router]);
 
   if (isLoading) {
     return (
@@ -85,8 +85,8 @@ export function EvaluationsContent() {
             <div>
               <p className="font-semibold text-red-900">No Evaluations Available</p>
               <p className="text-sm text-red-800">
-                No job ID found for {currentSessionId ? `session ${currentSessionId.substring(0, 8)}...` : 'active session'}. 
-                Please go to Sessions, select a session, and create assignments first.
+                No job ID found for session {urlSessionId?.substring(0, 8)}... 
+                Please create assignments first.
               </p>
             </div>
           </CardContent>

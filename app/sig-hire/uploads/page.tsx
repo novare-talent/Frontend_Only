@@ -1,12 +1,27 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { SectionCards } from "@/components/Sig-Hire/upload-cards";
 import { SigHireFooter } from "@/components/Sig-Hire/footer";
 import GlowOrb from "@/components/landing/effects/GlowOrb";
 import { Particles } from "@/components/ui/particles";
 
 function UploadContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const sessionId = searchParams.get('session_id');
+
+  useEffect(() => {
+    if (!sessionId) {
+      router.push('/sig-hire/sessions');
+    }
+  }, [sessionId, router]);
+
+  if (!sessionId) {
+    return null;
+  }
+
   return (
     <main className="relative min-h-screen overflow-hidden">
       {/* Background Effects - Fixed positioning */}

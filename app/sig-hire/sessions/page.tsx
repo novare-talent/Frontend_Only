@@ -26,19 +26,47 @@ const STEP_LABELS = ["Upload", "Rank", "Assign", "Evaluate"];
 function getSessionStep(session: SessionData, assignmentsCount: number): number {
   if (session.status === "initialized" || session.status === "failed") return 0;
   if (session.status === "processing") return 1;
-  // ready
-  if (assignmentsCount > 0) return 2;
-  return 1;
+  // ready - user has completed ranking
+  if (assignmentsCount > 0) return 3; // Has assignments, so at evaluate step
+  return 1; // Ready but no assignments yet, at ranking step
 }
 
-interface StepProgressProps { currentStep: number }
-function SessionStepProgress({ currentStep }: StepProgressProps) {
+function getMaxUnlockedStep(session: SessionData, assignmentsCount: number): number {
+  if (session.status === "initialized" || session.status === "failed") return 0;
+  // Once status is processing or ready, ranking is unlocked
+  if (session.status === "processing" || session.status === "ready") {
+    // If ready, both upload and ranking are unlocked
+    if (session.status === "ready") {
+      // If has assignments, all steps unlocked
+      if (assignmentsCount > 0) return 3;
+      // Otherwise upload, ranking, and assign are unlocked
+      return 2;
+    }
+    // If processing, only upload is unlocked
+    return 1;
+  }
+  return 0;
+}
+
+interface StepProgressProps { 
+  currentStep: number;
+  maxUnlockedStep: number;
+  onStepClick?: (step: number) => void;
+}
+function SessionStepProgress({ currentStep, maxUnlockedStep, onStepClick }: StepProgressProps) {
   return (
     <div className="py-3 border-t border-b border-white/5 my-3">
       <div className="flex items-start">
         {STEP_LABELS.map((label, i) => (
           <React.Fragment key={label}>
-            <div className="flex flex-col items-center gap-1 shrink-0">
+            <button
+              onClick={() => i <= maxUnlockedStep && onStepClick?.(i)}
+              disabled={i > maxUnlockedStep}
+              className={cn(
+                "flex flex-col items-center gap-1 shrink-0 transition-opacity",
+                i <= maxUnlockedStep ? "cursor-pointer hover:opacity-80" : "cursor-not-allowed"
+              )}
+            >
               <div className="relative flex items-center justify-center h-4">
                 {i === currentStep && (
                   <span className="absolute w-4 h-4 rounded-full bg-violet-400/20 animate-ping" />
@@ -47,14 +75,16 @@ function SessionStepProgress({ currentStep }: StepProgressProps) {
                   "w-2 h-2 rounded-full transition-colors relative z-10",
                   i < currentStep  && "bg-violet-600",
                   i === currentStep && "bg-violet-400 ring-2 ring-violet-400/40",
-                  i > currentStep  && "bg-white/15",
+                  i > currentStep && i <= maxUnlockedStep && "bg-violet-600/50",
+                  i > maxUnlockedStep  && "bg-white/15",
                 )} />
               </div>
               <span className={cn(
                 "text-[9px] whitespace-nowrap",
-                i === currentStep ? "text-white/80 font-medium" : "text-white/30"
+                i === currentStep ? "text-white/80 font-medium" : 
+                i <= maxUnlockedStep ? "text-white/50" : "text-white/30"
               )}>{label}</span>
-            </div>
+            </button>
             {i < STEP_LABELS.length - 1 && (
               <div className={cn(
                 "flex-1 h-px mt-2 mx-1",
@@ -400,6 +430,7 @@ function SessionsPageContent() {
             {sessions.map((session: SessionData, index: number) => {
               const assignCount = assignmentsCounts[session.session_id] ?? 0;
               const step = getSessionStep(session, assignCount);
+              const maxUnlocked = getMaxUnlockedStep(session, assignCount);
               const isActive = currentSessionId === session.session_id;
               const isFailed = session.status === "failed";
               const isProcessing = session.status === "processing";
@@ -409,6 +440,7 @@ function SessionsPageContent() {
                 if (isProcessing) return "Processing…";
                 if (step === 0) return "Upload Data";
                 if (step === 1) return "View Rankings";
+                if (step === 2) return "Send Assignments";
                 return "Review Evaluations";
               })();
 
@@ -418,6 +450,9 @@ function SessionsPageContent() {
                   router.push(`/sig-hire/uploads?session_id=${session.session_id}`);
                 } else if (step === 1) {
                   handleViewSession(session.session_id, session.status);
+                } else if (step === 2) {
+                  setCurrentSessionId(session.session_id);
+                  router.push(`/sig-hire/assignments?session_id=${session.session_id}`);
                 } else {
                   handleViewAssignments(session.session_id);
                 }
@@ -500,7 +535,22 @@ function SessionsPageContent() {
                     )}
 
                     {/* Step progress */}
-                    <SessionStepProgress currentStep={step} />
+                    <SessionStepProgress 
+                      currentStep={step}
+                      maxUnlockedStep={maxUnlocked}
+                      onStepClick={(clickedStep) => {
+                        setCurrentSessionId(session.session_id);
+                        if (clickedStep === 0) {
+                          router.push(`/sig-hire/uploads?session_id=${session.session_id}`);
+                        } else if (clickedStep === 1) {
+                          router.push(`/sig-hire/rankings?session_id=${session.session_id}`);
+                        } else if (clickedStep === 2) {
+                          router.push(`/sig-hire/assignments?session_id=${session.session_id}`);
+                        } else {
+                          handleViewAssignments(session.session_id);
+                        }
+                      }}
+                    />
 
                     {/* Primary CTA */}
                     <button

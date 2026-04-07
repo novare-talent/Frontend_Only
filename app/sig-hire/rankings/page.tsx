@@ -1,6 +1,6 @@
 "use client";
 import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "@/context/SessionContext";
 import { RankingsScreen } from "@/components/Sig-Hire/rankings-screen";
 import { RankingBotCard } from "@/components/Sig-Hire/rankingbot";
@@ -11,6 +11,7 @@ import { IconMessageChatbot, IconX } from "@tabler/icons-react";
 
 function RankingsContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { sessionId: contextSessionId, setSessionId } = useSession();
   const urlSessionId = searchParams.get('session_id');
   const [refreshKey, setRefreshKey] = useState(0);
@@ -20,14 +21,15 @@ function RankingsContent() {
   const sessionId = urlSessionId || contextSessionId;
 
   useEffect(() => {
-    setIsHydrated(true);
-
-    if (urlSessionId) {
-      setSessionId(urlSessionId);
+    if (!urlSessionId) {
+      router.push('/sig-hire/sessions');
+      return;
     }
 
+    setIsHydrated(true);
+    setSessionId(urlSessionId);
     window.scrollTo(0, 0);
-  }, [urlSessionId, setSessionId]);
+  }, [urlSessionId, setSessionId, router]);
 
   // Prevent body scroll when drawer is open
   useEffect(() => {

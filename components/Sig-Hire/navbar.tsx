@@ -12,6 +12,7 @@ import { useMultiSession } from "@/context/MultiSessionContext";
 import { initializeSession } from "@/lib/ranking-api";
 import { createClient } from "@/utils/supabase/client";
 import { WorkflowStepper } from "@/components/Sig-Hire/workflow-stepper";
+import Swal from "sweetalert2";
 
 const navItems = [
   { label: "Home",     href: "/sig-hire",          tourId: "nav-home" },
@@ -64,11 +65,25 @@ function NavbarInner() {
     pathname === href || (href !== "/sig-hire" && pathname.startsWith(href));
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    setSessionId(null);
-    setClientId(null);
-    router.push("/sig-hire");
+    const result = await Swal.fire({
+      title: 'Logout?',
+      text: 'Are you sure you want to logout?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#8b5cf6',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, logout',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (result.isConfirmed) {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      setSessionId(null);
+      setClientId(null);
+      router.push("/sig-hire");
+      window.location.reload();
+    }
   };
 
   const handleStartHiring = async () => {

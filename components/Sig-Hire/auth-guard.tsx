@@ -24,17 +24,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-      if (profile?.role !== "client") {
-        router.replace("/client-signup");
-        return;
-      }
-
       setLoading(false);
     };
 

@@ -89,8 +89,13 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
       try {
         const { data: jobData, error: jobError } = await supabase
           .from('jobs').select('job_id').eq('form_id', sessionId).single();
-        if (jobError || !jobData) { console.error('Job fetch error:', jobError); return; }
-        setJobId(jobData.job_id);
+        if (jobError) {
+          if (jobError.code !== 'PGRST116') {
+            console.error('Job fetch error:', jobError);
+          }
+          return;
+        }
+        if (jobData) setJobId(jobData.job_id);
       } catch (err) { console.error('Error fetching job ID:', err); }
     };
     fetchJobId();
