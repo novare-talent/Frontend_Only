@@ -24,6 +24,7 @@ import {
   Info,
   Calendar,
   Clock,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -88,6 +89,7 @@ export function JobCard({
   const [loading, setLoading] = useState(false);
   const [evalLoading, setEvalLoading] = useState(false);
   const [hasEvaluation, setHasEvaluation] = useState(false);
+  const [hasResponses, setHasResponses] = useState(false);
   const supabase = createClient();
 
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -179,6 +181,22 @@ export function JobCard({
     };
 
     checkEvaluation();
+  }, [jobId, supabase]);
+
+  useEffect(() => {
+    const checkResponses = async () => {
+      if (!jobId) return;
+      const { data } = await supabase
+        .from("responses")
+        .select("id")
+        .eq("job_id", jobId)
+        .limit(1)
+        .maybeSingle();
+
+      setHasResponses(!!data);
+    };
+
+    checkResponses();
   }, [jobId, supabase]);
 
   const handleEdit = () => {
@@ -288,6 +306,10 @@ export function JobCard({
 
   const handleViewResults = () => {
     if (jobId) router.push(`/client/evaluate/${jobId}`);
+  };
+
+  const handleViewResponses = () => {
+    if (jobId) router.push(`/client/responses/${jobId}`);
   };
 
   if (loading) {
@@ -449,6 +471,18 @@ export function JobCard({
                   ? "Re-Evaluate"
                   : "Evaluate Candidates"}
             </Button>
+
+            {hasResponses && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleViewResponses}
+                className="gap-2"
+              >
+                <FileText className="size-4" />
+                Form Responses
+              </Button>
+            )}
 
             {hasEvaluation && (
               <Button
