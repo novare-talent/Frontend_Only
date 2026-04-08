@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Loader2, Check, Eye } from "lucide-react";
+import { Loader2, Check, Eye, FileText } from "lucide-react";
 import { toast } from "sonner";
 import {
   Popover,
@@ -35,6 +35,7 @@ export default function JobList() {
   const [evaluatingJob, setEvaluatingJob] = useState<string | null>(null);
   const [activatingJob, setActivatingJob] = useState<string | null>(null);
   const [hasEvaluation, setHasEvaluation] = useState<Record<string, boolean>>({});
+  const [hasResponses, setHasResponses] = useState<Record<string, boolean>>({});
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notification, setNotification] = useState<{
@@ -114,9 +115,10 @@ export default function JobList() {
       setDraftJobs(jobsWithClientFirstNames.filter((j) => j.status === "draft"));
       setActiveJobs(jobsWithClientFirstNames.filter((j) => j.status === "active" || j.status === "sighyre" || j.status === "mailed"));
       
-      // Check evaluation status for active jobs
+      // Check evaluation and response status for all jobs
       jobsWithClientFirstNames.forEach(job => {
         checkEvaluationStatus(job.job_id);
+        checkResponsesStatus(job.job_id);
       });
     }
   };
@@ -130,6 +132,20 @@ export default function JobList() {
       .maybeSingle();
 
     setHasEvaluation(prev => ({
+      ...prev,
+      [jobId]: !!data
+    }));
+  };
+
+  const checkResponsesStatus = async (jobId: string) => {
+    const { data } = await supabase
+      .from("responses")
+      .select("id")
+      .eq("job_id", jobId)
+      .limit(1)
+      .maybeSingle();
+
+    setHasResponses(prev => ({
       ...prev,
       [jobId]: !!data
     }));
@@ -253,10 +269,15 @@ export default function JobList() {
     router.push(`/admin/evaluate/${jobId}`);
   };
 
+  const handleViewResponses = (jobId: string) => {
+    router.push(`/admin/responses/${jobId}`);
+  };
+
   const JobCard = ({ job, isDraft = false }: { job: Job; isDraft?: boolean }) => {
     const isEvaluating = evaluatingJob === job.job_id;
     const currentProgress = progress[job.job_id] || 0;
     const jobHasEvaluation = hasEvaluation[job.job_id];
+    const jobHasResponses = hasResponses[job.job_id];
 
     return (
       <div className="border rounded-lg p-4 shadow-sm flex justify-between items-start hover:shadow-md transition-shadow">
@@ -344,6 +365,18 @@ export default function JobList() {
                   jobHasEvaluation ? "Re-Evaluate" : "Evaluate Candidates"
                 )}
               </Button>
+
+              {jobHasResponses && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleViewResponses(job.job_id)}
+                  className="gap-2"
+                >
+                  <FileText className="size-4" />
+                  Form Responses
+                </Button>
+              )}
 
               {jobHasEvaluation && (
                 <Button
