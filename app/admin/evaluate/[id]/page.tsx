@@ -11,7 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useParams, useRouter } from "next/navigation";
-import { User, FileText, Mail, Phone, ArrowLeft } from "lucide-react";
+import { User, FileText, Mail, Phone, ArrowLeft, Eye } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -131,6 +131,10 @@ export default function AdminEvaluationPage() {
     (a, b) => (b.final_score ?? 0) - (a.final_score ?? 0)
   );
 
+  const handleViewResponse = (profileId: string) => {
+    router.push(`/admin/responses/${id}/${profileId}`);
+  };
+
   return (
     <div className="container mx-auto px-6">
       <div className="mb-6">
@@ -204,15 +208,26 @@ export default function AdminEvaluationPage() {
                     )}
 
                     {c.resume_url && (
-                      <a
-                        href={c.resume_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-sm text-primary
-                        transition hover:gap-2 hover:underline"
-                      >
-                        View Resume <FileText className="size-4" />
-                      </a>
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={c.resume_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-sm text-primary
+                          transition hover:gap-2 hover:underline"
+                        >
+                          View Resume <FileText className="size-4" />
+                        </a>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewResponse(c.profile_id || "")}
+                          className="gap-1 h-7 text-xs"
+                        >
+                          <Eye className="size-3" />
+                          Form Response
+                        </Button>
+                      </div>
                     )}
                   </div>
 
