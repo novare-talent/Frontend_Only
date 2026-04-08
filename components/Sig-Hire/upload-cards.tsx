@@ -105,13 +105,14 @@ export function SectionCards() {
 
       setLoadingMessage("Uploading your files...");
 
-      // Upload data to API
+      // Upload data to API - pass jobDescription as additional_prompt for context
       await uploadSessionData(
         activeSessionId,
         jobDescription,
         jobFile,
         candidatesCSV,
-        candidatesFile
+        candidatesFile,
+        jobDescription // Pass JD text as additional context to API
       );
 
       const messages = [

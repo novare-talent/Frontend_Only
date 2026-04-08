@@ -78,7 +78,8 @@ export async function uploadSessionData(
   jobDescription: string,
   jobFile: File | null,
   candidatesCSV: string,
-  candidatesFile: File | null
+  candidatesFile: File | null,
+  additionalPrompt?: string
 ): Promise<UploadResponse> {
   try {
     const formData = new FormData();
@@ -118,6 +119,11 @@ export async function uploadSessionData(
     // Append with exact field names the API expects
     formData.append("csv_file", csvFile);
     formData.append("jd_file", jdFile);
+    
+    // Append additional_prompt if provided (JD text for context)
+    if (additionalPrompt && additionalPrompt.trim()) {
+      formData.append("additional_prompt", additionalPrompt.trim());
+    }
 
     const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/upload`, {
       method: "POST",

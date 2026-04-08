@@ -13,8 +13,6 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
-const supabase = createClient();
-
 interface CandidateResult {
   results: {
     final_score: number;
@@ -41,6 +39,8 @@ export default function AllEvaluations() {
 
   async function fetchResults() {
     try {
+      const supabase = createClient();
+      
       const { data, error } = await supabase
         .from("evaluations")
         .select("evaluation_id, job_id, results")

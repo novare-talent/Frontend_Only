@@ -10,8 +10,6 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
-const supabase = createClient();
-
 interface CandidateResult {
   results: {
     final_score: number;
@@ -29,6 +27,7 @@ export default function EvaluationResults() {
   const [loading, setLoading] = useState(true);
 
   async function fetchResults() {
+    const supabase = createClient();
     const { data, error } = await supabase.from("evaluations").select("results");
 
     if (error) {

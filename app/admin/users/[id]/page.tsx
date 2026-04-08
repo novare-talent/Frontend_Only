@@ -23,8 +23,6 @@ import {
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-const supabase = createClient();
-
 export default function UserDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -38,6 +36,7 @@ export default function UserDetailPage() {
   }, [id]);
 
   const fetchUser = async (userId: string) => {
+    const supabase = createClient();
     setLoading(true);
     const { data, error } = await supabase
       .from("profiles")
@@ -57,6 +56,7 @@ export default function UserDetailPage() {
     if (!id) return;
     setDeleting(true);
 
+    const supabase = createClient();
     const { error } = await supabase.from("profiles").delete().eq("id", id);
 
     setDeleting(false);

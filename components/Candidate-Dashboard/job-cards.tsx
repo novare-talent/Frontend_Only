@@ -26,8 +26,6 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
-const supabase = createClient();
-
 function formatIST(dateString: string | null | undefined) {
   if (!dateString) return "—";
   const date = new Date(dateString);
@@ -309,6 +307,7 @@ export default function JobsGrid() {
   }, []);
 
   const fetchJobsWithFormStatus = async () => {
+    const supabase = createClient();
     const { data: jobsData, error: jobsError } = await supabase
       .from("jobs")
       .select(

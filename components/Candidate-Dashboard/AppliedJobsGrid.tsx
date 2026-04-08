@@ -15,8 +15,6 @@ import Link from "next/link";
 import { ChevronRight, FileText } from "lucide-react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
-const supabase = createClient();
-
 interface Job {
   job_id: string;
   Job_Name: string;
@@ -75,6 +73,7 @@ export default function AppliedJobsGrid() {
   }, []);
 
   const fetchAppliedJobs = async () => {
+    const supabase = createClient();
     // 1. Get current user
     const {
       data: { user },

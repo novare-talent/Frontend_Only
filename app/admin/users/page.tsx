@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { DataTable } from "@/components/Admin-Dashboard/data-table";
 
-const supabase = createClient();
-
 export default function UsersPage() {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -15,6 +13,7 @@ export default function UsersPage() {
   }, []);
 
   const fetchProfiles = async () => {
+    const supabase = createClient();
     setLoading(true);
     const { data, error } = await supabase
       .from("profiles")

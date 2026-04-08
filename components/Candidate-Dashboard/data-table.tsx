@@ -13,8 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-const supabase = createClient();
-
 interface Job {
   id: number;
   Job_Name: string;
@@ -31,6 +29,7 @@ export default function JobTable() {
   }, []);
 
   const fetchJobs = async () => {
+    const supabase = createClient();
     const { data, error } = await supabase
       .from("jobs")
       .select("id, Job_Name, Job_Description, JD_pdf, form_link, status")

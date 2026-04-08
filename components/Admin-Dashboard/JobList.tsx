@@ -14,8 +14,6 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, XCircle, Info } from "lucide-react";
 
-const supabase = createClient();
-
 interface Job {
   job_id: string;
   Job_Name: string;
@@ -72,6 +70,7 @@ export default function JobList() {
   }, []);
 
   const fetchJobs = async () => {
+    const supabase = createClient();
     const { data, error } = await supabase
       .from("jobs")
       .select("job_id, Job_Name, Job_Description, JD_pdf, Shortlisted_Candidates, stipend, duration, employer_id, status")
@@ -124,6 +123,7 @@ export default function JobList() {
   };
 
   const checkEvaluationStatus = async (jobId: string) => {
+    const supabase = createClient();
     const { data } = await supabase
       .from("evaluations")
       .select("job_id")
@@ -138,6 +138,7 @@ export default function JobList() {
   };
 
   const checkResponsesStatus = async (jobId: string) => {
+    const supabase = createClient();
     const { data } = await supabase
       .from("responses")
       .select("id")
@@ -154,6 +155,7 @@ export default function JobList() {
   const handleActivateJob = async (jobId: string) => {
     try {
       setActivatingJob(jobId);
+      const supabase = createClient();
       const { error } = await supabase
         .from("jobs")
         .update({ status: "active" })
@@ -177,6 +179,7 @@ export default function JobList() {
       showNotification("info", "Starting evaluation", "Fetching form details…");
 
       // Get access token for consuming evaluation
+      const supabase = createClient();
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !session?.access_token) {
         showNotification(
