@@ -11,6 +11,7 @@ import { uploadsGuide } from "@/lib/driver-config";
 import { PageHeader } from "@/components/Sig-Hire/PageHeader";
 import ChromeButton from "@/components/Sig-Hire/ChromeButton";
 import { FileText, Users, Upload } from "lucide-react";
+import { showError } from "@/lib/swal";
 
 export function SectionCards() {
   const router = useRouter();
@@ -30,7 +31,6 @@ export function SectionCards() {
   const [isDragOverCandidates, setIsDragOverCandidates] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [loadingMessage, setLoadingMessage] = useState("Processing...");
 
   const handleJobDrop = (e: React.DragEvent) => {
@@ -41,7 +41,7 @@ export function SectionCards() {
     if (!file) return;
     const ext = file.name.toLowerCase();
     if (!ext.endsWith(".pdf") && !ext.endsWith(".doc") && !ext.endsWith(".docx")) {
-      setError("Only .pdf, .doc, .docx files are allowed for job description");
+      showError("Only .pdf, .doc, .docx files are allowed for job description");
       return;
     }
     setJobFile(file);
@@ -54,7 +54,7 @@ export function SectionCards() {
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
     if (!file.name.toLowerCase().endsWith(".csv")) {
-      setError("Only CSV files are allowed for candidates");
+      showError("Only CSV files are allowed for candidates");
       return;
     }
     setCandidatesFile(file);
@@ -69,11 +69,11 @@ export function SectionCards() {
 
   const validateInputs = (): boolean => {
     if (!jobDescription && !jobFile) {
-      setError("Please provide either job description text or upload a job document");
+      showError("Please provide either job description text or upload a job document");
       return false;
     }
     if (!candidatesCSV && !candidatesFile) {
-      setError("Please provide either candidates CSV or upload a candidates file");
+      showError("Please provide either candidates CSV or upload a candidates file");
       return false;
     }
     return true;
@@ -84,7 +84,6 @@ export function SectionCards() {
       if (!validateInputs()) return;
 
       setIsLoading(true);
-      setError(null);
 
       let activeSessionId = sessionId;
 
@@ -160,9 +159,8 @@ export function SectionCards() {
       // Navigate to rankings page with session_id
       router.push(`/sig-hire/rankings?session_id=${activeSessionId}`);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to upload data. Please try again."
-      );
+      const errorMessage = err instanceof Error ? err.message : "Failed to upload data. Please try again.";
+      showError(errorMessage);
       setIsLoading(false);
     }
   };
@@ -172,7 +170,6 @@ export function SectionCards() {
       <LoadingOverlay 
         isVisible={isLoading} 
         message={loadingMessage}
-        error={error}
         onRetry={handleContinue}
       />
 
@@ -331,10 +328,6 @@ export function SectionCards() {
           </div>
         </div>
       </div>
-
-      {error && (
-        <p className="mt-4 text-sm text-red-400 text-center">{error}</p>
-      )}
 
       <div className="mt-8 flex justify-center">
         <ChromeButton

@@ -112,13 +112,19 @@ export async function uploadSessionData(
     if (!csvFile) {
       throw new Error("Candidates CSV file is required. Please upload or paste candidate data.");
     }
-    if (!jdFile) {
-      throw new Error("Job description file is required. Please upload or paste the job description.");
+    
+    // Validate that at least one of jdFile or additionalPrompt is provided
+    if (!jdFile && (!additionalPrompt || !additionalPrompt.trim())) {
+      throw new Error("Job description is required. Please either upload a job document or provide job description text in the textbox.");
     }
 
     // Append with exact field names the API expects
     formData.append("csv_file", csvFile);
-    formData.append("jd_file", jdFile);
+    
+    // Only append jd_file if it exists
+    if (jdFile) {
+      formData.append("jd_file", jdFile);
+    }
     
     // Append additional_prompt if provided (JD text for context)
     if (additionalPrompt && additionalPrompt.trim()) {
