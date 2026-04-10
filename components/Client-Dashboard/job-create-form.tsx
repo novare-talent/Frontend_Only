@@ -35,16 +35,23 @@ export function JobCreateForm({
   className,
   errors = {},
   mode = "create",
+  jobCreatedAt,
 }: {
   value: JobMeta
   onChange: (v: JobMeta) => void
   className?: string
   errors?: FormErrors
   mode?: "create" | "edit"
+  jobCreatedAt?: string | null
 }) {
   const [tagInput, setTagInput] = useState("")
   const [isDragOver, setIsDragOver] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
+  
+  const maxDate = mode === "edit" && jobCreatedAt
+    ? new Date(new Date(jobCreatedAt).getTime() + 15 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16)
+    : new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16)
+  const minDate = new Date().toISOString().slice(0, 16)
   
   // const skillSuggestions = [
   //   "React", "Node.js", "Python", "JavaScript", "TypeScript", "AWS", "Docker", 
@@ -121,6 +128,11 @@ export function JobCreateForm({
               <>
                 <CardTitle className="text-xl md:text-2xl text-primary">Edit Job</CardTitle>
                 <p className="text-sm text-muted-foreground mt-1">Update your job posting and application form</p>
+                {jobCreatedAt && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Created on: {new Date(jobCreatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                )}
               </>
             )}
           </div>
@@ -234,8 +246,11 @@ export function JobCreateForm({
             type="datetime-local"
             value={value.closingTime}
             onChange={(e) => set("closingTime", e.target.value)}
+            min={minDate}
+            max={maxDate}
             autoComplete="off"
           />
+          <p className="text-xs text-muted-foreground">Deadline must be within 15 days from {mode === "edit" ? "job creation" : "today"}</p>
         </div>
 
         {/* Skills - Full Width Row */}

@@ -32,6 +32,7 @@ export default function EditJobPage() {
   const [isUpdating, setIsUpdating] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
+  const [jobCreatedAt, setJobCreatedAt] = useState<string | null>(null)
 
   const supabase = createClient()
 
@@ -61,6 +62,8 @@ export default function EditJobPage() {
           router.push('/client/jobs')
           return
         }
+
+        setJobCreatedAt(job.created_at)
 
         let formQuestions: Question[] = []
         if (job.form_id) {
@@ -289,7 +292,7 @@ export default function EditJobPage() {
 
   return (
     <main className=" px-6 py-10">
-      <JobCreateForm value={meta} onChange={setMeta} className="mb-6" mode="edit" />
+      <JobCreateForm value={meta} onChange={setMeta} className="mb-6" mode="edit" jobCreatedAt={jobCreatedAt} />
       <QuestionBuilder value={questions} onChange={setQuestions} onGenerateAI={generateFormWithAI} />
       <div className="mt-6 flex justify-end gap-4">
         <Button variant="outline" onClick={() => router.push('/client')}>
