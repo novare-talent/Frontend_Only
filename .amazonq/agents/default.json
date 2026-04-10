@@ -8,7 +8,7 @@
       "args": [
         "serve"
       ],
-      "type": "stdio"
+      "disabled": false
     }
   },
   "tools": [
@@ -16,7 +16,31 @@
     "execute_bash",
     "fs_write",
     "report_issue",
-    "use_aws"
+    "use_aws",
+    "@code-review-graph/build_or_update_graph_tool",
+    "@code-review-graph/run_postprocess_tool",
+    "@code-review-graph/get_minimal_context_tool",
+    "@code-review-graph/get_impact_radius_tool",
+    "@code-review-graph/query_graph_tool",
+    "@code-review-graph/get_review_context_tool",
+    "@code-review-graph/semantic_search_nodes_tool",
+    "@code-review-graph/embed_graph_tool",
+    "@code-review-graph/list_graph_stats_tool",
+    "@code-review-graph/get_docs_section_tool",
+    "@code-review-graph/find_large_functions_tool",
+    "@code-review-graph/list_flows_tool",
+    "@code-review-graph/get_flow_tool",
+    "@code-review-graph/get_affected_flows_tool",
+    "@code-review-graph/list_communities_tool",
+    "@code-review-graph/get_community_tool",
+    "@code-review-graph/get_architecture_overview_tool",
+    "@code-review-graph/detect_changes_tool",
+    "@code-review-graph/refactor_tool",
+    "@code-review-graph/apply_refactor_tool",
+    "@code-review-graph/generate_wiki_tool",
+    "@code-review-graph/get_wiki_page_tool",
+    "@code-review-graph/list_repos_tool",
+    "@code-review-graph/cross_repo_search_tool"
   ],
   "toolAliases": {},
   "allowedTools": [
