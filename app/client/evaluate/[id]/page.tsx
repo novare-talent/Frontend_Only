@@ -47,7 +47,7 @@ export default function EvaluationPage() {
 
         const { data: evalRow } = await supabase
           .from("evaluations")
-          .select("*")
+          .select("job_id, results")
           .eq("job_id", id)
           .maybeSingle();
 
@@ -58,34 +58,39 @@ export default function EvaluationPage() {
 
         setEvaluation(evalRow);
 
-        const { data: job } = await supabase
-          .from("jobs")
-          .select("Job_Name, Job_Description")
-          .eq("job_id", evalRow.job_id)
-          .maybeSingle();
-
-        setJobTitle(job?.Job_Name || job?.Job_Description || "Untitled Job");
-
         const baseCandidates: Candidate[] =
           evalRow?.results?.candidates ?? [];
 
-        const enriched = await Promise.all(
-          baseCandidates.map(async (c) => {
-            if (!c.profile_id) return c;
+        const profileIds = baseCandidates
+          .filter((c) => c.profile_id)
+          .map((c) => c.profile_id as string);
 
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("email, phone")
-              .eq("id", c.profile_id)
-              .maybeSingle();
+        // Parallelize job title + batch profile fetch
+        const [{ data: job }, { data: profileRows }] = await Promise.all([
+          supabase
+            .from("jobs")
+            .select("Job_Name, Job_Description")
+            .eq("job_id", evalRow.job_id)
+            .maybeSingle(),
+          profileIds.length > 0
+            ? supabase
+                .from("profiles")
+                .select("id, email, phone")
+                .in("id", profileIds)
+            : Promise.resolve({ data: [] }),
+        ]);
 
-            return {
-              ...c,
-              email: profile?.email,
-              phone: profile?.phone,
-            };
-          })
+        setJobTitle(job?.Job_Name || job?.Job_Description || "Untitled Job");
+
+        const profileMap = Object.fromEntries(
+          (profileRows ?? []).map((p: any) => [p.id, p])
         );
+
+        const enriched = baseCandidates.map((c) => ({
+          ...c,
+          email: c.profile_id ? profileMap[c.profile_id]?.email : undefined,
+          phone: c.profile_id ? profileMap[c.profile_id]?.phone : undefined,
+        }));
 
         setCandidates(enriched);
       } finally {

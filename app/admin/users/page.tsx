@@ -20,7 +20,8 @@ export default function UsersPage() {
       .select(
         "id, first_name, last_name, phone, github_link, linkedin_link, profile_image, created_at, updated_at, email, role, resume_url, github_profile"
       )
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(500);
 
     if (error) {
       console.error("Error fetching profiles:", error);
