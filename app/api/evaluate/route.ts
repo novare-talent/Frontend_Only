@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     /* ----------------------- 4️⃣ Fetch Job ----------------------- */
     const { data: job, error: jobError } = await supabase
       .from("jobs")
-      .select("*")
+      .select("job_id, Job_Name, JD_pdf, closingTime")
       .eq("job_id", job_id)
       .single()
     if (jobError || !job)
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     /* ----------------------- 7️⃣ Fetch Responses ----------------------- */
     const { data: responses, error: responseError } = await supabase
       .from("responses")
-      .select("*")
+      .select("id, profile_id, form_id, answers, resume_url, created_at")
       .eq("form_id", form.form_id)
     if (responseError || !responses || responses.length === 0)
       return NextResponse.json(
@@ -141,32 +141,33 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    /* ----------------------- 🔟 Evaluate Candidates with Rate Limiting ----------------------- */
+    /* ----------------------- 🔟 Evaluate Candidates with Concurrent Batching ----------------------- */
     console.log(`Starting evaluation of ${candidates.length} candidates...`)
-    const evaluated = []
-    
-    // Process candidates sequentially with delay to avoid rate limits
-    for (let i = 0; i < candidates.length; i++) {
-      const candidate = candidates[i]
-      console.log(`Evaluating candidate ${i + 1}/${candidates.length}: ${candidate.name}`)
-      
-      try {
-        // Extract resume text if available
-        let resumeText = null
-        if (candidate.resume_url) {
-          try {
-            console.log(`  Fetching resume for ${candidate.name}`)
-            resumeText = await extractResumeText(candidate.resume_url)
-            console.log(`  Extracted ${resumeText?.length || 0} characters from resume`)
-          } catch (resumeErr) {
-            console.warn(`  Failed to extract resume for ${candidate.name}:`, resumeErr)
-            // Continue without resume
-          }
-        }
+    const evaluated: any[] = []
+    const BATCH_SIZE = 3
 
-        const evalResult = await evaluateCandidateWithRetry(candidate, jobDescription, resumeText)
-        
-        if (evalResult) {
+    for (let i = 0; i < candidates.length; i += BATCH_SIZE) {
+      const batch = candidates.slice(i, i + BATCH_SIZE)
+      console.log(`Processing batch ${Math.floor(i / BATCH_SIZE) + 1}: candidates ${i + 1}–${Math.min(i + BATCH_SIZE, candidates.length)}`)
+
+      const batchResults = await Promise.allSettled(
+        batch.map(async (candidate) => {
+          let resumeText: string | null = null
+          if (candidate.resume_url) {
+            try {
+              resumeText = await extractResumeText(candidate.resume_url)
+            } catch (resumeErr) {
+              console.warn(`  Failed to extract resume for ${candidate.name}:`, resumeErr)
+            }
+          }
+          const evalResult = await evaluateCandidateWithRetry(candidate, jobDescription, resumeText)
+          return { candidate, evalResult, resumeText }
+        })
+      )
+
+      for (const result of batchResults) {
+        if (result.status === "fulfilled" && result.value.evalResult) {
+          const { candidate, evalResult, resumeText } = result.value
           evaluated.push({
             id: candidate.id,
             name: candidate.name,
@@ -177,18 +178,15 @@ export async function POST(request: NextRequest) {
             results: evalResult,
           })
           console.log(`  ✓ Successfully evaluated ${candidate.name}`)
-        } else {
-          console.warn(`  ✗ Failed to evaluate ${candidate.name}`)
+        } else if (result.status === "rejected") {
+          console.error(`  Error in batch:`, result.reason)
         }
-        
-        // Add delay between requests to avoid rate limits (2 seconds)
-        if (i < candidates.length - 1) {
-          console.log(`  Waiting 2s before next evaluation...`)
-          await delay(2000)
-        }
-      } catch (err) {
-        console.error(`  Error evaluating candidate ${candidate.name}:`, err)
-        // Continue with next candidate
+      }
+
+      // Delay between batches to respect rate limits
+      if (i + BATCH_SIZE < candidates.length) {
+        console.log(`  Waiting 2s before next batch...`)
+        await delay(2000)
       }
     }
 

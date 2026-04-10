@@ -54,7 +54,7 @@ export default function ProfilePage() {
 
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("*")
+          .select("id, first_name, last_name, email, phone, github_link, linkedin_link, profile_image, resume_url")
           .eq("id", user.id)
           .single();
 
@@ -101,7 +101,7 @@ export default function ProfilePage() {
       // Refresh profile data
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("*")
+        .select("id, first_name, last_name, email, phone, github_link, linkedin_link, profile_image, resume_url")
         .eq("id", user.id)
         .single();
       setProfile(profileData);
@@ -167,7 +167,7 @@ export default function ProfilePage() {
       // Refresh profile data
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("*")
+        .select("id, first_name, last_name, email, phone, github_link, linkedin_link, profile_image, resume_url")
         .eq("id", user.id)
         .single();
       setProfile(profileData);
