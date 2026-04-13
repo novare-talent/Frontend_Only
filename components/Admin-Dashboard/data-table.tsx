@@ -71,15 +71,15 @@ export function DataTable({ data }: { data: Profile[] }) {
                 <TableCell>
                   <Link
                     href={`/admin/users/${user.id}`}
-                    className="hover:underline font-medium"
+                    className="hover:underline font-medium text-gray-900 dark:text-gray-100"
                   >
                     {displayName || "—"}
                   </Link>
                 </TableCell>
 
-                <TableCell>{user.email ?? "—"}</TableCell>
-                <TableCell>{user.phone ?? "—"}</TableCell>
-                <TableCell className="capitalize">{user.role ?? "—"}</TableCell>
+                <TableCell className="text-gray-900 dark:text-gray-100">{user.email ?? "—"}</TableCell>
+                <TableCell className="text-gray-900 dark:text-gray-100">{user.phone ?? "—"}</TableCell>
+                <TableCell className="capitalize text-gray-900 dark:text-gray-100">{user.role ?? "—"}</TableCell>
 
                 <TableCell>
                   {user.github_link ? (
@@ -87,7 +87,7 @@ export function DataTable({ data }: { data: Profile[] }) {
                       href={user.github_link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="underline text-sm"
+                      className="underline text-sm text-blue-600 dark:text-blue-400"
                     >
                       Link
                     </a>
@@ -102,7 +102,7 @@ export function DataTable({ data }: { data: Profile[] }) {
                       href={user.linkedin_link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="underline text-sm"
+                      className="underline text-sm text-blue-600 dark:text-blue-400"
                     >
                       Link
                     </a>
@@ -111,11 +111,11 @@ export function DataTable({ data }: { data: Profile[] }) {
                   )}
                 </TableCell>
 
-                <TableCell>
+                <TableCell className="text-gray-900 dark:text-gray-100">
                   {user.resume_url ? "Available" : "—"}
                 </TableCell>
 
-                <TableCell>
+                <TableCell className="text-gray-900 dark:text-gray-100">
                   {user.created_at
                     ? new Date(user.created_at).toLocaleDateString()
                     : "—"}

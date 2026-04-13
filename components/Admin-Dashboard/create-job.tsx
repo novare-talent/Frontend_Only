@@ -75,10 +75,10 @@ export default function CreateJob() {
   return (
     <div className="flex flex-col md:flex-row gap-6 p-8 mx-6 bg-white dark:bg-black shadow-md rounded-lg">
       <form onSubmit={handleSubmit} className="flex-1 flex flex-col gap-4">
-        <h2 className="text-2xl font-semibold text-primary">Create New Job</h2>
+        <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Create New Job</h2>
 
         <div>
-          <label className="block text-md font-medium mb-1">Job Title</label>
+          <label className="block text-md font-medium text-gray-900 dark:text-gray-100 mb-1">Job Title</label>
           <input
             type="text"
             className="w-full border rounded-sm p-2"
@@ -90,7 +90,7 @@ export default function CreateJob() {
         </div>
 
         <div>
-          <label className="block text-md font-medium mb-1">Job Description</label>
+          <label className="block text-md font-medium text-gray-900 dark:text-gray-100 mb-1">Job Description</label>
           <textarea
             rows={6}
             className="w-full border rounded-sm p-2"
@@ -112,7 +112,7 @@ export default function CreateJob() {
 
       {/* Right side: PDF upload */}
       <div className="flex-1">
-        <h3 className="text-xl font-semibold mb-2 text-primary">
+        <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
           Upload Job Description PDF
         </h3>
         {/* 👇 Hook FileUpload to setPdfFile */}

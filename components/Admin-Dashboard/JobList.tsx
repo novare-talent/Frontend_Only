@@ -286,7 +286,7 @@ export default function JobList() {
       <div className="border rounded-lg p-4 shadow-sm flex justify-between items-start hover:shadow-md transition-shadow">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
-            <h2 className="text-lg font-medium">{job.Job_Name}</h2>
+            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">{job.Job_Name}</h2>
             {isDraft && (
               <span className="bg-yellow-100 text-yellow-800 text-xs font-semibold px-3 py-1 rounded-full">
                 DRAFT
@@ -298,7 +298,7 @@ export default function JobList() {
               </span>
             )}
           </div>
-          <p className="text-sm text-gray-600 mb-2">{job.Job_Description}</p>
+          <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{job.Job_Description}</p>
           {isDraft && (
             <div className="flex flex-wrap gap-2 mb-3">
               <span className="text-sm font-semibold text-slate-900 bg-amber-100 border border-amber-300 px-2 py-1 rounded-md">
@@ -433,7 +433,7 @@ export default function JobList() {
             <div className="flex gap-3">
               {getNotificationIcon()}
               <div className="flex-1">
-                <h4 className="font-semibold text-sm mb-1">
+                <h4 className="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-1">
                   {notification?.title}
                 </h4>
                 <p className="text-sm text-muted-foreground">
@@ -456,7 +456,7 @@ export default function JobList() {
         {/* Draft Section */}
         {draftJobs.length > 0 && (
           <div>
-            <h2 className="text-xl font-semibold text-amber-600 mb-4">
+            <h2 className="text-xl font-semibold text-amber-600 dark:text-amber-500 mb-4">
               📋 Draft Jobs ({draftJobs.length})
             </h2>
             <div className="space-y-4 bg-amber-50 dark:bg-amber-900/10 rounded-lg p-4">
@@ -470,7 +470,7 @@ export default function JobList() {
         {/* Active Section */}
         {activeJobs.length > 0 ? (
           <div>
-            <h2 className="text-xl font-semibold text-primary mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
               ✨ Active Jobs ({activeJobs.length})
             </h2>
             <div className="space-y-4">
@@ -481,13 +481,13 @@ export default function JobList() {
           </div>
         ) : (
           <div className="text-center py-8">
-            <p className="text-gray-500">No active jobs yet. Create and activate a draft job to get started.</p>
+            <p className="text-gray-600 dark:text-gray-400">No active jobs yet. Create and activate a draft job to get started.</p>
           </div>
         )}
 
         {draftJobs.length === 0 && activeJobs.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No jobs found.</p>
+            <p className="text-gray-600 dark:text-gray-400 text-lg">No jobs found.</p>
           </div>
         )}
       </div>

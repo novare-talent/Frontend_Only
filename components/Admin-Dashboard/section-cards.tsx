@@ -17,7 +17,7 @@ export function SectionCards() {
       <Card className="@container/card">
         <CardHeader>
           <CardDescription>New Jobs Posted</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+          <CardTitle className="text-2xl font-semibold tabular-nums text-gray-900 dark:text-gray-100 @[250px]/card:text-3xl">
             18
           </CardTitle>
           <CardAction>
@@ -28,7 +28,7 @@ export function SectionCards() {
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
+          <div className="line-clamp-1 flex gap-2 font-medium text-gray-900 dark:text-gray-100">
             Increased activity in Engineering <IconTrendingUp className="size-4" />
           </div>
           <div className="text-muted-foreground">Data from last 30 days</div>
@@ -39,7 +39,7 @@ export function SectionCards() {
       <Card className="@container/card">
         <CardHeader>
           <CardDescription>Total Applications</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+          <CardTitle className="text-2xl font-semibold tabular-nums text-gray-900 dark:text-gray-100 @[250px]/card:text-3xl">
             242
           </CardTitle>
           <CardAction>
@@ -50,7 +50,7 @@ export function SectionCards() {
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
+          <div className="line-clamp-1 flex gap-2 font-medium text-gray-900 dark:text-gray-100">
             Spike due to new marketing campaign <IconTrendingUp className="size-4" />
           </div>
           <div className="text-muted-foreground">
@@ -63,7 +63,7 @@ export function SectionCards() {
       <Card className="@container/card">
         <CardHeader>
           <CardDescription>Average Time to be Hired</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+          <CardTitle className="text-2xl font-semibold tabular-nums text-gray-900 dark:text-gray-100 @[250px]/card:text-3xl">
             14 Days
           </CardTitle>
           <CardAction>
@@ -74,7 +74,7 @@ export function SectionCards() {
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
+          <div className="line-clamp-1 flex gap-2 font-medium text-gray-900 dark:text-gray-100">
             Hiring process is more efficient <IconTrendingDown className="size-4" />
           </div>
           <div className="text-muted-foreground">

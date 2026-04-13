@@ -31,7 +31,7 @@ export function SiteHeader() {
           orientation="vertical"
           className="mx-2 data-[orientation=vertical]:h-4"
         />
-        <h1 className="text-base font-medium text-accent-foreground">
+        <h1 className="text-base font-medium text-gray-900 dark:text-gray-100">
           {isMounted ? title : 'Dashboard'}
         </h1>
         <div className="ml-auto flex items-center gap-2" suppressHydrationWarning>
