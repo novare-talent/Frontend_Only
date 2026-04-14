@@ -127,11 +127,11 @@ export default function AdminCandidateResponsePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+      <div className="min-h-screen p-6">
         <div className="max-w-4xl mx-auto">
           <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-slate-200 rounded w-1/4"></div>
-            <div className="h-64 bg-slate-200 rounded"></div>
+            <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded w-1/4"></div>
+            <div className="h-64 bg-slate-200 dark:bg-slate-800 rounded"></div>
           </div>
         </div>
       </div>
@@ -140,7 +140,7 @@ export default function AdminCandidateResponsePage() {
 
   if (!response) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+      <div className="min-h-screen p-6">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-4 mb-6">
             <Button variant="outline" size="sm" onClick={handleBack}>
@@ -161,7 +161,7 @@ export default function AdminCandidateResponsePage() {
   const answers = parseAnswers(response.answers);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+    <div className="min-h-screen p-6">
       <div className="max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -174,7 +174,7 @@ export default function AdminCandidateResponsePage() {
               Back to Evaluations
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">{jobTitle}</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{jobTitle}</h1>
               <p className="text-sm text-muted-foreground">Candidate Response</p>
             </div>
           </div>
@@ -183,7 +183,7 @@ export default function AdminCandidateResponsePage() {
             {/* Candidate Information */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
                   <User className="size-5" />
                   Candidate Information
                 </CardTitle>
@@ -192,23 +192,23 @@ export default function AdminCandidateResponsePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center gap-2">
                     <User className="size-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Name:</span>
-                    <span className="text-sm">{response.full_name || "—"}</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Name:</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{response.full_name || "—"}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Mail className="size-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Email:</span>
-                    <span className="text-sm">{response.email || "—"}</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Email:</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{response.email || "—"}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="size-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Phone:</span>
-                    <span className="text-sm">{response.phone || "—"}</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Phone:</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{response.phone || "—"}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="size-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Submitted:</span>
-                    <span className="text-sm">{formatIST(response.created_at)}</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Submitted:</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{formatIST(response.created_at)}</span>
                   </div>
                 </div>
                 {response.resume_url && (
@@ -233,7 +233,7 @@ export default function AdminCandidateResponsePage() {
             {/* Form Responses */}
             <Card>
               <CardHeader>
-                <CardTitle>Form Responses</CardTitle>
+                <CardTitle className="text-gray-900 dark:text-gray-100">Form Responses</CardTitle>
                 <CardDescription>
                   Answers provided by the candidate during application
                 </CardDescription>
@@ -253,8 +253,8 @@ export default function AdminCandidateResponsePage() {
                         transition={{ delay: index * 0.1 }}
                         className="border rounded-lg p-4 space-y-2"
                       >
-                        <h4 className="font-medium text-slate-900">{question}</h4>
-                        <p className="text-slate-700 whitespace-pre-wrap">
+                        <h4 className="font-medium text-gray-900 dark:text-gray-100">{question}</h4>
+                        <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                           {typeof answer === "string" ? answer : JSON.stringify(answer, null, 2)}
                         </p>
                       </motion.div>

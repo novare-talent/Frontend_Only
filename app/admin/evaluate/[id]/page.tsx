@@ -136,7 +136,7 @@ export default function AdminEvaluationPage() {
   };
 
   return (
-    <div className="container mx-auto px-6">
+    <div className="container mx-auto px-6 py-6">
       <div className="mb-6">
         <Button
           variant="outline"
@@ -155,7 +155,7 @@ export default function AdminEvaluationPage() {
       >
         <Card className="border-0 bg-transparent">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold tracking-tight">
+            <CardTitle className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
               Candidate Evaluations
             </CardTitle>
             <CardDescription>
@@ -187,7 +187,7 @@ export default function AdminEvaluationPage() {
                 >
                   {/* Candidate Header */}
                   <div className="mb-3 space-y-1">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
                       <User className="size-4 text-primary" />
                       {c.full_name || "Unnamed Candidate"}
                       <span className="text-sm text-muted-foreground">

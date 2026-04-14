@@ -64,7 +64,7 @@ export default function EvaluationResults() {
           </CardHeader>
           <Separator />
           <CardContent className="pt-4 space-y-6">
-            {candidates.map((c, idx) => (
+            {Array.isArray(candidates) && candidates.map((c, idx) => (
               <div key={idx} className="space-y-2 border-b pb-4 last:border-none">
                 <p className="font-medium">Candidate #{idx + 1}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
@@ -105,6 +105,9 @@ export default function EvaluationResults() {
                 </div>
               </div>
             ))}
+            {!Array.isArray(candidates) && (
+              <p className="text-muted-foreground">Invalid candidate data format.</p>
+            )}
           </CardContent>
         </Card>
       ))}

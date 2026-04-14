@@ -139,7 +139,7 @@ export default function CandidateResponsePage() {
       <div className="container mx-auto px-6 py-10">
         <Card className="border-0 bg-transparent">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold tracking-tight">
+            <CardTitle className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
               Form Response
             </CardTitle>
             <CardDescription>
@@ -180,7 +180,7 @@ export default function CandidateResponsePage() {
 
           <Card className="border-0 bg-transparent">
             <CardHeader>
-              <CardTitle className="text-2xl font-bold tracking-tight">
+              <CardTitle className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
                 Form Response
               </CardTitle>
               <CardDescription>
@@ -201,7 +201,7 @@ export default function CandidateResponsePage() {
         >
           {/* Candidate Header */}
           <div className="mb-4 space-y-1">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
+            <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
               <User className="size-4 text-primary" />
               {response.full_name || "Unknown Candidate"}
             </h3>
@@ -262,7 +262,7 @@ export default function CandidateResponsePage() {
 
               return (
                 <div key={key} className="text-sm">
-                  <p className="font-medium text-foreground mb-1">
+                  <p className="font-medium text-gray-900 dark:text-gray-100 mb-1">
                     {key}:
                   </p>
                   <p className="text-muted-foreground pl-3 border-l-2 border-primary/30 py-1">

@@ -81,7 +81,7 @@ export default function CreateJob() {
           <label className="block text-md font-medium text-gray-900 dark:text-gray-100 mb-1">Job Title</label>
           <input
             type="text"
-            className="w-full border rounded-sm p-2"
+            className="w-full border rounded-sm p-2 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
             value={jobName}
             onChange={(e) => setJobName(e.target.value)}
             placeholder="Enter job name"
@@ -93,7 +93,7 @@ export default function CreateJob() {
           <label className="block text-md font-medium text-gray-900 dark:text-gray-100 mb-1">Job Description</label>
           <textarea
             rows={6}
-            className="w-full border rounded-sm p-2"
+            className="w-full border rounded-sm p-2 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Enter job description"

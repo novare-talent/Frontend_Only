@@ -92,14 +92,14 @@ export default function AllEvaluations() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        <p className="text-lg">No evaluations found.</p>
+        <p className="text-lg text-gray-900 dark:text-gray-100">No evaluations found.</p>
       </div>
     );
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">All Evaluation Results</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">All Evaluation Results</h1>
         <Button
           variant="outline"
           size="sm"
@@ -127,7 +127,7 @@ export default function AllEvaluations() {
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-lg font-semibold">
+                    <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                       {evaluation.job_title}
                     </CardTitle>
                     <p className="text-sm text-muted-foreground mt-1">
@@ -146,7 +146,7 @@ export default function AllEvaluations() {
                     <p className="font-medium text-muted-foreground">
                       Top Score
                     </p>
-                    <p className="text-lg font-semibold">
+                    <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                       {candidates.length > 0
                         ? Math.max(
                             ...candidates.map(
@@ -160,7 +160,7 @@ export default function AllEvaluations() {
                     <p className="font-medium text-muted-foreground">
                       Avg Score
                     </p>
-                    <p className="text-lg font-semibold">
+                    <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                       {candidates.length > 0
                         ? (
                             candidates.reduce(
@@ -176,7 +176,7 @@ export default function AllEvaluations() {
                     <p className="font-medium text-muted-foreground">
                       Candidates
                     </p>
-                    <p className="text-lg font-semibold">{candidates.length}</p>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">{candidates.length}</p>
                   </div>
                   <div>
                     <p className="font-medium text-muted-foreground">
