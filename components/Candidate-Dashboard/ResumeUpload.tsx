@@ -184,7 +184,7 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({
       // Update parent component with all resume URLs
       const allUrls = [...resumes.map((r) => r.url), ...newResumeUrls];
       onResumeUpdate(allUrls);
-    } catch (error) {
+    } catch {
       toast.error("Error", { description: "Error uploading resumes. Please try again." });
     } finally {
       setUploading(false);
@@ -243,7 +243,7 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({
     // Update parent component
     onResumeUpdate(newResumes.map((r) => r.url));
     
-  } catch (error) {
+  } catch {
     toast.error("Error", { description: "Error deleting resume. Please try again."});
   }
 };

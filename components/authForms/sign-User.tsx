@@ -74,6 +74,7 @@ export function SignUpForm({
     return !newErrors.email;
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const validateClientEmail = () => {
     const newErrors = {
       email: "",

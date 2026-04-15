@@ -126,23 +126,10 @@ const allCourses = [
 ];
 
 const gridVariants = {
-  // removed opacity so grid doesn't animate from invisible
   hidden: { }, 
   visible: {
-    // no opacity here either
     transition: { staggerChildren: 0.06, when: "beforeChildren" },
   },
-};
-
-const cardVariants = {
-  // removed opacity so each card (and its image) is always visible
-  hidden: { y: 10, scale: 0.995 },
-  visible: {
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.35, ease: "easeOut" },
-  },
-  exit: { y: 8, scale: 0.995, transition: { duration: 0.25 } },
 };
 
 export default function TrainingPage() {

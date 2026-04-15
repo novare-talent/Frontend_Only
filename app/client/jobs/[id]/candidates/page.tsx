@@ -66,7 +66,7 @@ export default function CandidatesPage({ params }: { params: Promise<{ id: strin
     }
 
     init()
-  }, [jobId])
+  }, [jobId, supabase])
 
   const selectCandidate = async (id: string) => {
     if (!j) return

@@ -144,6 +144,7 @@ export function QuestionBuilder({ value, onChange, className, onGenerateAI, isGe
     add(type)
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const active = useMemo(() => value.find((q) => q.id === activeId) || null, [value, activeId])
 
   return (

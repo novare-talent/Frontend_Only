@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import { motion } from "framer-motion";
-import { BarChart3, TrendingUp, Users, Target } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { useDriverGuide } from "@/hooks/useDriverGuide";
 import { insightsGuide } from "@/lib/driver-config";
 import { SigHireFooter } from "@/components/Sig-Hire/footer";

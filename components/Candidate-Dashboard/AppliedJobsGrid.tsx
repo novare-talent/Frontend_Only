@@ -27,6 +27,7 @@ interface Job {
 const IntegrationCard = ({
   title,
   description,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   link = "#",
   jdPdf,
 }: {

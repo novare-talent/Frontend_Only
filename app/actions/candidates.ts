@@ -19,7 +19,7 @@ export async function createCandidateMappings(params: {
   try {
     const supabase = await createClient()
 
-    const { job_id, session_id, candidates } = params
+    const { job_id, candidates } = params
 
     if (!job_id || candidates.length === 0) {
       throw new Error('Job ID and candidates are required')

@@ -64,6 +64,7 @@ function SubmittedAssignmentsList() {
     )
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function SubmissionReceivedCard({ className = "" }: { className?: string }) {
     return(
         <div>

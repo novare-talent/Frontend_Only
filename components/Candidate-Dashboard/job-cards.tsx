@@ -304,6 +304,7 @@ export default function JobsGrid() {
 
   useEffect(() => {
     fetchJobsWithFormStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchJobsWithFormStatus = async () => {

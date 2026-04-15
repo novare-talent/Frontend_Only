@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/client';
 
 // Note: This runs on the server side, so we need to use server-side Supabase client
 // For now, we'll use the edge runtime approach
@@ -74,7 +73,7 @@ export async function POST(request: NextRequest) {
       const buffer = await file.arrayBuffer();
 
       // Upload to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from(bucketName)
         .upload(storagePath, buffer, {
           contentType: file.type || 'application/octet-stream',

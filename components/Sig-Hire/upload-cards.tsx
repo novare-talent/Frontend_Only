@@ -17,6 +17,7 @@ export function SectionCards() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { sessionId: contextSessionId, setSessionId } = useSession();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { sessions } = useMultiSession();
   const { startTour } = useDriverGuide("uploads", uploadsGuide, false);
   

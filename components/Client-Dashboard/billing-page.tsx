@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/popover"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { CreditCard, Package, ArrowUpRight, ArrowDownLeft, Loader2, CheckCircle2, XCircle, Info, RefreshCw } from "lucide-react"
+import { CreditCard, Package, Loader2, CheckCircle2, XCircle, Info, RefreshCw } from "lucide-react"
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { createClient } from "@/utils/supabase/client"
@@ -35,6 +35,7 @@ interface PaymentTransaction {
 }
 
 export function BillingPage() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [transactions] = useState<PaymentTransaction[]>([])
   const [creditsRemaining, setCreditsRemaining] = useState(0)
   const [evaluationsRemaining, setEvaluationsRemaining] = useState(0)
@@ -125,7 +126,7 @@ export function BillingPage() {
             showNotification('error', 'Error', 'Failed to load profile data')
           }
         }
-      } catch (err) {
+      } catch {
         showNotification('error', 'Error', 'Failed to load user data')
       } finally {
         setIsLoading(false)
@@ -133,6 +134,7 @@ export function BillingPage() {
     }
 
     fetchUserData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase])
 
   const handleRefreshCredits = async () => {
@@ -261,7 +263,7 @@ export function BillingPage() {
           responseText = await response.text()
           const errorData = JSON.parse(responseText)
           errorMessage = errorData.detail || errorData.message || errorMessage
-        } catch (e) {
+        } catch {
           // Use default error message
         }
         

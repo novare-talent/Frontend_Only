@@ -99,6 +99,7 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
       } catch (err) { console.error('Error fetching job ID:', err); }
     };
     fetchJobId();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
   useEffect(() => {
@@ -133,6 +134,7 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
       } catch (err) { console.error('Error fetching assignment:', err); }
     };
     fetchAssignment();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobId]);
 
   useEffect(() => {
@@ -148,6 +150,7 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
       finally { setIsLoadingPrevious(false); }
     };
     fetchPreviousAssignments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobId]);
 
   const handleFileDrop = (e: React.DragEvent) => {

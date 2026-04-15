@@ -33,7 +33,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { ShineBorder } from "@/components/ui/shine-border";
@@ -133,6 +132,7 @@ export function JobCard({
       );
     };
     init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobId]);
   const getNotificationIcon = () => {
     if (!notification) return null;

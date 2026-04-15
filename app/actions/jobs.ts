@@ -35,7 +35,7 @@ export async function createSigHireJob(params: CreateJobParams) {
         const fileName = `${user.id}/${timestamp}-${params.jd_file.name}`
         
         // Upload to 'jd' bucket
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('jd')
           .upload(fileName, buffer, {
             contentType: params.jd_file.type,

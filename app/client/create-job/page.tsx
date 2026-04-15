@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { JobCreateForm, type JobMeta } from "@/components/Client-Dashboard/job-create-form";
 import { QuestionBuilder, type Question } from "@/components/Client-Dashboard/question-builder";
-import { JobFormPreview } from "@/components/Client-Dashboard/job-form-preview";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -77,7 +76,7 @@ export default function NewJobPage() {
           router.replace("/client/billing");
           return;
         }
-      } catch (err) {
+      } catch {
         toast.error("Error", { description: "Unable to verify credits." });
         router.replace("/client");
       } finally {
@@ -125,7 +124,7 @@ export default function NewJobPage() {
       }
 
       return true;
-    } catch (err: any) {
+    } catch {
       toast.error("Network Error", { description: "Please check your connection and try again." });
       return false;
     }
@@ -187,7 +186,7 @@ export default function NewJobPage() {
       let jdUrl = uploadedJdUrl;
       if (!jdUrl && meta.jdFile) {
         const fileName = `${Date.now()}-${meta.jdFile.name}`;
-        const { data: _uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from("jd")
           .upload(`jobs/${fileName}`, meta.jdFile);
 
@@ -250,7 +249,7 @@ export default function NewJobPage() {
           : null;
 
       // Insert job first
-      const { data: job, error: jobError } = await supabase.from("jobs").insert(jobData).select().single();
+      const { error: jobError } = await supabase.from("jobs").insert(jobData).select().single();
 
       if (jobError) {
         toast.error("Error", { description: "Failed to create job. Try again." });
@@ -261,7 +260,7 @@ export default function NewJobPage() {
 
       // Insert form if present
       if (formData) {
-        const { data: form, error: formError } = await supabase.from("forms").insert(formData).select().single();
+        const { error: formError } = await supabase.from("forms").insert(formData).select().single();
         if (formError) {
           // rollback job
           await supabase.from("jobs").delete().eq("job_id", jobId);
@@ -333,7 +332,7 @@ export default function NewJobPage() {
       let jdUrl = uploadedJdUrl;
       if (!jdUrl && meta.jdFile) {
         const fileName = `${Date.now()}-${meta.jdFile.name}`;
-        const { data: _uploadData, error: uploadError } = await supabase.storage.from("jd").upload(`jobs/${fileName}`, meta.jdFile);
+        const { error: uploadError } = await supabase.storage.from("jd").upload(`jobs/${fileName}`, meta.jdFile);
         if (uploadError) {
           toast.error("Upload Error", { description: "Failed to upload JD file." });
           throw uploadError;

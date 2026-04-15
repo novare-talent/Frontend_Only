@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { createClient } from "@/utils/supabase/client";
 
 export type JobMeta = {
   title: string
@@ -46,6 +45,7 @@ export function JobCreateForm({
 }) {
   const [tagInput, setTagInput] = useState("")
   const [isDragOver, setIsDragOver] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [showSuggestions, setShowSuggestions] = useState(false)
   
   const maxDate = mode === "edit" && jobCreatedAt

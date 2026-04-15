@@ -22,6 +22,7 @@ interface RankingsTableProps {
   onSelectionChange?: (selected: Set<string>) => void;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getInitials(name: string) {
   return name
     .split(' ')
@@ -31,6 +32,7 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getAvatarGradient(index: number) {
   const gradients = [
     'linear-gradient(135deg, #7C3AED, #C4B5FD)',

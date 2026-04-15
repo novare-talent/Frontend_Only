@@ -75,6 +75,7 @@ interface RankingBotCardProps {
 }
 
 export function RankingBotCard({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   className = "",
   sessionId,
   onQuerySubmitted,

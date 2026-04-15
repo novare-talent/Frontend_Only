@@ -1,10 +1,9 @@
 "use client"
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/utils/supabase/client";
 import { AlertCircle, CheckCircle, Loader, Upload } from "lucide-react";
 
 export function SubmissionContent() {
@@ -60,7 +59,7 @@ export function SubmissionContent() {
         throw new Error(errorData.error || "Failed to submit assignment");
       }
 
-      const data = await response.json();
+      await response.json();
       setSuccess("Assignment submitted successfully!");
       setFile(null);
       setFileName("");

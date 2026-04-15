@@ -32,6 +32,7 @@ export default function GithubFetcher() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
   const [hasGithubIdentity, setHasGithubIdentity] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [hasGithubProfile, setHasGithubProfile] = useState(false);
   const [needsGithubAuth, setNeedsGithubAuth] = useState(false);
 

@@ -13,18 +13,6 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
-interface CandidateResult {
-  results: {
-    final_score: number;
-    overall_fit: number;
-    skills_match: number;
-    experience_relevance: number;
-    communication_clarity: number;
-    justification: string;
-  };
-  profile_id: string;
-}
-
 interface EvaluationRow {
   evaluation_id: string;
   job_id: string;

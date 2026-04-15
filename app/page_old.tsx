@@ -10,7 +10,6 @@ export default function NovareTalentLanding() {
   const stageRef = useRef<HTMLDivElement>(null);
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
   useEffect(() => {
@@ -36,7 +35,6 @@ export default function NovareTalentLanding() {
       } catch (error) {
         console.error("Error checking user:", error);
       } finally {
-        setLoading(false);
       }
     };
 

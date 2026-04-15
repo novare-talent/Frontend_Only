@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Loader2, Check, Eye, FileText } from "lucide-react";
-import { toast } from "sonner";
 import {
   Popover,
   PopoverContent,
@@ -67,6 +66,7 @@ export default function JobList() {
 
   useEffect(() => {
     fetchJobs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchJobs = async () => {

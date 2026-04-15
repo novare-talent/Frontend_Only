@@ -126,7 +126,7 @@ export default function EditJobPage() {
     }
 
     fetchJobData()
-  }, [jobId, router])
+  }, [jobId, router, supabase])
 
   async function handleUpdate() {
     if (!userId) {

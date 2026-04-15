@@ -1,12 +1,10 @@
 "use client"
 
-import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 
 export function SigHireSubmissionSuccessContent() {
-  const searchParams = useSearchParams();
 
   return (
     <Card className="max-w-md">

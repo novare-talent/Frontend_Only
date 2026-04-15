@@ -1,6 +1,5 @@
 import Navbar from "@/components/landing/layout/Navbar";
 import Hero from "@/components/landing/sections/Hero";
-import SocialProofBar from "@/components/landing/sections/SocialProofBar";
 import WhyTheOnePercent from "@/components/landing/sections/WhyTheOnePercent";
 import HowItWorks from "@/components/landing/sections/HowItWorks";
 import NovareStandard from "@/components/landing/sections/NovareStandard";

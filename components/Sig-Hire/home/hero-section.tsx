@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { History, Sparkles } from "lucide-react";
 import ChromeButton from "@/components/Sig-Hire/ChromeButton";
 import { MOCK_CANDIDATES } from "./constants";
@@ -330,7 +331,7 @@ function HeroBackground() {
       {/* Bottom animated section */}
       <div className="relative" style={{ height: "530px", width: "100%" }}>
         <div className="absolute inset-0" style={{ mixBlendMode: "overlay", zIndex: 12 }}>
-          <img src="/images/hero/hero-background-bottom.png" alt="Hero background" className="w-full h-full" />
+          <Image src="/images/hero/hero-background-bottom.png" alt="Hero background" fill className="object-cover" />
         </div>
 
         {[

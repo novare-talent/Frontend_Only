@@ -19,7 +19,7 @@ export async function bulkCreateAssignments(params: CreateAssignmentsParams) {
       throw new Error('User not authenticated')
     }
 
-    const { job_id, session_id, candidate_ids } = params
+    const { job_id, candidate_ids } = params
 
     if (!job_id || candidate_ids.length === 0) {
       throw new Error('Job ID and candidate IDs are required')

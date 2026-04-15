@@ -115,7 +115,6 @@ function SessionsPageContent() {
     setCurrentSessionId,
     deleteSession,
     addSession,
-    getSessionAssignments,
     loadSessions,
   } = useMultiSession();
   const [loading, setLoading] = useState(true);

@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import "./ThemeSwitcher.css";
 
+const themes = ["light", "dark", "dim"];
+
 export default function ThemeSwitcher() {
   const [theme, setTheme] = useState("light");
   const [activeIndex, setActiveIndex] = useState(0);
-
-  const themes = ["light", "dark", "dim"];
 
   useEffect(() => {
     document.body.setAttribute("data-theme", theme);

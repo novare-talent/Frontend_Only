@@ -2,7 +2,6 @@
 
 import React from "react";
 import Image from "next/image";
-import { Marquee } from "@/components/landing/ui/Marquee";
 import ScrollReveal from "@/components/landing/effects/ScrollReveal";
 
 const LOGOS = [

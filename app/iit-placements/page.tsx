@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  TrendingUp,
-  Users,
   Building2,
-  GraduationCap,
-  Globe,
-  Award,
-  Briefcase,
   BarChart3,
+  TrendingUp,
+  Award,
+  Users,
+  Globe,
+  GraduationCap,
+  Briefcase,
   Target,
   Rocket,
 } from "lucide-react";
+import Image from "next/image";
 import Breadcrumbs from "@/components/placements/Breadcrumbs";
 import PlacementStatsCard from "@/components/placements/PlacementStatsCard";
 import IITPlacementTable from "@/components/placements/IITPlacementTable";
@@ -475,9 +476,11 @@ export default function IITPlacementsHub() {
                 </p>
               </div>
               <div className="flex justify-center">
-                <img
+                <Image
                   src="/images/PlacementCell.png"
                   alt="IIT Placement Cell structure showing connections to Companies, Students, Policies, Scheduling, and Logistics"
+                  width={800}
+                  height={600}
                   className="rounded-2xl w-full max-w-md"
                 />
               </div>
@@ -504,9 +507,11 @@ export default function IITPlacementsHub() {
                 </p>
               </div>
               <div className="flex justify-center md:order-1">
-                <img
+                <Image
                   src="/images/DaySlots.png"
                   alt="Day-based slot system showing Day 1, Day 2, and Day 3+ companies with placement rates"
+                  width={800}
+                  height={600}
                   className="rounded-2xl w-full max-w-md"
                 />
               </div>
@@ -533,9 +538,11 @@ export default function IITPlacementsHub() {
                 </p>
               </div>
               <div className="flex justify-center">
-                <img
+                <Image
                   src="/images/PPO.png"
                   alt="PPO vs Placements flow — PPO shows Internship to Offer, Placements shows Application through Technical and HR rounds to Offer"
+                  width={800}
+                  height={600}
                   className="rounded-2xl w-full max-w-md"
                 />
               </div>
@@ -553,9 +560,11 @@ export default function IITPlacementsHub() {
                 nearly the full academic year:
               </p>
               <div className="flex justify-center mb-8">
-                <img
+                <Image
                   src="/images/Timeline.png"
                   alt="Placement timeline from Registrations through PPTs & Tests, Day 1 Execution, Phase 1, to Phase 2"
+                  width={1200}
+                  height={600}
                   className="rounded-2xl w-full max-w-2xl"
                 />
               </div>
@@ -615,9 +624,11 @@ export default function IITPlacementsHub() {
                 </ul>
               </div>
               <div className="flex justify-center md:order-1">
-                <img
+                <Image
                   src="/images/PolicyEngine.png"
                   alt="Placement System Policy Engine showing One Offer, Minimum CTC, No Poaching, Dream Roles, Ethics, and Privacy policies"
+                  width={800}
+                  height={600}
                   className="rounded-2xl w-full max-w-md"
                 />
               </div>

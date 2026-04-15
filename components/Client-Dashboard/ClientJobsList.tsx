@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css"; // Ensure this is installed via npm install driver.js
@@ -26,7 +25,6 @@ type Job = {
 };
 
 export default function ClientJobs() {
-  const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
 

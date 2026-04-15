@@ -16,9 +16,8 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import { FileText, Upload, X, Loader2 } from "lucide-react";
+import { FileText, Upload, X } from "lucide-react";
 import { toast } from "sonner";
-import Link from "next/link";
 
 type MaybeResumeSource = string[] | string | null | undefined;
 
@@ -72,7 +71,7 @@ export default function JobForm({
   const [submitting, setSubmitting] = useState(false);
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [multiSelectValues, setMultiSelectValues] = useState<Record<string, string[]>>({});
-  const [uploadingNewResume, setUploadingNewResume] = useState(false);
+
   const [isDragging, setIsDragging] = useState(false);
   const [newResumeFile, setNewResumeFile] = useState<File | null>(null);
 
@@ -80,8 +79,7 @@ export default function JobForm({
   const [jobDetails, setJobDetails] = useState<any>(null);
   const [loadingJob, setLoadingJob] = useState(true);
 
-  // Auto-open guard so we only open profile page once per mount
-  const [autoOpenedProfile, setAutoOpenedProfile] = useState(false);
+
 
   useEffect(() => {
     let mounted = true;
@@ -316,7 +314,7 @@ export default function JobForm({
       if (newResumeFile && profileId) {
         try {
           const filePath = `${profileId}/${Date.now()}_${newResumeFile.name}`;
-          const { data: uploadData, error: uploadError } = await supabaseClient.storage
+          const { error: uploadError } = await supabaseClient.storage
             .from("resumes")
             .upload(filePath, newResumeFile, { upsert: true });
 
@@ -340,7 +338,7 @@ export default function JobForm({
             .from("profiles")
             .update({ resume_url: updatedResumes })
             .eq("id", profileId);
-        } catch (err) {
+        } catch {
           toast.error("Upload Error", {
             description: "Failed to upload resume. Please try again.",
           });
