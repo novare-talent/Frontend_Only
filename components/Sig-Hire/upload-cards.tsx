@@ -2,7 +2,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { LoadingOverlay } from "./loading-overlay";
-import { uploadSessionData, waitForSessionReady, initializeSession } from "@/lib/ranking-api";
+import { uploadSessionData, waitForSessionReady, initializeSession, checkSessionStatus } from "@/lib/ranking-api";
 import { useSession } from "@/context/SessionContext";
 import { useMultiSession } from "@/context/MultiSessionContext";
 import { createSigHireJob } from "@/app/actions/jobs";
@@ -10,7 +10,7 @@ import { useDriverGuide } from "@/hooks/useDriverGuide";
 import { uploadsGuide } from "@/lib/driver-config";
 import { PageHeader } from "@/components/Sig-Hire/PageHeader";
 import ChromeButton from "@/components/Sig-Hire/ChromeButton";
-import { FileText, Users, Upload } from "lucide-react";
+import { FileText, Users, Upload, CheckCircle2 } from "lucide-react";
 import { showError } from "@/lib/swal";
 
 export function SectionCards() {
@@ -33,6 +33,12 @@ export function SectionCards() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("Processing...");
+  
+  const [hasExistingData, setHasExistingData] = useState(false);
+  const [existingJdFile, setExistingJdFile] = useState<string | null>(null);
+  const [existingJdFileName, setExistingJdFileName] = useState<string | null>(null);
+  const [existingCsvFile, setExistingCsvFile] = useState<string | null>(null);
+  const [candidatesCount, setCandidatesCount] = useState<number>(0);
 
   const handleJobDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -68,7 +74,54 @@ export function SectionCards() {
     }
   }, [urlSessionId, setSessionId]);
 
+  // Fetch existing session data
+  useEffect(() => {
+    const fetchSessionData = async () => {
+      if (!sessionId) return;
+      
+      try {
+        const status = await checkSessionStatus(sessionId);
+        
+        if (status.status !== "not_found" && status.candidates_count > 0) {
+          setHasExistingData(true);
+          setCandidatesCount(status.candidates_count);
+          
+          // Fetch job data from Supabase
+          const supabase = createClient();
+          const { data: jobData } = await supabase
+            .from('jobs')
+            .select('Job_Description, JD_pdf')
+            .eq('form_id', sessionId)
+            .single();
+          
+          if (jobData) {
+            if (jobData.Job_Description) {
+              setJobDescription(jobData.Job_Description);
+            }
+            if (jobData.JD_pdf) {
+              setExistingJdFile(jobData.JD_pdf);
+              // Extract filename from URL
+              const fileName = jobData.JD_pdf.split('/').pop()?.split('?')[0] || 'job_description.pdf';
+              setExistingJdFileName(decodeURIComponent(fileName));
+            }
+          }
+          
+          setExistingCsvFile("candidates.csv");
+        }
+      } catch (err) {
+        console.log("No existing session data found", err);
+      }
+    };
+    
+    fetchSessionData();
+  }, [sessionId]);
+
   const validateInputs = (): boolean => {
+    // If session has existing data, allow continuing without new uploads
+    if (hasExistingData) {
+      return true;
+    }
+    
     if (!jobDescription && !jobFile) {
       showError("Please provide either job description text or upload a job document");
       return false;
@@ -103,40 +156,48 @@ export function SectionCards() {
         setSessionId(activeSessionId);
       }
 
-      setLoadingMessage("Uploading your files...");
+      // Only upload if there's new data
+      if (!hasExistingData || jobFile || candidatesFile) {
+        setLoadingMessage("Uploading your files...");
 
-      // Upload data to API - pass jobDescription as additional_prompt for context
-      await uploadSessionData(
-        activeSessionId,
-        jobDescription,
-        jobFile,
-        "",
-        candidatesFile,
-        jobDescription // Pass JD text as additional context to API
-      );
+        // Upload data to API - pass jobDescription as additional_prompt for context
+        await uploadSessionData(
+          activeSessionId,
+          jobDescription,
+          jobFile,
+          "",
+          candidatesFile,
+          jobDescription // Pass JD text as additional context to API
+        );
+      } else {
+        setLoadingMessage("Loading existing session...");
+      }
 
-      const messages = [
-        "Analyzing job requirements...",
-        "Reading candidate profiles...",
-        "Extracting key qualifications...",
-        "Matching skills and experience...",
-        "Evaluating candidates...",
-        "Calculating compatibility scores...",
-        "Ranking results...",
-        "Almost there..."
-      ];
+      // Only wait for processing if new data was uploaded
+      if (!hasExistingData || jobFile || candidatesFile) {
+        const messages = [
+          "Analyzing job requirements...",
+          "Reading candidate profiles...",
+          "Extracting key qualifications...",
+          "Matching skills and experience...",
+          "Evaluating candidates...",
+          "Calculating compatibility scores...",
+          "Ranking results...",
+          "Almost there..."
+        ];
 
-      let checkCount = 0;
-      // Wait for session to be ready (max 8 checks with 2 second intervals)
-      await waitForSessionReady(
-        activeSessionId,
-        8,
-        2000,
-        () => {
-          setLoadingMessage(messages[checkCount % messages.length]);
-          checkCount++;
-        }
-      );
+        let checkCount = 0;
+        // Wait for session to be ready (max 8 checks with 2 second intervals)
+        await waitForSessionReady(
+          activeSessionId,
+          8,
+          2000,
+          () => {
+            setLoadingMessage(messages[checkCount % messages.length]);
+            checkCount++;
+          }
+        );
+      }
 
       // Create job record in jobs table
       setLoadingMessage("Finalizing...");
@@ -203,6 +264,12 @@ export function SectionCards() {
               <label className="text-xs font-medium text-white/60 uppercase tracking-wider">
                 Write Job Description
               </label>
+              {hasExistingData && jobDescription && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)" }}>
+                  <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
+                  <span className="text-xs text-green-400">Job description text loaded</span>
+                </div>
+              )}
               <textarea
                 className="min-h-[140px] w-full rounded-lg p-3 text-sm text-white/80 placeholder-white/25 outline-none resize-none transition-colors"
                 style={{
@@ -227,6 +294,20 @@ export function SectionCards() {
               <label className="text-xs font-medium text-white/60 uppercase tracking-wider">
                 Upload Document or PDF
               </label>
+              {hasExistingData && existingJdFile && !jobFile && (
+                <a 
+                  href={existingJdFile} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:opacity-80 transition-opacity"
+                  style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)" }}
+                >
+                  <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
+                  <FileText className="w-4 h-4 text-green-400 shrink-0" />
+                  <span className="text-xs text-green-400 truncate flex-1">{existingJdFileName || 'job_description.pdf'}</span>
+                  <span className="text-xs text-green-300/60 shrink-0">View →</span>
+                </a>
+              )}
               <label
                 className="flex flex-col items-center justify-center gap-2 w-full cursor-pointer rounded-lg px-4 py-5 transition-all duration-200 text-center"
                 style={{
@@ -270,23 +351,19 @@ export function SectionCards() {
           </div>
 
           <div className="relative z-10 flex flex-col justify-between gap-4 p-6 flex-1">
-            <div className="flex flex-col gap-3 p-4 rounded-lg" style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.2)" }}>
-              <h4 className="text-xs font-semibold text-white/80 uppercase tracking-wider">CSV Requirements</h4>
+            <div className="flex flex-col gap-3 p-4 rounded-lg" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)" }}>
+              <h4 className="text-xs font-semibold text-red-400 uppercase tracking-wider">CSV Requirements</h4>
               <ul className="space-y-1.5 text-xs text-white/60">
                 <li className="flex items-start gap-2">
-                  <span className="text-lavender mt-0.5">•</span>
-                  <span>Must include a <span className="text-white/80 font-medium">resume</span> column with resume URLs or text</span>
+                  <span className="text-red-400 mt-0.5">•</span>
+                  <span>Must include a <span className="text-white/80 font-medium">resume</span> column with resume URLs</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-lavender mt-0.5">•</span>
+                  <span className="text-red-400 mt-0.5">•</span>
                   <span>Google Drive links must be <span className="text-white/80 font-medium">publicly visible</span></span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-lavender mt-0.5">•</span>
-                  <span>Supported formats: PDF links, Google Drive links, or resume text</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-lavender mt-0.5">•</span>
+                  <span className="text-red-400 mt-0.5">•</span>
                   <span>Other columns: name, email, phone, github, linkedin, etc.</span>
                 </li>
               </ul>
@@ -296,6 +373,13 @@ export function SectionCards() {
               <label className="text-xs font-medium text-white/60 uppercase tracking-wider">
                 Upload CSV
               </label>
+              {hasExistingData && existingCsvFile && !candidatesFile && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)" }}>
+                  <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
+                  <FileText className="w-4 h-4 text-green-400 shrink-0" />
+                  <span className="text-xs text-green-400 flex-1">{existingCsvFile} ({candidatesCount} candidates)</span>
+                </div>
+              )}
               <label
                 className="flex flex-col items-center justify-center gap-2 w-full cursor-pointer rounded-lg px-4 py-5 transition-all duration-200 text-center"
                 style={{
