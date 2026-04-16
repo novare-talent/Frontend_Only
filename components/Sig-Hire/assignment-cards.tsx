@@ -174,6 +174,38 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
 
   const handleGenerateAssignment = async () => {
     if (!jobId) { setError('Job not found'); return; }
+    
+    // Check if job has JD_pdf or if user uploaded a file
+    const supabase = createClient();
+    const { data: job } = await supabase.from('jobs').select('JD_pdf, Job_Description').eq('job_id', jobId).single();
+    
+    // If no JD_pdf exists and no file is uploaded, show error
+    if (!job?.JD_pdf && !assignmentFile) {
+      setError('Please upload a Job Description PDF file before generating the assignment.');
+      return;
+    }
+    
+    // If user uploaded a new file, upload it first
+    if (assignmentFile && !job?.JD_pdf) {
+      try {
+        const fileName = `jobs/${Date.now()}-${assignmentFile.name}`;
+        const { error: uploadError } = await supabase.storage.from('jd').upload(fileName, assignmentFile, { upsert: true });
+        if (uploadError) throw uploadError;
+        
+        const { data: urlData } = supabase.storage.from('jd').getPublicUrl(fileName);
+        const jdUrl = urlData.publicUrl;
+        
+        // Update job with JD_pdf
+        const { error: updateError } = await supabase.from('jobs').update({ JD_pdf: jdUrl }).eq('job_id', jobId);
+        if (updateError) throw updateError;
+        
+        setSuccess('JD PDF uploaded successfully!');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to upload JD PDF');
+        return;
+      }
+    }
+    
     setIsGenerating(true); setError(null);
     try {
       const response = await fetch(`/api/assignment/create/${jobId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });

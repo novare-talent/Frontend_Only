@@ -26,7 +26,7 @@ export function SectionCards() {
 
   const [jobDescription, setJobDescription] = useState("");
   const [jobFile, setJobFile] = useState<File | null>(null);
-  const [candidatesCSV, setCandidatesCSV] = useState("");
+
   const [candidatesFile, setCandidatesFile] = useState<File | null>(null);
   const [isDragOverJob, setIsDragOverJob] = useState(false);
   const [isDragOverCandidates, setIsDragOverCandidates] = useState(false);
@@ -73,8 +73,8 @@ export function SectionCards() {
       showError("Please provide either job description text or upload a job document");
       return false;
     }
-    if (!candidatesCSV && !candidatesFile) {
-      showError("Please provide either candidates CSV or upload a candidates file");
+    if (!candidatesFile) {
+      showError("Please upload a candidates CSV file");
       return false;
     }
     return true;
@@ -110,7 +110,7 @@ export function SectionCards() {
         activeSessionId,
         jobDescription,
         jobFile,
-        candidatesCSV,
+        "",
         candidatesFile,
         jobDescription // Pass JD text as additional context to API
       );
@@ -204,7 +204,7 @@ export function SectionCards() {
                 Write Job Description
               </label>
               <textarea
-                className="min-h-[200px] w-full rounded-lg p-3 text-sm text-white/80 placeholder-white/25 outline-none resize-none transition-colors"
+                className="min-h-[140px] w-full rounded-lg p-3 text-sm text-white/80 placeholder-white/25 outline-none resize-none transition-colors"
                 style={{
                   background: "rgba(0,0,0,0.25)",
                   border: "1px solid rgba(255,255,255,0.07)",
@@ -217,13 +217,10 @@ export function SectionCards() {
               />
             </div>
 
-            <div className="relative py-1">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-white/8" />
-              </div>
-              <div className="relative flex justify-center">
-                <span className="px-3 text-[11px] uppercase tracking-widest text-white/25" style={{ background: "transparent" }}>or</span>
-              </div>
+            <div className="relative  flex items-center gap-4">
+              <span className="flex-1 border-t border-white/10" />
+              <span className="text-lg font-bold uppercase tracking-widest gradient-text">or</span>
+              <span className="flex-1 border-t border-white/10" />
             </div>
 
             <div className="flex flex-col gap-2">
@@ -268,36 +265,31 @@ export function SectionCards() {
             </div>
             <div>
               <h3 className="text-base font-semibold text-white leading-tight">Candidates</h3>
-              <p className="text-xs text-white/40 mt-0.5">Paste CSV data or upload a .csv file</p>
+              <p className="text-xs text-white/40 mt-0.5">Upload a CSV file with candidate information</p>
             </div>
           </div>
 
-          <div className="relative z-10 flex flex-col gap-4 p-6">
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-medium text-white/60 uppercase tracking-wider">
-                Enter CSV Data
-              </label>
-              <textarea
-                className="min-h-[200px] w-full rounded-lg p-3 text-sm text-white/80 placeholder-white/25 outline-none resize-none transition-colors"
-                style={{
-                  background: "rgba(0,0,0,0.25)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                }}
-                onFocus={e => e.currentTarget.style.borderColor = "rgba(124,58,237,0.5)"}
-                onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"}
-                placeholder="Paste CSV data here (name, email, resume_url, etc.)..."
-                value={candidatesCSV}
-                onChange={(e) => setCandidatesCSV(e.target.value)}
-              />
-            </div>
-
-            <div className="relative py-1">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-white/8" />
-              </div>
-              <div className="relative flex justify-center">
-                <span className="px-3 text-[11px] uppercase tracking-widest text-white/25" style={{ background: "transparent" }}>or</span>
-              </div>
+          <div className="relative z-10 flex flex-col justify-between gap-4 p-6 flex-1">
+            <div className="flex flex-col gap-3 p-4 rounded-lg" style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.2)" }}>
+              <h4 className="text-xs font-semibold text-white/80 uppercase tracking-wider">CSV Requirements</h4>
+              <ul className="space-y-1.5 text-xs text-white/60">
+                <li className="flex items-start gap-2">
+                  <span className="text-lavender mt-0.5">•</span>
+                  <span>Must include a <span className="text-white/80 font-medium">resume</span> column with resume URLs or text</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-lavender mt-0.5">•</span>
+                  <span>Google Drive links must be <span className="text-white/80 font-medium">publicly visible</span></span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-lavender mt-0.5">•</span>
+                  <span>Supported formats: PDF links, Google Drive links, or resume text</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-lavender mt-0.5">•</span>
+                  <span>Other columns: name, email, phone, github, linkedin, etc.</span>
+                </li>
+              </ul>
             </div>
 
             <div className="flex flex-col gap-2">
