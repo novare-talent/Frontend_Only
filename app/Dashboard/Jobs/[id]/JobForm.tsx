@@ -189,8 +189,7 @@ export default function JobForm({
   function formatISTDate(dateString: string) {
     if (!dateString) return "—";
     const date = new Date(dateString);
-    return date.toLocaleString("en-IN", {
-      timeZone: "Asia/Kolkata",
+    return date.toLocaleString(undefined, {
       weekday: "short",
       day: "2-digit",
       month: "short",

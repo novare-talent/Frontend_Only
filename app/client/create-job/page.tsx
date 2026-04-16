@@ -212,6 +212,11 @@ export default function NewJobPage() {
         transformedLevel = meta.experience ? `Job - ${meta.experience}` : "Job";
       }
 
+      // Convert local time to UTC for closingTime
+      const closingTimeUTC = meta.closingTime 
+        ? new Date(meta.closingTime).toISOString()
+        : null;
+
       const jobData = {
         job_id: jobId,
         Job_Name: meta.title,
@@ -221,7 +226,7 @@ export default function NewJobPage() {
         stipend: meta.stipend,
         location: meta.location,
         duration: meta.duration,
-        closingTime: meta.closingTime,
+        closingTime: closingTimeUTC,
         tags: meta.tags,
         status: "draft",
         employer_id: userId,

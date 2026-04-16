@@ -28,8 +28,7 @@ type FormResponse = {
 function formatIST(dateString: string | null | undefined) {
   if (!dateString) return "—";
   const date = new Date(dateString);
-  return date.toLocaleString("en-IN", {
-    timeZone: "Asia/Kolkata",
+  return date.toLocaleString(undefined, {
     day: "2-digit",
     month: "short",
     year: "numeric",

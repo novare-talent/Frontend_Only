@@ -103,6 +103,17 @@ export default function EditJobPage() {
 
         const { type, experience } = parseLevel(job.level || "");
 
+        // Convert UTC to local time for datetime-local input
+        const getLocalDateTimeString = (utcString: string) => {
+          const date = new Date(utcString);
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          const hours = String(date.getHours()).padStart(2, '0');
+          const minutes = String(date.getMinutes()).padStart(2, '0');
+          return `${year}-${month}-${day}T${hours}:${minutes}`;
+        };
+
         setMeta({
           title: job.Job_Name || "",
           type,
@@ -110,7 +121,7 @@ export default function EditJobPage() {
           stipend: job.stipend || "",
           location: job.location || "",
           duration: job.duration || "",
-          closingTime: job.closingTime ? new Date(job.closingTime).toISOString().slice(0, 16) : "",
+          closingTime: job.closingTime ? getLocalDateTimeString(job.closingTime) : "",
           tags: job.tags || [],
           description: job.Job_Description || "",
           jdFile: null,
@@ -170,6 +181,11 @@ export default function EditJobPage() {
         transformedLevel = meta.experience ? `Job - ${meta.experience}` : "Job";
       }
       jobUpdateData.level = transformedLevel;
+
+      // Convert local time to UTC for closingTime
+      if (meta.closingTime) {
+        jobUpdateData.closingTime = new Date(meta.closingTime).toISOString();
+      }
 
       const { data: job, error: jobError } = await supabase
         .from('jobs')
