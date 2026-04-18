@@ -28,7 +28,7 @@ export class JobService {
     const timestamp = Date.now()
     const fileName = `${userId}/${timestamp}-${file.name}`
     
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('jd')
       .upload(fileName, buffer, {
         contentType: file.type,

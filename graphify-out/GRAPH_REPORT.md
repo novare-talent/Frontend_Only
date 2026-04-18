@@ -1,19 +1,20 @@
 # Graph Report - app + lib + components + hooks + context + utils  (2026-04-18)
 
 ## Corpus Check
-- 11 files · ~17,007 words
+- 660 files · ~0 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 639 nodes · 578 edges · 173 communities detected
-- Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 43 edges (avg confidence: 0.8)
+- 660 nodes · 569 edges · 187 communities detected
+- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 48 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
 - [[_COMMUNITY_Client Dashboard & Data Fetching|Client Dashboard & Data Fetching]]
 - [[_COMMUNITY_Core App Routes & Auth|Core App Routes & Auth]]
 - [[_COMMUNITY_Candidate Workflow UI|Candidate Workflow UI]]
-- [[_COMMUNITY_Multi-Step Wizard Flow|Multi-Step Wizard Flow]]
+- [[_COMMUNITY_Candidate Actions & Service|Candidate Actions & Service]]
+- [[_COMMUNITY_Actions Service Layer|Actions Service Layer]]
 - [[_COMMUNITY_Question Builder & Rankings Table|Question Builder & Rankings Table]]
 - [[_COMMUNITY_Ranking & Query Session|Ranking & Query Session]]
 - [[_COMMUNITY_Job Creation UI|Job Creation UI]]
@@ -75,1065 +76,1156 @@
 - [[_COMMUNITY_Selected Candidates UI|Selected Candidates UI]]
 - [[_COMMUNITY_Ranking Bot Chat|Ranking Bot Chat]]
 - [[_COMMUNITY_Session Context|Session Context]]
-- [[_COMMUNITY_Root Layout|Root Layout]]
-- [[_COMMUNITY_Home Page|Home Page]]
-- [[_COMMUNITY_404 Not Found|404 Not Found]]
-- [[_COMMUNITY_Users Admin Page|Users Admin Page]]
-- [[_COMMUNITY_Training Badge Page|Training Badge Page]]
-- [[_COMMUNITY_SigHire Job Actions|SigHire Job Actions]]
-- [[_COMMUNITY_Bulk Assignments Action|Bulk Assignments Action]]
-- [[_COMMUNITY_Client Dashboard Page|Client Dashboard Page]]
-- [[_COMMUNITY_New Job Page|New Job Page]]
-- [[_COMMUNITY_Edit Job Page|Edit Job Page]]
-- [[_COMMUNITY_SigHire Layout|SigHire Layout]]
-- [[_COMMUNITY_Rankings Query Page|Rankings Query Page]]
-- [[_COMMUNITY_Driver.js Onboarding Tour|Driver.js Onboarding Tour]]
-- [[_COMMUNITY_Tailwind Class Utilities|Tailwind Class Utilities]]
-- [[_COMMUNITY_Theme Provider|Theme Provider]]
-- [[_COMMUNITY_Dark Mode Toggle|Dark Mode Toggle]]
-- [[_COMMUNITY_Placement CTA|Placement CTA]]
-- [[_COMMUNITY_Branch-Wise Table|Branch-Wise Table]]
-- [[_COMMUNITY_Progress Bar UI|Progress Bar UI]]
-- [[_COMMUNITY_Label UI|Label UI]]
-- [[_COMMUNITY_Toast Notifications|Toast Notifications]]
-- [[_COMMUNITY_Tooltip UI|Tooltip UI]]
-- [[_COMMUNITY_Feature Card UI|Feature Card UI]]
-- [[_COMMUNITY_Badge UI|Badge UI]]
-- [[_COMMUNITY_Separator UI|Separator UI]]
-- [[_COMMUNITY_Button UI|Button UI]]
-- [[_COMMUNITY_Checkbox UI|Checkbox UI]]
-- [[_COMMUNITY_Textarea UI|Textarea UI]]
-- [[_COMMUNITY_Input UI|Input UI]]
-- [[_COMMUNITY_Skeleton Loader|Skeleton Loader]]
-- [[_COMMUNITY_Guide Button UI|Guide Button UI]]
-- [[_COMMUNITY_Training Card|Training Card]]
-- [[_COMMUNITY_Billing Page|Billing Page]]
-- [[_COMMUNITY_Client Job Form|Client Job Form]]
-- [[_COMMUNITY_Create Job Button|Create Job Button]]
-- [[_COMMUNITY_Theme Switcher|Theme Switcher]]
-- [[_COMMUNITY_Glass Card UI|Glass Card UI]]
-- [[_COMMUNITY_Animated Counter|Animated Counter]]
-- [[_COMMUNITY_Dot Pattern UI|Dot Pattern UI]]
-- [[_COMMUNITY_Marquee UI|Marquee UI]]
-- [[_COMMUNITY_Number Ticker|Number Ticker]]
-- [[_COMMUNITY_Morphing Text|Morphing Text]]
-- [[_COMMUNITY_Flickering Grid|Flickering Grid]]
-- [[_COMMUNITY_Landing Hero Section|Landing Hero Section]]
-- [[_COMMUNITY_Novare Standard Section|Novare Standard Section]]
-- [[_COMMUNITY_FAQs Section|FAQs Section]]
-- [[_COMMUNITY_Landing Navbar|Landing Navbar]]
-- [[_COMMUNITY_Landing Providers|Landing Providers]]
-- [[_COMMUNITY_Particle Canvas Effect|Particle Canvas Effect]]
-- [[_COMMUNITY_Three.js Grid Effect|Three.js Grid Effect]]
-- [[_COMMUNITY_Text Question Component|Text Question Component]]
-- [[_COMMUNITY_Dashboard Grid|Dashboard Grid]]
-- [[_COMMUNITY_Employee Table|Employee Table]]
-- [[_COMMUNITY_Area Chart Interactive|Area Chart Interactive]]
-- [[_COMMUNITY_Radio Question Component|Radio Question Component]]
-- [[_COMMUNITY_Admin Sidebar|Admin Sidebar]]
-- [[_COMMUNITY_Admin Create Job|Admin Create Job]]
-- [[_COMMUNITY_Auth Guard|Auth Guard]]
-- [[_COMMUNITY_Query Management|Query Management]]
-- [[_COMMUNITY_Assignments Sender|Assignments Sender]]
-- [[_COMMUNITY_Section Label UI|Section Label UI]]
-- [[_COMMUNITY_Stats Ticker|Stats Ticker]]
-- [[_COMMUNITY_Auth Redirect Hook|Auth Redirect Hook]]
-- [[_COMMUNITY_Driver Guide Hook|Driver Guide Hook]]
-- [[_COMMUNITY_Mobile Detection Hook|Mobile Detection Hook]]
-- [[_COMMUNITY_Supabase Session Middleware|Supabase Session Middleware]]
-- [[_COMMUNITY_Supabase Browser Client|Supabase Browser Client]]
-- [[_COMMUNITY_Legacy Layout Copy|Legacy Layout Copy]]
-- [[_COMMUNITY_IIT Placements Page|IIT Placements Page]]
-- [[_COMMUNITY_Admin Redirect Page|Admin Redirect Page]]
-- [[_COMMUNITY_SigHire Insights Page|SigHire Insights Page]]
-- [[_COMMUNITY_Submission Success Content|Submission Success Content]]
-- [[_COMMUNITY_App Constants|App Constants]]
-- [[_COMMUNITY_Placement FAQ|Placement FAQ]]
-- [[_COMMUNITY_Placement Stats Card|Placement Stats Card]]
-- [[_COMMUNITY_Placement Breadcrumbs|Placement Breadcrumbs]]
-- [[_COMMUNITY_Data Table UI|Data Table UI]]
-- [[_COMMUNITY_Switch UI|Switch UI]]
-- [[_COMMUNITY_Toggle UI|Toggle UI]]
-- [[_COMMUNITY_Client Nav Main|Client Nav Main]]
-- [[_COMMUNITY_Job Form Preview|Job Form Preview]]
-- [[_COMMUNITY_Border Beam Effect|Border Beam Effect]]
-- [[_COMMUNITY_Glow Button|Glow Button]]
-- [[_COMMUNITY_Section Header UI|Section Header UI]]
-- [[_COMMUNITY_Progressive Blur Effect|Progressive Blur Effect]]
-- [[_COMMUNITY_Team Section|Team Section]]
-- [[_COMMUNITY_How It Works Section|How It Works Section]]
-- [[_COMMUNITY_Final CTA Section|Final CTA Section]]
-- [[_COMMUNITY_Zenhyre Section|Zenhyre Section]]
-- [[_COMMUNITY_Testimonials Section|Testimonials Section]]
-- [[_COMMUNITY_Social Proof Bar|Social Proof Bar]]
-- [[_COMMUNITY_Why One Percent Section|Why One Percent Section]]
-- [[_COMMUNITY_Global Background Effect|Global Background Effect]]
-- [[_COMMUNITY_Aurora Mesh Effect|Aurora Mesh Effect]]
-- [[_COMMUNITY_Candidate Nav Main|Candidate Nav Main]]
-- [[_COMMUNITY_Admin Data Table|Admin Data Table]]
-- [[_COMMUNITY_Admin Nav Main|Admin Nav Main]]
-- [[_COMMUNITY_SigHire Page Header|SigHire Page Header]]
-- [[_COMMUNITY_Rankings Screen|Rankings Screen]]
-- [[_COMMUNITY_Chrome Button|Chrome Button]]
-- [[_COMMUNITY_Loading Overlay|Loading Overlay]]
-- [[_COMMUNITY_Query Filters|Query Filters]]
-- [[_COMMUNITY_SigHire Testimonials|SigHire Testimonials]]
-- [[_COMMUNITY_SigHire Hero Section|SigHire Hero Section]]
-- [[_COMMUNITY_SigHire Constants|SigHire Constants]]
-- [[_COMMUNITY_SigHire How It Works|SigHire How It Works]]
-- [[_COMMUNITY_SigHire Features Section|SigHire Features Section]]
-- [[_COMMUNITY_SigHire CTA Section|SigHire CTA Section]]
+- [[_COMMUNITY_page.tsx (app)|page.tsx (app)]]
+- [[_COMMUNITY_page.tsx (app)|page.tsx (app)]]
+- [[_COMMUNITY_layout.tsx (app)|layout.tsx (app)]]
+- [[_COMMUNITY_page.tsx (app)|page.tsx (app)]]
+- [[_COMMUNITY_not-found.tsx (app)|not-found.tsx (app)]]
+- [[_COMMUNITY_page.tsx (app)|page.tsx (app)]]
+- [[_COMMUNITY_route.ts (app)|route.ts (app)]]
+- [[_COMMUNITY_route.ts (app)|route.ts (app)]]
+- [[_COMMUNITY_page.tsx (app)|page.tsx (app)]]
+- [[_COMMUNITY_page.tsx (app)|page.tsx (app)]]
+- [[_COMMUNITY_page.tsx (app)|page.tsx (app)]]
+- [[_COMMUNITY_page.tsx (app)|page.tsx (app)]]
+- [[_COMMUNITY_layout.tsx (app)|layout.tsx (app)]]
+- [[_COMMUNITY_evaluations-content.tsx (app)|evaluations-content.tsx (app)]]
+- [[_COMMUNITY_page.tsx (app)|page.tsx (app)]]
+- [[_COMMUNITY_createDriver() (lib)|createDriver() (lib)]]
+- [[_COMMUNITY_utils.ts (lib)|utils.ts (lib)]]
+- [[_COMMUNITY_theme-provider.tsx (components)|theme-provider.tsx (components)]]
+- [[_COMMUNITY_toggle-button.tsx (components)|toggle-button.tsx (components)]]
+- [[_COMMUNITY_PlacementCTA.tsx (components)|PlacementCTA.tsx (components)]]
+- [[_COMMUNITY_BranchWiseTable() (components)|BranchWiseTable() (components)]]
+- [[_COMMUNITY_progress.tsx (components)|progress.tsx (components)]]
+- [[_COMMUNITY_label.tsx (components)|label.tsx (components)]]
+- [[_COMMUNITY_sonner.tsx (components)|sonner.tsx (components)]]
+- [[_COMMUNITY_tooltip.tsx (components)|tooltip.tsx (components)]]
+- [[_COMMUNITY_feature-card.tsx (components)|feature-card.tsx (components)]]
+- [[_COMMUNITY_Badge() (components)|Badge() (components)]]
+- [[_COMMUNITY_separator.tsx (components)|separator.tsx (components)]]
+- [[_COMMUNITY_cn() (components)|cn() (components)]]
+- [[_COMMUNITY_Checkbox() (components)|Checkbox() (components)]]
+- [[_COMMUNITY_textarea.tsx (components)|textarea.tsx (components)]]
+- [[_COMMUNITY_input.tsx (components)|input.tsx (components)]]
+- [[_COMMUNITY_skeleton.tsx (components)|skeleton.tsx (components)]]
+- [[_COMMUNITY_guide-button.tsx (components)|guide-button.tsx (components)]]
+- [[_COMMUNITY_TrainingCard.tsx (components)|TrainingCard.tsx (components)]]
+- [[_COMMUNITY_BillingPage() (components)|BillingPage() (components)]]
+- [[_COMMUNITY_Job-Form.tsx (components)|Job-Form.tsx (components)]]
+- [[_COMMUNITY_CreateJobButton.tsx (components)|CreateJobButton.tsx (components)]]
+- [[_COMMUNITY_ThemeSwitcher.tsx (components)|ThemeSwitcher.tsx (components)]]
+- [[_COMMUNITY_GlassCard.tsx (components)|GlassCard.tsx (components)]]
+- [[_COMMUNITY_AnimatedCounter() (components)|AnimatedCounter() (components)]]
+- [[_COMMUNITY_dot-pattern.tsx (components)|dot-pattern.tsx (components)]]
+- [[_COMMUNITY_Marquee.tsx (components)|Marquee.tsx (components)]]
+- [[_COMMUNITY_number-ticker.tsx (components)|number-ticker.tsx (components)]]
+- [[_COMMUNITY_morphing-text.tsx (components)|morphing-text.tsx (components)]]
+- [[_COMMUNITY_flickering-grid.tsx (components)|flickering-grid.tsx (components)]]
+- [[_COMMUNITY_Hero.tsx (components)|Hero.tsx (components)]]
+- [[_COMMUNITY_NovareStandard.tsx (components)|NovareStandard.tsx (components)]]
+- [[_COMMUNITY_FAQs.tsx (components)|FAQs.tsx (components)]]
+- [[_COMMUNITY_Navbar.tsx (components)|Navbar.tsx (components)]]
+- [[_COMMUNITY_Providers.tsx (components)|Providers.tsx (components)]]
+- [[_COMMUNITY_ParticleCanvas.tsx (components)|ParticleCanvas.tsx (components)]]
+- [[_COMMUNITY_ThreeGrid.tsx (components)|ThreeGrid.tsx (components)]]
+- [[_COMMUNITY_TextQuestion.tsx (components)|TextQuestion.tsx (components)]]
+- [[_COMMUNITY_DashboardGrid.tsx (components)|DashboardGrid.tsx (components)]]
+- [[_COMMUNITY_emp-table.tsx (components)|emp-table.tsx (components)]]
+- [[_COMMUNITY_ChartAreaInteractive() (components)|ChartAreaInteractive() (components)]]
+- [[_COMMUNITY_RadioQuestion.tsx (components)|RadioQuestion.tsx (components)]]
+- [[_COMMUNITY_fetchUser() (components)|fetchUser() (components)]]
+- [[_COMMUNITY_create-job.tsx (components)|create-job.tsx (components)]]
+- [[_COMMUNITY_AuthGuard() (components)|AuthGuard() (components)]]
+- [[_COMMUNITY_queries-management.tsx (components)|queries-management.tsx (components)]]
+- [[_COMMUNITY_AssignmentsSender() (components)|AssignmentsSender() (components)]]
+- [[_COMMUNITY_section-ui.tsx (components)|section-ui.tsx (components)]]
+- [[_COMMUNITY_stats-ticker.tsx (components)|stats-ticker.tsx (components)]]
+- [[_COMMUNITY_useAuthRedirect.ts (hooks)|useAuthRedirect.ts (hooks)]]
+- [[_COMMUNITY_useDriverGuide.ts (hooks)|useDriverGuide.ts (hooks)]]
+- [[_COMMUNITY_use-mobile.ts (hooks)|use-mobile.ts (hooks)]]
+- [[_COMMUNITY_updateSession() (utils)|updateSession() (utils)]]
+- [[_COMMUNITY_createClient() (utils)|createClient() (utils)]]
+- [[_COMMUNITY_page.tsx (app)|page.tsx (app)]]
+- [[_COMMUNITY_page.tsx (app)|page.tsx (app)]]
+- [[_COMMUNITY_layout copy.tsx (app)|layout copy.tsx (app)]]
+- [[_COMMUNITY_page.tsx (app)|page.tsx (app)]]
+- [[_COMMUNITY_route.ts (app)|route.ts (app)]]
+- [[_COMMUNITY_route.ts (app)|route.ts (app)]]
+- [[_COMMUNITY_page.tsx (app)|page.tsx (app)]]
+- [[_COMMUNITY_page.tsx (app)|page.tsx (app)]]
+- [[_COMMUNITY_route.ts (app)|route.ts (app)]]
+- [[_COMMUNITY_route.ts (app)|route.ts (app)]]
+- [[_COMMUNITY_route.ts (app)|route.ts (app)]]
+- [[_COMMUNITY_page.tsx (app)|page.tsx (app)]]
+- [[_COMMUNITY_submission-success-content.tsx (app)|submission-success-content.tsx (app)]]
+- [[_COMMUNITY_constants.ts (lib)|constants.ts (lib)]]
+- [[_COMMUNITY_PlacementFAQ.tsx (components)|PlacementFAQ.tsx (components)]]
+- [[_COMMUNITY_PlacementStatsCard.tsx (components)|PlacementStatsCard.tsx (components)]]
+- [[_COMMUNITY_Breadcrumbs.tsx (components)|Breadcrumbs.tsx (components)]]
+- [[_COMMUNITY_data-table.tsx (components)|data-table.tsx (components)]]
+- [[_COMMUNITY_switch.tsx (components)|switch.tsx (components)]]
+- [[_COMMUNITY_toggle.tsx (components)|toggle.tsx (components)]]
+- [[_COMMUNITY_nav-main.tsx (components)|nav-main.tsx (components)]]
+- [[_COMMUNITY_job-form-preview.tsx (components)|job-form-preview.tsx (components)]]
+- [[_COMMUNITY_border-beam.tsx (components)|border-beam.tsx (components)]]
+- [[_COMMUNITY_GlowButton.tsx (components)|GlowButton.tsx (components)]]
+- [[_COMMUNITY_SectionHeader.tsx (components)|SectionHeader.tsx (components)]]
+- [[_COMMUNITY_progressive-blur.tsx (components)|progressive-blur.tsx (components)]]
+- [[_COMMUNITY_Team.tsx (components)|Team.tsx (components)]]
+- [[_COMMUNITY_HowItWorks.tsx (components)|HowItWorks.tsx (components)]]
+- [[_COMMUNITY_FinalCTA.tsx (components)|FinalCTA.tsx (components)]]
+- [[_COMMUNITY_Zenhyre.tsx (components)|Zenhyre.tsx (components)]]
+- [[_COMMUNITY_Testimonials.tsx (components)|Testimonials.tsx (components)]]
+- [[_COMMUNITY_SocialProofBar.tsx (components)|SocialProofBar.tsx (components)]]
+- [[_COMMUNITY_WhyTheOnePercent.tsx (components)|WhyTheOnePercent.tsx (components)]]
+- [[_COMMUNITY_GlobalBackground.tsx (components)|GlobalBackground.tsx (components)]]
+- [[_COMMUNITY_AuroraMesh.tsx (components)|AuroraMesh.tsx (components)]]
+- [[_COMMUNITY_nav-main.tsx (components)|nav-main.tsx (components)]]
+- [[_COMMUNITY_data-table.tsx (components)|data-table.tsx (components)]]
+- [[_COMMUNITY_nav-main.tsx (components)|nav-main.tsx (components)]]
+- [[_COMMUNITY_PageHeader.tsx (components)|PageHeader.tsx (components)]]
+- [[_COMMUNITY_rankings-screen.tsx (components)|rankings-screen.tsx (components)]]
+- [[_COMMUNITY_ChromeButton.tsx (components)|ChromeButton.tsx (components)]]
+- [[_COMMUNITY_loading-overlay.tsx (components)|loading-overlay.tsx (components)]]
+- [[_COMMUNITY_query-filters.tsx (components)|query-filters.tsx (components)]]
+- [[_COMMUNITY_testimonials-section.tsx (components)|testimonials-section.tsx (components)]]
+- [[_COMMUNITY_hero-section.tsx (components)|hero-section.tsx (components)]]
+- [[_COMMUNITY_constants.tsx (components)|constants.tsx (components)]]
+- [[_COMMUNITY_how-it-works-section.tsx (components)|how-it-works-section.tsx (components)]]
+- [[_COMMUNITY_features-section.tsx (components)|features-section.tsx (components)]]
+- [[_COMMUNITY_cta-section.tsx (components)|cta-section.tsx (components)]]
+- [[_COMMUNITY_Services Index|Services Index]]
+- [[_COMMUNITY_Action Types|Action Types]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `GET()` - 23 edges
-2. `POST()` - 23 edges
-3. `Select()` - 21 edges
-4. `proxyRequest()` - 11 edges
-5. `DELETE()` - 8 edges
-6. `Page()` - 7 edges
+1. `Select()` - 17 edges
+2. `proxyRequest()` - 9 edges
+3. `POST()` - 8 edges
+4. `GET()` - 8 edges
+5. `Page()` - 7 edges
+6. `DELETE()` - 7 edges
 7. `PUT()` - 7 edges
 8. `PATCH()` - 7 edges
-9. `parseAnswers()` - 5 edges
-10. `getSupabaseAdmin()` - 5 edges
+9. `fetchRankingsFromSupabase()` - 5 edges
+10. `handleEvaluate()` - 5 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `GET()` --calls--> `AssignmentsContent()`  [INFERRED]
-  app/api/credits/route.ts → app/sig-hire/assignments/page.tsx
-- `GET()` --calls--> `UploadContent()`  [INFERRED]
-  app/api/credits/route.ts → app/sig-hire/uploads/page.tsx
+- `bulkCreateAssignments()` --calls--> `handleSendAssignments()`  [INFERRED]
+  app/actions/assignments.ts → components/Sig-Hire/assignment-cards.tsx
 - `Select()` --calls--> `loadAssignmentsCount()`  [INFERRED]
   components/ui/select.tsx → components/Sig-Hire/workflow-stepper.tsx
+- `Select()` --calls--> `fetchSessionData()`  [INFERRED]
+  components/ui/select.tsx → components/Sig-Hire/upload-cards.tsx
 - `MultiSessionProvider()` --calls--> `createClient()`  [INFERRED]
   context/MultiSessionContext.tsx → utils/supabase/server.ts
-- `GET()` --calls--> `handleFormSubmit()`  [INFERRED]
-  app/api/credits/route.ts → app/client/profile/page.tsx
+- `createCandidateMappings()` --calls--> `handleSendAssignments()`  [INFERRED]
+  app/actions/candidates.ts → components/Sig-Hire/assignment-cards.tsx
 
 ## Communities
 
 ### Community 0 - "Client Dashboard & Data Fetching"
-Cohesion: 0.05
-Nodes (26): fetchAppliedJobs(), fetchAssignment(), fetchJobId(), fetchPreviousAssignments(), handleGenerateAssignment(), fetchJobs(), fetchJobs(), handleEvaluateAll() (+18 more)
+Cohesion: 0.06
+Nodes (18): fetchAppliedJobs(), fetchJobs(), fetchJobs(), handleEvaluateAll(), checkEvaluation(), handleEvaluate(), init(), showNotification() (+10 more)
 
 ### Community 1 - "Core App Routes & Auth"
-Cohesion: 0.09
-Nodes (22): resetPassword(), updatePassword(), EvaluationsContent(), handleDelete(), SignUpContent(), delay(), DELETE(), evaluateCandidate() (+14 more)
+Cohesion: 0.15
+Nodes (13): handleFormSubmit(), loadProfile(), delay(), evaluateCandidate(), evaluateCandidateWithRetry(), extractResumeText(), extractTextFromPDFBuffer(), GET() (+5 more)
 
 ### Community 2 - "Candidate Workflow UI"
 Cohesion: 0.11
 Nodes (8): fetchJobsWithFormStatus(), measure(), parseJobsAndInternships(), remove(), handleDelete(), handleDrop(), handleFileChange(), processFiles()
 
-### Community 3 - "Multi-Step Wizard Flow"
+### Community 3 - "Candidate Actions & Service"
+Cohesion: 0.1
+Nodes (5): handleSendAssignments(), CandidateService, createCandidateMappings(), getCandidateByUUID(), getCandidateMappings()
+
+### Community 4 - "Actions Service Layer"
+Cohesion: 0.12
+Nodes (7): AssignmentService, bulkCreateAssignments(), resetPassword(), AuthService, updatePassword(), JobService, createSigHireJob()
+
+### Community 5 - "Question Builder & Rankings Table"
 Cohesion: 0.14
 Nodes (4): handleCta(), handleViewAssignments(), handleViewSession(), loadUser()
 
-### Community 4 - "Question Builder & Rankings Table"
-Cohesion: 0.16
-Nodes (6): add(), onDropFromPalette(), uid(), CandidateRow(), getScoreColor(), handleSelectCandidate()
+### Community 6 - "Ranking & Query Session"
+Cohesion: 0.15
+Nodes (7): add(), onDropFromPalette(), uid(), update(), CandidateRow(), getScoreColor(), handleSelectCandidate()
 
-### Community 5 - "Ranking & Query Session"
+### Community 7 - "Job Creation UI"
 Cohesion: 0.22
 Nodes (8): checkSessionStatus(), extractCandidatesFromResults(), fetchRankings(), removeQuery(), submitQuery(), waitForSessionReady(), fetchRankingsFromSupabase(), parseSupabaseRankings()
 
-### Community 6 - "Job Creation UI"
+### Community 8 - "Sidebar Navigation"
 Cohesion: 0.15
 Nodes (5): Alert(), GlowOrb(), handleDrop(), handleFileSelect(), set()
 
-### Community 7 - "Sidebar Navigation"
+### Community 9 - "Form Responses Admin"
 Cohesion: 0.2
 Nodes (3): NavUser(), SidebarMenuButton(), useSidebar()
 
-### Community 8 - "Form Responses Admin"
-Cohesion: 0.33
-Nodes (4): fetchResponse(), formatIST(), handleBack(), parseAnswers()
-
-### Community 9 - "Assignments Pages"
+### Community 10 - "Assignments Pages"
 Cohesion: 0.2
-Nodes (3): AssignmentsContent(), Page(), UploadContent()
+Nodes (1): Page()
 
-### Community 10 - "Sheet UI Component"
+### Community 11 - "Sheet UI Component"
+Cohesion: 0.6
+Nodes (4): DELETE(), PATCH(), proxyRequest(), PUT()
+
+### Community 12 - "User/Client Sign Form"
 Cohesion: 0.2
 Nodes (0): 
 
-### Community 11 - "User/Client Sign Form"
+### Community 13 - "Drawer UI Component"
 Cohesion: 0.24
 Nodes (3): handleUserSubmit(), setResumeFile(), validateUserUrls()
 
-### Community 12 - "Drawer UI Component"
+### Community 14 - "Select UI Component"
 Cohesion: 0.22
 Nodes (0): 
 
-### Community 13 - "Select UI Component"
-Cohesion: 0.22
-Nodes (0): 
-
-### Community 14 - "Job Form Management"
-Cohesion: 0.32
-Nodes (4): fetchAllData(), handleSubmit(), normalizeResumeUrls(), validateFormBeforeSubmit()
-
-### Community 15 - "Workflow Stepper UI"
+### Community 15 - "Job Form Management"
 Cohesion: 0.25
 Nodes (3): Button(), cn(), loadAssignmentsCount()
 
-### Community 16 - "Profile & Resume Management"
-Cohesion: 0.33
-Nodes (2): handleFormSubmit(), loadProfile()
+### Community 16 - "Workflow Stepper UI"
+Cohesion: 0.32
+Nodes (4): fetchAllData(), handleSubmit(), normalizeResumeUrls(), validateFormBeforeSubmit()
 
-### Community 17 - "Breadcrumb Navigation"
+### Community 17 - "Profile & Resume Management"
+Cohesion: 0.43
+Nodes (4): fetchResponse(), formatIST(), handleBack(), parseAnswers()
+
+### Community 18 - "Breadcrumb Navigation"
 Cohesion: 0.29
 Nodes (0): 
 
-### Community 18 - "GitHub OAuth Integration"
+### Community 19 - "GitHub OAuth Integration"
 Cohesion: 0.38
 Nodes (3): init(), loadProfileState(), resolveGithubAuthState()
 
-### Community 19 - "Dialog UI Component"
+### Community 20 - "Dialog UI Component"
 Cohesion: 0.33
 Nodes (0): 
 
-### Community 20 - "Navbar"
+### Community 21 - "Navbar"
 Cohesion: 0.33
 Nodes (0): 
 
-### Community 21 - "IIT Placements Data"
+### Community 22 - "IIT Placements Data"
+Cohesion: 0.4
+Nodes (3): fetchSessionData(), handleContinue(), validateInputs()
+
+### Community 23 - "Landing & Dashboard Routing"
 Cohesion: 0.4
 Nodes (2): getIITBySlug(), getRelatedIITs()
 
-### Community 22 - "Landing & Dashboard Routing"
+### Community 24 - "Alert/Toast Utilities"
 Cohesion: 0.4
 Nodes (0): 
 
-### Community 23 - "Alert/Toast Utilities"
+### Community 25 - "Table UI Component"
 Cohesion: 0.4
 Nodes (0): 
 
-### Community 24 - "Table UI Component"
+### Community 26 - "Form UI Component"
 Cohesion: 0.4
 Nodes (0): 
 
-### Community 25 - "Form UI Component"
+### Community 27 - "Mouse Position Hook"
 Cohesion: 0.4
 Nodes (0): 
 
-### Community 26 - "Mouse Position Hook"
+### Community 28 - "Multi-Session Context & Supabase Server"
 Cohesion: 0.5
 Nodes (2): useMousePosition(), useMousePositionRef()
 
-### Community 27 - "Multi-Session Context & Supabase Server"
+### Community 29 - "Shared Layouts"
 Cohesion: 0.4
 Nodes (2): MultiSessionProvider(), createClient()
 
-### Community 28 - "Shared Layouts"
+### Community 30 - "Evaluation Viewer"
 Cohesion: 0.5
 Nodes (1): Layout()
 
-### Community 29 - "Evaluation Viewer"
-Cohesion: 0.67
-Nodes (2): fetchEvaluation(), handleViewResponse()
-
-### Community 30 - "Candidate Data Access"
-Cohesion: 0.5
-Nodes (0): 
-
-### Community 31 - "Assignment Submission"
+### Community 31 - "Candidate Data Access"
 Cohesion: 0.67
 Nodes (2): handleFileChange(), handleSubmit()
 
-### Community 32 - "Placement Stats Table"
+### Community 32 - "Assignment Submission"
 Cohesion: 0.5
 Nodes (0): 
 
-### Community 33 - "Tabs UI Component"
+### Community 33 - "Placement Stats Table"
 Cohesion: 0.5
 Nodes (0): 
 
-### Community 34 - "Card UI Component"
+### Community 34 - "Tabs UI Component"
 Cohesion: 0.5
 Nodes (0): 
 
-### Community 35 - "Particle Animation"
+### Community 35 - "Card UI Component"
 Cohesion: 0.83
 Nodes (3): hexToRgb(), MousePosition(), Particles()
 
-### Community 36 - "Toggle Group UI"
+### Community 36 - "Particle Animation"
 Cohesion: 0.5
 Nodes (0): 
 
-### Community 37 - "Avatar UI Component"
+### Community 37 - "Toggle Group UI"
 Cohesion: 0.5
 Nodes (0): 
 
-### Community 38 - "Dropdown Menu UI"
+### Community 38 - "Avatar UI Component"
 Cohesion: 0.5
 Nodes (0): 
 
-### Community 39 - "Site Header"
+### Community 39 - "Dropdown Menu UI"
 Cohesion: 0.5
 Nodes (1): SiteHeader()
 
-### Community 40 - "Scroll Animations"
+### Community 40 - "Site Header"
 Cohesion: 0.5
 Nodes (0): 
 
-### Community 41 - "Candidate Rankings UI"
+### Community 41 - "Scroll Animations"
 Cohesion: 0.5
 Nodes (0): 
 
-### Community 42 - "Submitted Assignments List"
+### Community 42 - "Candidate Rankings UI"
 Cohesion: 0.5
 Nodes (0): 
 
-### Community 43 - "Landing Page Scripts"
+### Community 43 - "Submitted Assignments List"
+Cohesion: 0.67
+Nodes (2): fetchEvaluation(), handleViewResponse()
+
+### Community 44 - "Landing Page Scripts"
 Cohesion: 0.67
 Nodes (0): 
 
-### Community 44 - "SEO & Static Generation"
+### Community 45 - "SEO & Static Generation"
 Cohesion: 0.67
 Nodes (0): 
 
-### Community 45 - "Results Page"
-Cohesion: 0.67
-Nodes (1): fetchResults()
-
-### Community 46 - "Login Flow"
+### Community 46 - "Results Page"
 Cohesion: 0.67
 Nodes (0): 
 
-### Community 47 - "Error Handling"
+### Community 47 - "Login Flow"
+Cohesion: 0.67
+Nodes (0): 
+
+### Community 48 - "Error Handling"
+Cohesion: 0.67
+Nodes (0): 
+
+### Community 49 - "Candidate Selection"
 Cohesion: 0.67
 Nodes (1): ErrorPage()
 
-### Community 48 - "Candidate Selection"
-Cohesion: 0.67
-Nodes (0): 
-
-### Community 49 - "Submission Layout"
+### Community 50 - "Submission Layout"
 Cohesion: 0.67
 Nodes (1): SubmissionLayout()
 
-### Community 50 - "Submission Page"
+### Community 51 - "Submission Page"
 Cohesion: 0.67
 Nodes (1): SubmissionPage()
 
-### Community 51 - "Success Layout"
+### Community 52 - "Success Layout"
 Cohesion: 0.67
 Nodes (1): SuccessLayout()
 
-### Community 52 - "Submission Success Page"
+### Community 53 - "Submission Success Page"
 Cohesion: 0.67
 Nodes (1): SubmissionSuccessPage()
 
-### Community 53 - "Placement Trends Chart"
+### Community 54 - "Placement Trends Chart"
 Cohesion: 0.67
 Nodes (0): 
 
-### Community 54 - "Shine Border Effect"
+### Community 55 - "Shine Border Effect"
 Cohesion: 0.67
 Nodes (1): cn()
 
-### Community 55 - "Popover UI"
+### Community 56 - "Popover UI"
 Cohesion: 0.67
 Nodes (0): 
 
-### Community 56 - "Chart Component"
+### Community 57 - "Chart Component"
 Cohesion: 0.67
 Nodes (0): 
 
-### Community 57 - "Radio Group UI"
+### Community 58 - "Radio Group UI"
 Cohesion: 0.67
 Nodes (0): 
 
-### Community 58 - "File Upload Component"
+### Community 59 - "File Upload Component"
 Cohesion: 0.67
 Nodes (0): 
 
-### Community 59 - "App Sidebar"
+### Community 60 - "App Sidebar"
 Cohesion: 0.67
 Nodes (1): AppSidebar()
 
-### Community 60 - "Footer"
+### Community 61 - "Footer"
 Cohesion: 0.67
 Nodes (1): handleAuthClick()
 
-### Community 61 - "Section Cards"
+### Community 62 - "Section Cards"
 Cohesion: 0.67
 Nodes (1): SectionCards()
 
-### Community 62 - "Selected Candidates UI"
+### Community 63 - "Selected Candidates UI"
 Cohesion: 0.67
 Nodes (0): 
 
-### Community 63 - "Ranking Bot Chat"
+### Community 64 - "Ranking Bot Chat"
 Cohesion: 1.0
 Nodes (2): handleKeyDown(), sendMessage()
 
-### Community 64 - "Session Context"
+### Community 65 - "Session Context"
 Cohesion: 0.67
 Nodes (0): 
 
-### Community 65 - "Root Layout"
+### Community 66 - "page.tsx (app)"
+Cohesion: 0.67
+Nodes (0): 
+
+### Community 67 - "page.tsx (app)"
+Cohesion: 0.67
+Nodes (0): 
+
+### Community 68 - "layout.tsx (app)"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 69 - "page.tsx (app)"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 70 - "not-found.tsx (app)"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 71 - "page.tsx (app)"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 72 - "route.ts (app)"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 73 - "route.ts (app)"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 74 - "page.tsx (app)"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 75 - "page.tsx (app)"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 76 - "page.tsx (app)"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 77 - "page.tsx (app)"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 78 - "layout.tsx (app)"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 79 - "evaluations-content.tsx (app)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 66 - "Home Page"
+### Community 80 - "page.tsx (app)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 67 - "404 Not Found"
+### Community 81 - "createDriver() (lib)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 68 - "Users Admin Page"
+### Community 82 - "utils.ts (lib)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 69 - "Training Badge Page"
+### Community 83 - "theme-provider.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 70 - "SigHire Job Actions"
+### Community 84 - "toggle-button.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 71 - "Bulk Assignments Action"
+### Community 85 - "PlacementCTA.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 72 - "Client Dashboard Page"
+### Community 86 - "BranchWiseTable() (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 73 - "New Job Page"
+### Community 87 - "progress.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 74 - "Edit Job Page"
+### Community 88 - "label.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 75 - "SigHire Layout"
+### Community 89 - "sonner.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 76 - "Rankings Query Page"
+### Community 90 - "tooltip.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 77 - "Driver.js Onboarding Tour"
+### Community 91 - "feature-card.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 78 - "Tailwind Class Utilities"
+### Community 92 - "Badge() (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 79 - "Theme Provider"
+### Community 93 - "separator.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 80 - "Dark Mode Toggle"
+### Community 94 - "cn() (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 81 - "Placement CTA"
+### Community 95 - "Checkbox() (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 82 - "Branch-Wise Table"
+### Community 96 - "textarea.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 83 - "Progress Bar UI"
+### Community 97 - "input.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 84 - "Label UI"
+### Community 98 - "skeleton.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 85 - "Toast Notifications"
+### Community 99 - "guide-button.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 86 - "Tooltip UI"
+### Community 100 - "TrainingCard.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 87 - "Feature Card UI"
+### Community 101 - "BillingPage() (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 88 - "Badge UI"
+### Community 102 - "Job-Form.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 89 - "Separator UI"
+### Community 103 - "CreateJobButton.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 90 - "Button UI"
+### Community 104 - "ThemeSwitcher.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 91 - "Checkbox UI"
+### Community 105 - "GlassCard.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 92 - "Textarea UI"
+### Community 106 - "AnimatedCounter() (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 93 - "Input UI"
+### Community 107 - "dot-pattern.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 94 - "Skeleton Loader"
+### Community 108 - "Marquee.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 95 - "Guide Button UI"
+### Community 109 - "number-ticker.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 96 - "Training Card"
+### Community 110 - "morphing-text.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 97 - "Billing Page"
+### Community 111 - "flickering-grid.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 98 - "Client Job Form"
+### Community 112 - "Hero.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 99 - "Create Job Button"
+### Community 113 - "NovareStandard.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 100 - "Theme Switcher"
+### Community 114 - "FAQs.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 101 - "Glass Card UI"
+### Community 115 - "Navbar.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 102 - "Animated Counter"
+### Community 116 - "Providers.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 103 - "Dot Pattern UI"
+### Community 117 - "ParticleCanvas.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 104 - "Marquee UI"
+### Community 118 - "ThreeGrid.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 105 - "Number Ticker"
+### Community 119 - "TextQuestion.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 106 - "Morphing Text"
+### Community 120 - "DashboardGrid.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 107 - "Flickering Grid"
+### Community 121 - "emp-table.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 108 - "Landing Hero Section"
+### Community 122 - "ChartAreaInteractive() (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 109 - "Novare Standard Section"
+### Community 123 - "RadioQuestion.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 110 - "FAQs Section"
+### Community 124 - "fetchUser() (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 111 - "Landing Navbar"
+### Community 125 - "create-job.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 112 - "Landing Providers"
+### Community 126 - "AuthGuard() (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 113 - "Particle Canvas Effect"
+### Community 127 - "queries-management.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 114 - "Three.js Grid Effect"
+### Community 128 - "AssignmentsSender() (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 115 - "Text Question Component"
+### Community 129 - "section-ui.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 116 - "Dashboard Grid"
+### Community 130 - "stats-ticker.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 117 - "Employee Table"
+### Community 131 - "useAuthRedirect.ts (hooks)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 118 - "Area Chart Interactive"
+### Community 132 - "useDriverGuide.ts (hooks)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 119 - "Radio Question Component"
+### Community 133 - "use-mobile.ts (hooks)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 120 - "Admin Sidebar"
+### Community 134 - "updateSession() (utils)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 121 - "Admin Create Job"
+### Community 135 - "createClient() (utils)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 122 - "Auth Guard"
+### Community 136 - "page.tsx (app)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 123 - "Query Management"
+### Community 137 - "page.tsx (app)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 124 - "Assignments Sender"
+### Community 138 - "layout copy.tsx (app)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 125 - "Section Label UI"
+### Community 139 - "page.tsx (app)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 126 - "Stats Ticker"
+### Community 140 - "route.ts (app)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 127 - "Auth Redirect Hook"
+### Community 141 - "route.ts (app)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 128 - "Driver Guide Hook"
+### Community 142 - "page.tsx (app)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 129 - "Mobile Detection Hook"
+### Community 143 - "page.tsx (app)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 130 - "Supabase Session Middleware"
+### Community 144 - "route.ts (app)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 131 - "Supabase Browser Client"
+### Community 145 - "route.ts (app)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 132 - "Legacy Layout Copy"
+### Community 146 - "route.ts (app)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 133 - "IIT Placements Page"
+### Community 147 - "page.tsx (app)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 134 - "Admin Redirect Page"
+### Community 148 - "submission-success-content.tsx (app)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 135 - "SigHire Insights Page"
+### Community 149 - "constants.ts (lib)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 136 - "Submission Success Content"
+### Community 150 - "PlacementFAQ.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 137 - "App Constants"
+### Community 151 - "PlacementStatsCard.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 138 - "Placement FAQ"
+### Community 152 - "Breadcrumbs.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 139 - "Placement Stats Card"
+### Community 153 - "data-table.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 140 - "Placement Breadcrumbs"
+### Community 154 - "switch.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 141 - "Data Table UI"
+### Community 155 - "toggle.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 142 - "Switch UI"
+### Community 156 - "nav-main.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 143 - "Toggle UI"
+### Community 157 - "job-form-preview.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 144 - "Client Nav Main"
+### Community 158 - "border-beam.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 145 - "Job Form Preview"
+### Community 159 - "GlowButton.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 146 - "Border Beam Effect"
+### Community 160 - "SectionHeader.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 147 - "Glow Button"
+### Community 161 - "progressive-blur.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 148 - "Section Header UI"
+### Community 162 - "Team.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 149 - "Progressive Blur Effect"
+### Community 163 - "HowItWorks.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 150 - "Team Section"
+### Community 164 - "FinalCTA.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 151 - "How It Works Section"
+### Community 165 - "Zenhyre.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 152 - "Final CTA Section"
+### Community 166 - "Testimonials.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 153 - "Zenhyre Section"
+### Community 167 - "SocialProofBar.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 154 - "Testimonials Section"
+### Community 168 - "WhyTheOnePercent.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 155 - "Social Proof Bar"
+### Community 169 - "GlobalBackground.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 156 - "Why One Percent Section"
+### Community 170 - "AuroraMesh.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 157 - "Global Background Effect"
+### Community 171 - "nav-main.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 158 - "Aurora Mesh Effect"
+### Community 172 - "data-table.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 159 - "Candidate Nav Main"
+### Community 173 - "nav-main.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 160 - "Admin Data Table"
+### Community 174 - "PageHeader.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 161 - "Admin Nav Main"
+### Community 175 - "rankings-screen.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 162 - "SigHire Page Header"
+### Community 176 - "ChromeButton.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 163 - "Rankings Screen"
+### Community 177 - "loading-overlay.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 164 - "Chrome Button"
+### Community 178 - "query-filters.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 165 - "Loading Overlay"
+### Community 179 - "testimonials-section.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 166 - "Query Filters"
+### Community 180 - "hero-section.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 167 - "SigHire Testimonials"
+### Community 181 - "constants.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 168 - "SigHire Hero Section"
+### Community 182 - "how-it-works-section.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 169 - "SigHire Constants"
+### Community 183 - "features-section.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 170 - "SigHire How It Works"
+### Community 184 - "cta-section.tsx (components)"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 171 - "SigHire Features Section"
+### Community 185 - "Services Index"
 Cohesion: 1.0
 Nodes (0): 
 
-### Community 172 - "SigHire CTA Section"
+### Community 186 - "Action Types"
 Cohesion: 1.0
 Nodes (0): 
 
 ## Knowledge Gaps
-- **Thin community `Root Layout`** (2 nodes): `layout.tsx`, `RootLayout()`
+- **Thin community `layout.tsx (app)`** (2 nodes): `layout.tsx`, `RootLayout()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Home Page`** (2 nodes): `page.tsx`, `Home()`
+- **Thin community `page.tsx (app)`** (2 nodes): `page.tsx`, `Home()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `404 Not Found`** (2 nodes): `not-found.tsx`, `NotFound()`
+- **Thin community `not-found.tsx (app)`** (2 nodes): `not-found.tsx`, `NotFound()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Users Admin Page`** (2 nodes): `page.tsx`, `UsersPage()`
+- **Thin community `page.tsx (app)`** (2 nodes): `page.tsx`, `badgeFor()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Training Badge Page`** (2 nodes): `page.tsx`, `badgeFor()`
+- **Thin community `route.ts (app)`** (2 nodes): `route.ts`, `generateFormFromPDF()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `SigHire Job Actions`** (2 nodes): `jobs.ts`, `createSigHireJob()`
+- **Thin community `route.ts (app)`** (2 nodes): `route.ts`, `OPTIONS()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Bulk Assignments Action`** (2 nodes): `assignments.ts`, `bulkCreateAssignments()`
+- **Thin community `page.tsx (app)`** (2 nodes): `page.tsx`, `AdminDashboard()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Client Dashboard Page`** (2 nodes): `page.tsx`, `AdminDashboard()`
+- **Thin community `page.tsx (app)`** (2 nodes): `page.tsx`, `NewJobPage()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `New Job Page`** (2 nodes): `page.tsx`, `NewJobPage()`
+- **Thin community `page.tsx (app)`** (2 nodes): `page.tsx`, `FormResponsesPage()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Edit Job Page`** (2 nodes): `page.tsx`, `EditJobPage()`
+- **Thin community `page.tsx (app)`** (2 nodes): `page.tsx`, `EditJobPage()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `SigHire Layout`** (2 nodes): `layout.tsx`, `SigHireLayout()`
+- **Thin community `layout.tsx (app)`** (2 nodes): `layout.tsx`, `SigHireLayout()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Rankings Query Page`** (2 nodes): `page.tsx`, `handleQuerySubmitted()`
+- **Thin community `evaluations-content.tsx (app)`** (2 nodes): `evaluations-content.tsx`, `EvaluationsContent()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Driver.js Onboarding Tour`** (2 nodes): `createDriver()`, `driver-config.ts`
+- **Thin community `page.tsx (app)`** (2 nodes): `page.tsx`, `handleQuerySubmitted()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Tailwind Class Utilities`** (2 nodes): `utils.ts`, `cn()`
+- **Thin community `createDriver() (lib)`** (2 nodes): `createDriver()`, `driver-config.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Theme Provider`** (2 nodes): `theme-provider.tsx`, `ThemeProvider()`
+- **Thin community `utils.ts (lib)`** (2 nodes): `utils.ts`, `cn()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Dark Mode Toggle`** (2 nodes): `toggle-button.tsx`, `ModeToggle()`
+- **Thin community `theme-provider.tsx (components)`** (2 nodes): `theme-provider.tsx`, `ThemeProvider()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Placement CTA`** (2 nodes): `PlacementCTA.tsx`, `PlacementCTA()`
+- **Thin community `toggle-button.tsx (components)`** (2 nodes): `toggle-button.tsx`, `ModeToggle()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Branch-Wise Table`** (2 nodes): `BranchWiseTable()`, `BranchWiseTable.tsx`
+- **Thin community `PlacementCTA.tsx (components)`** (2 nodes): `PlacementCTA.tsx`, `PlacementCTA()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Progress Bar UI`** (2 nodes): `progress.tsx`, `Progress()`
+- **Thin community `BranchWiseTable() (components)`** (2 nodes): `BranchWiseTable()`, `BranchWiseTable.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Label UI`** (2 nodes): `label.tsx`, `Label()`
+- **Thin community `progress.tsx (components)`** (2 nodes): `progress.tsx`, `Progress()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Toast Notifications`** (2 nodes): `sonner.tsx`, `Toaster()`
+- **Thin community `label.tsx (components)`** (2 nodes): `label.tsx`, `Label()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Tooltip UI`** (2 nodes): `tooltip.tsx`, `TooltipContent()`
+- **Thin community `sonner.tsx (components)`** (2 nodes): `sonner.tsx`, `Toaster()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Feature Card UI`** (2 nodes): `feature-card.tsx`, `FeatureCard()`
+- **Thin community `tooltip.tsx (components)`** (2 nodes): `tooltip.tsx`, `TooltipContent()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Badge UI`** (2 nodes): `Badge()`, `badge.tsx`
+- **Thin community `feature-card.tsx (components)`** (2 nodes): `feature-card.tsx`, `FeatureCard()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Separator UI`** (2 nodes): `separator.tsx`, `Separator()`
+- **Thin community `Badge() (components)`** (2 nodes): `Badge()`, `badge.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Button UI`** (2 nodes): `cn()`, `button.tsx`
+- **Thin community `separator.tsx (components)`** (2 nodes): `separator.tsx`, `Separator()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Checkbox UI`** (2 nodes): `Checkbox()`, `checkbox.tsx`
+- **Thin community `cn() (components)`** (2 nodes): `cn()`, `button.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Textarea UI`** (2 nodes): `textarea.tsx`, `cn()`
+- **Thin community `Checkbox() (components)`** (2 nodes): `Checkbox()`, `checkbox.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Input UI`** (2 nodes): `input.tsx`, `Input()`
+- **Thin community `textarea.tsx (components)`** (2 nodes): `textarea.tsx`, `cn()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Skeleton Loader`** (2 nodes): `skeleton.tsx`, `Skeleton()`
+- **Thin community `input.tsx (components)`** (2 nodes): `input.tsx`, `Input()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Guide Button UI`** (2 nodes): `guide-button.tsx`, `GuideButton()`
+- **Thin community `skeleton.tsx (components)`** (2 nodes): `skeleton.tsx`, `Skeleton()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Training Card`** (2 nodes): `TrainingCard.tsx`, `CardTraining()`
+- **Thin community `guide-button.tsx (components)`** (2 nodes): `guide-button.tsx`, `GuideButton()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Billing Page`** (2 nodes): `BillingPage()`, `billing-page.tsx`
+- **Thin community `TrainingCard.tsx (components)`** (2 nodes): `TrainingCard.tsx`, `CardTraining()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Client Job Form`** (2 nodes): `Job-Form.tsx`, `onSubmit()`
+- **Thin community `BillingPage() (components)`** (2 nodes): `BillingPage()`, `billing-page.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Create Job Button`** (2 nodes): `CreateJobButton.tsx`, `CreateJobButtonServerChecked()`
+- **Thin community `Job-Form.tsx (components)`** (2 nodes): `Job-Form.tsx`, `onSubmit()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Theme Switcher`** (2 nodes): `ThemeSwitcher.tsx`, `ThemeSwitcher()`
+- **Thin community `CreateJobButton.tsx (components)`** (2 nodes): `CreateJobButton.tsx`, `CreateJobButtonServerChecked()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Glass Card UI`** (2 nodes): `GlassCard.tsx`, `GlassCard()`
+- **Thin community `ThemeSwitcher.tsx (components)`** (2 nodes): `ThemeSwitcher.tsx`, `ThemeSwitcher()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Animated Counter`** (2 nodes): `AnimatedCounter()`, `AnimatedCounter.tsx`
+- **Thin community `GlassCard.tsx (components)`** (2 nodes): `GlassCard.tsx`, `GlassCard()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Dot Pattern UI`** (2 nodes): `dot-pattern.tsx`, `DotPattern()`
+- **Thin community `AnimatedCounter() (components)`** (2 nodes): `AnimatedCounter()`, `AnimatedCounter.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Marquee UI`** (2 nodes): `Marquee.tsx`, `Marquee()`
+- **Thin community `dot-pattern.tsx (components)`** (2 nodes): `dot-pattern.tsx`, `DotPattern()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Number Ticker`** (2 nodes): `number-ticker.tsx`, `NumberTicker()`
+- **Thin community `Marquee.tsx (components)`** (2 nodes): `Marquee.tsx`, `Marquee()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Morphing Text`** (2 nodes): `morphing-text.tsx`, `useMorphingText()`
+- **Thin community `number-ticker.tsx (components)`** (2 nodes): `number-ticker.tsx`, `NumberTicker()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Flickering Grid`** (2 nodes): `flickering-grid.tsx`, `FlickeringGrid()`
+- **Thin community `morphing-text.tsx (components)`** (2 nodes): `morphing-text.tsx`, `useMorphingText()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Landing Hero Section`** (2 nodes): `Hero.tsx`, `handleAuthClick()`
+- **Thin community `flickering-grid.tsx (components)`** (2 nodes): `flickering-grid.tsx`, `FlickeringGrid()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Novare Standard Section`** (2 nodes): `NovareStandard.tsx`, `NovareStandard()`
+- **Thin community `Hero.tsx (components)`** (2 nodes): `Hero.tsx`, `handleAuthClick()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `FAQs Section`** (2 nodes): `FAQs.tsx`, `FAQItem()`
+- **Thin community `NovareStandard.tsx (components)`** (2 nodes): `NovareStandard.tsx`, `NovareStandard()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Landing Navbar`** (2 nodes): `Navbar.tsx`, `handleAuthClick()`
+- **Thin community `FAQs.tsx (components)`** (2 nodes): `FAQs.tsx`, `FAQItem()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Landing Providers`** (2 nodes): `Providers.tsx`, `Providers()`
+- **Thin community `Navbar.tsx (components)`** (2 nodes): `Navbar.tsx`, `handleAuthClick()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Particle Canvas Effect`** (2 nodes): `ParticleCanvas.tsx`, `ParticleCanvas()`
+- **Thin community `Providers.tsx (components)`** (2 nodes): `Providers.tsx`, `Providers()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Three.js Grid Effect`** (2 nodes): `ThreeGrid.tsx`, `ThreeGrid()`
+- **Thin community `ParticleCanvas.tsx (components)`** (2 nodes): `ParticleCanvas.tsx`, `ParticleCanvas()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Text Question Component`** (2 nodes): `TextQuestion.tsx`, `TextQuestion()`
+- **Thin community `ThreeGrid.tsx (components)`** (2 nodes): `ThreeGrid.tsx`, `ThreeGrid()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Dashboard Grid`** (2 nodes): `DashboardGrid.tsx`, `DashboardGrid()`
+- **Thin community `TextQuestion.tsx (components)`** (2 nodes): `TextQuestion.tsx`, `TextQuestion()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Employee Table`** (2 nodes): `emp-table.tsx`, `TableDemo()`
+- **Thin community `DashboardGrid.tsx (components)`** (2 nodes): `DashboardGrid.tsx`, `DashboardGrid()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Area Chart Interactive`** (2 nodes): `ChartAreaInteractive()`, `chart-area-interactive.tsx`
+- **Thin community `emp-table.tsx (components)`** (2 nodes): `emp-table.tsx`, `TableDemo()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Radio Question Component`** (2 nodes): `RadioQuestion.tsx`, `RadioQuestion()`
+- **Thin community `ChartAreaInteractive() (components)`** (2 nodes): `ChartAreaInteractive()`, `chart-area-interactive.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Admin Sidebar`** (2 nodes): `fetchUser()`, `app-sidebar.tsx`
+- **Thin community `RadioQuestion.tsx (components)`** (2 nodes): `RadioQuestion.tsx`, `RadioQuestion()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Admin Create Job`** (2 nodes): `create-job.tsx`, `CreateJob()`
+- **Thin community `fetchUser() (components)`** (2 nodes): `fetchUser()`, `app-sidebar.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Auth Guard`** (2 nodes): `AuthGuard()`, `auth-guard.tsx`
+- **Thin community `create-job.tsx (components)`** (2 nodes): `create-job.tsx`, `CreateJob()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Query Management`** (2 nodes): `queries-management.tsx`, `handleRemoveQuery()`
+- **Thin community `AuthGuard() (components)`** (2 nodes): `AuthGuard()`, `auth-guard.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Assignments Sender`** (2 nodes): `AssignmentsSender()`, `assignments-sender.tsx`
+- **Thin community `queries-management.tsx (components)`** (2 nodes): `queries-management.tsx`, `handleRemoveQuery()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Section Label UI`** (2 nodes): `section-ui.tsx`, `SectionLabel()`
+- **Thin community `AssignmentsSender() (components)`** (2 nodes): `AssignmentsSender()`, `assignments-sender.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Stats Ticker`** (2 nodes): `stats-ticker.tsx`, `StatsTicker()`
+- **Thin community `section-ui.tsx (components)`** (2 nodes): `section-ui.tsx`, `SectionLabel()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Auth Redirect Hook`** (2 nodes): `useAuthRedirect.ts`, `useAuthRedirect()`
+- **Thin community `stats-ticker.tsx (components)`** (2 nodes): `stats-ticker.tsx`, `StatsTicker()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Driver Guide Hook`** (2 nodes): `useDriverGuide.ts`, `useDriverGuide()`
+- **Thin community `useAuthRedirect.ts (hooks)`** (2 nodes): `useAuthRedirect.ts`, `useAuthRedirect()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Mobile Detection Hook`** (2 nodes): `use-mobile.ts`, `useIsMobile()`
+- **Thin community `useDriverGuide.ts (hooks)`** (2 nodes): `useDriverGuide.ts`, `useDriverGuide()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Supabase Session Middleware`** (2 nodes): `updateSession()`, `middleware.ts`
+- **Thin community `use-mobile.ts (hooks)`** (2 nodes): `use-mobile.ts`, `useIsMobile()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Supabase Browser Client`** (2 nodes): `createClient()`, `client.ts`
+- **Thin community `updateSession() (utils)`** (2 nodes): `updateSession()`, `middleware.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Legacy Layout Copy`** (1 nodes): `layout copy.tsx`
+- **Thin community `createClient() (utils)`** (2 nodes): `createClient()`, `client.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `IIT Placements Page`** (1 nodes): `page.tsx`
+- **Thin community `page.tsx (app)`** (2 nodes): `page.tsx`, `fetchResults()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Admin Redirect Page`** (1 nodes): `page.tsx`
+- **Thin community `page.tsx (app)`** (2 nodes): `page.tsx`, `UsersPage()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `SigHire Insights Page`** (1 nodes): `page.tsx`
+- **Thin community `layout copy.tsx (app)`** (1 nodes): `layout copy.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Submission Success Content`** (1 nodes): `submission-success-content.tsx`
+- **Thin community `page.tsx (app)`** (1 nodes): `page.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `App Constants`** (1 nodes): `constants.ts`
+- **Thin community `route.ts (app)`** (1 nodes): `route.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Placement FAQ`** (1 nodes): `PlacementFAQ.tsx`
+- **Thin community `route.ts (app)`** (1 nodes): `route.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Placement Stats Card`** (1 nodes): `PlacementStatsCard.tsx`
+- **Thin community `page.tsx (app)`** (1 nodes): `page.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Placement Breadcrumbs`** (1 nodes): `Breadcrumbs.tsx`
+- **Thin community `page.tsx (app)`** (1 nodes): `page.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Data Table UI`** (1 nodes): `data-table.tsx`
+- **Thin community `route.ts (app)`** (1 nodes): `route.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Switch UI`** (1 nodes): `switch.tsx`
+- **Thin community `route.ts (app)`** (1 nodes): `route.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Toggle UI`** (1 nodes): `toggle.tsx`
+- **Thin community `route.ts (app)`** (1 nodes): `route.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Client Nav Main`** (1 nodes): `nav-main.tsx`
+- **Thin community `page.tsx (app)`** (1 nodes): `page.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Job Form Preview`** (1 nodes): `job-form-preview.tsx`
+- **Thin community `submission-success-content.tsx (app)`** (1 nodes): `submission-success-content.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Border Beam Effect`** (1 nodes): `border-beam.tsx`
+- **Thin community `constants.ts (lib)`** (1 nodes): `constants.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Glow Button`** (1 nodes): `GlowButton.tsx`
+- **Thin community `PlacementFAQ.tsx (components)`** (1 nodes): `PlacementFAQ.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Section Header UI`** (1 nodes): `SectionHeader.tsx`
+- **Thin community `PlacementStatsCard.tsx (components)`** (1 nodes): `PlacementStatsCard.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Progressive Blur Effect`** (1 nodes): `progressive-blur.tsx`
+- **Thin community `Breadcrumbs.tsx (components)`** (1 nodes): `Breadcrumbs.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Team Section`** (1 nodes): `Team.tsx`
+- **Thin community `data-table.tsx (components)`** (1 nodes): `data-table.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `How It Works Section`** (1 nodes): `HowItWorks.tsx`
+- **Thin community `switch.tsx (components)`** (1 nodes): `switch.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Final CTA Section`** (1 nodes): `FinalCTA.tsx`
+- **Thin community `toggle.tsx (components)`** (1 nodes): `toggle.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Zenhyre Section`** (1 nodes): `Zenhyre.tsx`
+- **Thin community `nav-main.tsx (components)`** (1 nodes): `nav-main.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Testimonials Section`** (1 nodes): `Testimonials.tsx`
+- **Thin community `job-form-preview.tsx (components)`** (1 nodes): `job-form-preview.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Social Proof Bar`** (1 nodes): `SocialProofBar.tsx`
+- **Thin community `border-beam.tsx (components)`** (1 nodes): `border-beam.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Why One Percent Section`** (1 nodes): `WhyTheOnePercent.tsx`
+- **Thin community `GlowButton.tsx (components)`** (1 nodes): `GlowButton.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Global Background Effect`** (1 nodes): `GlobalBackground.tsx`
+- **Thin community `SectionHeader.tsx (components)`** (1 nodes): `SectionHeader.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Aurora Mesh Effect`** (1 nodes): `AuroraMesh.tsx`
+- **Thin community `progressive-blur.tsx (components)`** (1 nodes): `progressive-blur.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Candidate Nav Main`** (1 nodes): `nav-main.tsx`
+- **Thin community `Team.tsx (components)`** (1 nodes): `Team.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Admin Data Table`** (1 nodes): `data-table.tsx`
+- **Thin community `HowItWorks.tsx (components)`** (1 nodes): `HowItWorks.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Admin Nav Main`** (1 nodes): `nav-main.tsx`
+- **Thin community `FinalCTA.tsx (components)`** (1 nodes): `FinalCTA.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `SigHire Page Header`** (1 nodes): `PageHeader.tsx`
+- **Thin community `Zenhyre.tsx (components)`** (1 nodes): `Zenhyre.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Rankings Screen`** (1 nodes): `rankings-screen.tsx`
+- **Thin community `Testimonials.tsx (components)`** (1 nodes): `Testimonials.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Chrome Button`** (1 nodes): `ChromeButton.tsx`
+- **Thin community `SocialProofBar.tsx (components)`** (1 nodes): `SocialProofBar.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Loading Overlay`** (1 nodes): `loading-overlay.tsx`
+- **Thin community `WhyTheOnePercent.tsx (components)`** (1 nodes): `WhyTheOnePercent.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Query Filters`** (1 nodes): `query-filters.tsx`
+- **Thin community `GlobalBackground.tsx (components)`** (1 nodes): `GlobalBackground.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `SigHire Testimonials`** (1 nodes): `testimonials-section.tsx`
+- **Thin community `AuroraMesh.tsx (components)`** (1 nodes): `AuroraMesh.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `SigHire Hero Section`** (1 nodes): `hero-section.tsx`
+- **Thin community `nav-main.tsx (components)`** (1 nodes): `nav-main.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `SigHire Constants`** (1 nodes): `constants.tsx`
+- **Thin community `data-table.tsx (components)`** (1 nodes): `data-table.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `SigHire How It Works`** (1 nodes): `how-it-works-section.tsx`
+- **Thin community `nav-main.tsx (components)`** (1 nodes): `nav-main.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `SigHire Features Section`** (1 nodes): `features-section.tsx`
+- **Thin community `PageHeader.tsx (components)`** (1 nodes): `PageHeader.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `SigHire CTA Section`** (1 nodes): `cta-section.tsx`
+- **Thin community `rankings-screen.tsx (components)`** (1 nodes): `rankings-screen.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `ChromeButton.tsx (components)`** (1 nodes): `ChromeButton.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `loading-overlay.tsx (components)`** (1 nodes): `loading-overlay.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `query-filters.tsx (components)`** (1 nodes): `query-filters.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `testimonials-section.tsx (components)`** (1 nodes): `testimonials-section.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `hero-section.tsx (components)`** (1 nodes): `hero-section.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `constants.tsx (components)`** (1 nodes): `constants.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `how-it-works-section.tsx (components)`** (1 nodes): `how-it-works-section.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `features-section.tsx (components)`** (1 nodes): `features-section.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `cta-section.tsx (components)`** (1 nodes): `cta-section.tsx`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Services Index`** (1 nodes): `index.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Action Types`** (1 nodes): `types.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Select()` connect `Client Dashboard & Data Fetching` to `Candidate Workflow UI`, `GitHub OAuth Integration`, `Select UI Component`, `Workflow Stepper UI`?**
-  _High betweenness centrality (0.025) - this node is a cross-community bridge._
-- **Why does `update()` connect `Client Dashboard & Data Fetching` to `Question Builder & Rankings Table`?**
-  _High betweenness centrality (0.009) - this node is a cross-community bridge._
-- **Are the 9 inferred relationships involving `GET()` (e.g. with `handleFormSubmit()` and `resetPassword()`) actually correct?**
-  _`GET()` has 9 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 20 inferred relationships involving `Select()` (e.g. with `fetchJobs()` and `init()`) actually correct?**
-  _`Select()` has 20 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `Select()` connect `Client Dashboard & Data Fetching` to `Candidate Workflow UI`, `GitHub OAuth Integration`, `IIT Placements Data`, `Job Form Management`?**
+  _High betweenness centrality (0.019) - this node is a cross-community bridge._
+- **Why does `fetchJobsWithFormStatus()` connect `Candidate Workflow UI` to `Client Dashboard & Data Fetching`?**
+  _High betweenness centrality (0.006) - this node is a cross-community bridge._
+- **Why does `remove()` connect `Candidate Workflow UI` to `Ranking & Query Session`?**
+  _High betweenness centrality (0.006) - this node is a cross-community bridge._
+- **Are the 16 inferred relationships involving `Select()` (e.g. with `fetchJobs()` and `init()`) actually correct?**
+  _`Select()` has 16 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 5 inferred relationships involving `GET()` (e.g. with `handleFormSubmit()` and `resetPassword()`) actually correct?**
+  _`GET()` has 5 INFERRED edges - model-reasoned connections that need verification._
 - **Should `Client Dashboard & Data Fetching` be split into smaller, more focused modules?**
-  _Cohesion score 0.05 - nodes in this community are weakly interconnected._
-- **Should `Core App Routes & Auth` be split into smaller, more focused modules?**
-  _Cohesion score 0.09 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06 - nodes in this community are weakly interconnected._
 - **Should `Candidate Workflow UI` be split into smaller, more focused modules?**
   _Cohesion score 0.11 - nodes in this community are weakly interconnected._

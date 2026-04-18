@@ -222,10 +222,10 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
     try {
       const mappingResult = await createCandidateMappings({ job_id: jobId, session_id: sessionId || '', candidates: candidates.map(c => ({ cid: c.cid, name: c.name || 'Candidate', email: c.email || 'unknown@example.com' })) });
       if (!mappingResult.success) { setError(mappingResult.error || 'Failed to create candidate mappings'); setIsSending(false); return; }
-      const candidateUUIDs = mappingResult.mappings.map((m: any) => m.candidate_id);
+      const candidateUUIDs = mappingResult.data!.mappings.map((m: any) => m.candidate_id);
       const result = await bulkCreateAssignments({ job_id: jobId, session_id: sessionId || '', candidate_ids: candidateUUIDs });
       if (!result.success) { setError(result.error || 'Failed to send assignments'); setIsSending(false); return; }
-      const links = mappingResult.mappings.map((mapping: any) => {
+      const links = mappingResult.data!.mappings.map((mapping: any) => {
         const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
         return { candidateId: mapping.candidate_id, rankingCid: mapping.ranking_cid, name: mapping.name || 'Candidate', email: mapping.email || 'unknown@example.com', link: `${baseUrl}/submission?job_id=${jobId}&candidate_id=${mapping.candidate_id}` };
       });

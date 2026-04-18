@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       .eq("profile_id", userId)
       .order("created_at", { ascending: false })
       .limit(1)
-      .maybeSingle();
+      .maybeSingle() as { data: { id: string; jobs_remaining: number | null; status: string; created_at: string } | null; error: unknown };
 
     if (subsError) {
       return NextResponse.json({ error: "Error reading subscriptions", details: subsError }, { status: 500 });
@@ -69,16 +69,16 @@ export async function POST(req: NextRequest) {
 
     const { data: updated, error: updateError } = await supabaseAdmin
       .from("subscriptions")
-      .update({ jobs_remaining: newValue })
+      .update({ jobs_remaining: newValue } as never)
       .eq("id", subs.id)
       .select()
-      .single();
+      .single() as { data: { jobs_remaining: number | null } | null; error: unknown };
 
     if (updateError) {
       return NextResponse.json({ error: "Failed to decrement jobs_remaining", details: updateError }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true, jobs_remaining: Number(updated.jobs_remaining ?? newValue) }, { status: 200 });
+    return NextResponse.json({ ok: true, jobs_remaining: Number(updated?.jobs_remaining ?? newValue) }, { status: 200 });
   } catch (err: any) {
     console.error("[/api/consume-job] Unexpected error:", err);
     return NextResponse.json({ error: "Unexpected server error", details: String(err) }, { status: 500 });
