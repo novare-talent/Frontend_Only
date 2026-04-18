@@ -65,22 +65,22 @@ export default function CandidateResponsePage() {
       try {
         setLoading(true);
 
-        // Fetch job title
-        const { data: job } = await supabase
-          .from("jobs")
-          .select("Job_Name, Job_Description")
-          .eq("job_id", id)
-          .maybeSingle();
+        // Parallelize job title + response fetch
+        const [{ data: job }, { data: responseRow, error }] = await Promise.all([
+          supabase
+            .from("jobs")
+            .select("Job_Name, Job_Description")
+            .eq("job_id", id)
+            .maybeSingle(),
+          supabase
+            .from("responses")
+            .select("id, profile_id, full_name, email, phone, answers, created_at, resume_url, job_id")
+            .eq("job_id", id)
+            .eq("profile_id", profileId)
+            .maybeSingle(),
+        ]);
 
         setJobTitle(job?.Job_Name || job?.Job_Description || "Untitled Job");
-
-        // Fetch the specific response for this candidate
-        const { data: responseRow, error } = await supabase
-          .from("responses")
-          .select("*")
-          .eq("job_id", id)
-          .eq("profile_id", profileId)
-          .maybeSingle();
 
         if (error) {
           console.error("Error fetching response:", error);

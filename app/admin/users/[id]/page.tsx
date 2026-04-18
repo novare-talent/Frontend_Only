@@ -40,7 +40,7 @@ export default function UserDetailPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("profiles")
-      .select("*")
+      .select("id, first_name, last_name, email, role, phone, github_link, linkedin_link, created_at, resume_url, profile_image")
       .eq("id", userId)
       .single();
 

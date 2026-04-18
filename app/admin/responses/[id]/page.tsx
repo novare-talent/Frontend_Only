@@ -75,7 +75,7 @@ export default function AdminFormResponsesPage() {
         // Fetch all responses for the job
         const { data: responseRows, error } = await supabase
           .from("responses")
-          .select("*")
+          .select("id, profile_id, full_name, email, phone, answers, created_at, resume_url, job_id")
           .eq("job_id", id)
           .order("created_at", { ascending: false });
 

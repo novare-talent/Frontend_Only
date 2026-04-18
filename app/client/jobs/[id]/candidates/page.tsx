@@ -46,7 +46,7 @@ export default function CandidatesPage({ params }: { params: Promise<{ id: strin
 
         const { data: profiles, error: profileError } = await supabase
           .from("profiles")
-          .select("*")
+          .select("id, first_name, last_name, email, phone, github_link, linkedin_link")
           .in("id", ids)
 
         console.log("PROFILES FETCH RESULT", profiles, profileError)

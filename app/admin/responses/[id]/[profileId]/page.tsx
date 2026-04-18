@@ -65,22 +65,31 @@ export default function AdminCandidateResponsePage() {
       try {
         setLoading(true);
 
-        // Fetch job title
-        const { data: job } = await supabase
-          .from("jobs")
-          .select("Job_Name, Job_Description")
-          .eq("job_id", id)
-          .maybeSingle();
+        // Fetch job, response, and profile in parallel
+        const [
+          { data: job },
+          { data: responseData, error },
+          { data: profile },
+        ] = await Promise.all([
+          supabase
+            .from("jobs")
+            .select("Job_Name, Job_Description")
+            .eq("job_id", id)
+            .maybeSingle(),
+          supabase
+            .from("responses")
+            .select("id, profile_id, full_name, email, phone, answers, created_at, resume_url, job_id")
+            .eq("job_id", id)
+            .eq("profile_id", profileId)
+            .maybeSingle(),
+          supabase
+            .from("profiles")
+            .select("full_name, email, phone, resume_url")
+            .eq("id", profileId)
+            .maybeSingle(),
+        ]);
 
         setJobTitle(job?.Job_Name || job?.Job_Description || "Untitled Job");
-
-        // Fetch the specific response for this candidate
-        const { data: responseData, error } = await supabase
-          .from("responses")
-          .select("*")
-          .eq("job_id", id)
-          .eq("profile_id", profileId)
-          .maybeSingle();
 
         if (error) {
           console.error("Error fetching response:", error);
@@ -92,13 +101,6 @@ export default function AdminCandidateResponsePage() {
           setResponse(null);
           return;
         }
-
-        // Get profile information
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("full_name, email, phone, resume_url")
-          .eq("id", profileId)
-          .maybeSingle();
 
         setResponse({
           ...responseData,

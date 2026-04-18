@@ -40,21 +40,23 @@ export default function AllEvaluations() {
       } else {
         const evals: EvaluationRow[] = data || [];
 
-        // Fetch job titles
-        const enriched = await Promise.all(
-          evals.map(async (eval_row) => {
-            const { data: job } = await supabase
+        // Batch-fetch all job titles in one query
+        const jobIds = evals.map((e) => e.job_id).filter(Boolean);
+        const { data: jobs } = jobIds.length > 0
+          ? await supabase
               .from("jobs")
-              .select("Job_Name")
-              .eq("job_id", eval_row.job_id)
-              .maybeSingle();
+              .select("job_id, Job_Name")
+              .in("job_id", jobIds)
+          : { data: [] };
 
-            return {
-              ...eval_row,
-              job_title: job?.Job_Name || "Untitled Job",
-            };
-          })
+        const jobMap = Object.fromEntries(
+          (jobs ?? []).map((j: any) => [j.job_id, j])
         );
+
+        const enriched = evals.map((eval_row) => ({
+          ...eval_row,
+          job_title: jobMap[eval_row.job_id]?.Job_Name || "Untitled Job",
+        }));
 
         setEvaluations(enriched);
       }

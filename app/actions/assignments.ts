@@ -1,19 +1,12 @@
 'use server'
 
-import { createClient } from '@/utils/supabase/server'
+import { AuthService } from './services/auth.service'
+import type { CreateAssignmentsParams, ActionResult } from './types'
+import { AssignmentService } from './services/assignment.service'
 
-interface CreateAssignmentsParams {
-  job_id: string
-  session_id: string
-  candidate_ids: string[]
-}
-
-export async function bulkCreateAssignments(params: CreateAssignmentsParams) {
+export async function bulkCreateAssignments(params: CreateAssignmentsParams): Promise<ActionResult<{ created_count: number; message: string }>> {
   try {
-    const supabase = await createClient()
-    
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await AuthService.getCurrentUser()
     
     if (userError || !user) {
       throw new Error('User not authenticated')
@@ -25,19 +18,12 @@ export async function bulkCreateAssignments(params: CreateAssignmentsParams) {
       throw new Error('Job ID and candidate IDs are required')
     }
 
-    // Fetch the assignment template for this job
-    const { data: assignmentTemplate, error: fetchError } = await supabase
-      .from('assignments')
-      .select('assignment_json, assignment_pdf_url')
-      .eq('job_id', job_id)
-      .eq('candidate_id', '00000000-0000-0000-0000-000000000000')
-      .single()
+    const { data: assignmentTemplate, error: fetchError } = await AssignmentService.getTemplate(job_id)
 
     if (fetchError || !assignmentTemplate) {
       throw new Error('Assignment template not found for this job. Please create an assignment first.')
     }
 
-    // Create assignment records for each candidate
     const assignmentRecords = candidate_ids.map(candidate_id => ({
       job_id,
       candidate_id,
@@ -48,11 +34,7 @@ export async function bulkCreateAssignments(params: CreateAssignmentsParams) {
       evaluation_pdf_url: null
     }))
 
-    // Batch insert the records
-    const { data, error: insertError } = await supabase
-      .from('assignments')
-      .upsert(assignmentRecords, { onConflict: 'job_id,candidate_id' })
-      .select('job_id, candidate_id')
+    const { data, error: insertError } = await AssignmentService.bulkCreate(assignmentRecords)
 
     if (insertError) {
       console.error('Assignment creation error:', insertError)
@@ -61,8 +43,10 @@ export async function bulkCreateAssignments(params: CreateAssignmentsParams) {
 
     return {
       success: true,
-      created_count: data?.length || 0,
-      message: `Successfully created ${data?.length || 0} assignments`
+      data: {
+        created_count: data?.length || 0,
+        message: `Successfully created ${data?.length || 0} assignments`,
+      },
     }
   } catch (err) {
     console.error('Error in bulkCreateAssignments:', err)

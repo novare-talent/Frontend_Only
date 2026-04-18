@@ -97,11 +97,22 @@ export default function JobForm({
           return;
         }
 
-        const { data: profileRow } = await supabaseClient
-          .from("profiles")
-          .select("id, resume_url, first_name, last_name, phone, email")
-          .eq("id", user.id)
-          .single();
+        // Fetch profile and job details in parallel
+        const [{ data: profileRow }, { data: jobRow, error: jobError }] =
+          await Promise.all([
+            supabaseClient
+              .from("profiles")
+              .select("id, resume_url, first_name, last_name, phone, email")
+              .eq("id", user.id)
+              .single(),
+            jobId
+              ? supabaseClient
+                  .from("jobs")
+                  .select("Job_Name, closingTime, duration, level, stipend, location, tags")
+                  .eq("job_id", jobId)
+                  .single()
+              : Promise.resolve({ data: null, error: null }),
+          ]);
 
         if (mounted && profileRow) {
           setProfileId(profileRow.id);
@@ -127,18 +138,10 @@ export default function JobForm({
 
         setLoadingProfile(false);
 
-        // === FETCH JOB DETAILS ===
-        if (jobId) {
-          const { data: jobRow, error: jobError } = await supabaseClient
-            .from("jobs")
-            .select("Job_Name, closingTime, duration, level, stipend, location, tags")
-            .eq("job_id", jobId)
-            .single();
-
+        if (mounted && jobId) {
           if (!jobError && jobRow) {
             setJobDetails(jobRow);
           }
-
           setLoadingJob(false);
         }
       } catch (err) {
