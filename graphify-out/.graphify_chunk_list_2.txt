@@ -1,0 +1,20 @@
+public/images/testimonials/hitesh.jpg
+public/images/testimonials/Shruti.jpg
+public/images/team/ayush.webp
+public/images/team/sanat.webp
+public/images/team/sankalp.webp
+public/images/team/sahil.webp
+public/images/hero/hero-background-bottom-line-3.png
+public/images/hero/hero-background-bottom-line-2.png
+public/images/hero/hero-background-bottom-line-1.png
+public/images/hero/hero-background-bottom-line-4.png
+public/images/hero/hero-background-bottom.png
+public/images/hero/hero-background-top.png
+public/images/hero/hero-background-lights.png
+public/images/hero/hero-background-bottom-ray.png
+public/images/hero/hero-background-top-mask.png
+public/Training/Images/Analyst (part 1).png
+public/Training/Images/Consulting.png
+public/Training/Images/Strat and Ops.png
+public/Training/Images/AI ML Engineer.png
+public/Training/Images/Data Science.png

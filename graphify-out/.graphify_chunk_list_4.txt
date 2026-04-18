@@ -1,0 +1,13 @@
+public/assets/faq-bg.png
+public/assets/deep.jpg
+public/assets/icon-linkedin-header.svg
+public/assets/yashika.jpg
+public/assets/logo-novare-talent.png
+public/assets/hero-background.png
+public/assets/nikhil.jpg
+public/assets/team.svg
+public/assets/onkar.jpg
+public/assets/hitesh.jpg
+public/assets/Shruti.jpg
+public/assets/student-avatar-1.png
+public/assets/trustwall-avatar-1.png

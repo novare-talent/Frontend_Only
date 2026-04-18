@@ -1,0 +1,20 @@
+public/Training/Images/Founder's office.png
+public/Training/Images/Software Engineer.png
+public/Training/Images/Analyst (part 3).png
+public/Training/Images/Chief of staff.png
+public/Training/Images/Web development.png
+public/Training/Images/UI UX Design.png
+public/Training/Images/Cloud engineer.png
+public/Training/Images/Analyst (part 2).png
+public/Image/novera_talent_logo2.jpg
+public/Image/Sankalp.png
+public/Image/Sanat.png
+public/Image/Hitesh Sharma pfp.jpeg.jpg
+public/Image/Sahil.png
+public/Image/novare_talent_logo.jpeg
+public/Image/aniket deb.jpg
+public/assets/icon-linkedin.svg
+public/assets/icon-instagram.svg
+public/assets/footer-bg.png
+public/assets/icon-instagram-header.svg
+public/assets/chirag.jpg
