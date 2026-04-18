@@ -2,6 +2,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
+// Mark as dynamic route
+export const dynamic = 'force-dynamic';
+export const revalidate = 300;
+
 function getSupabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -56,7 +60,11 @@ export async function GET(request: NextRequest) {
       raw: row,
     }))
 
-    return NextResponse.json(normalized)
+    return NextResponse.json(normalized, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+      }
+    })
   } catch (e: any) {
     console.error("profiles route error:", e)
     return NextResponse.json({ error: e.message ?? "Internal Server Error" }, { status: 500 })

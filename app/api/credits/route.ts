@@ -3,6 +3,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+// Mark as dynamic route
+export const dynamic = 'force-dynamic';
+export const revalidate = 30;
+
 const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? null;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? null;
 
@@ -93,12 +97,22 @@ export async function GET(req: NextRequest) {
       // Success: return jobs_remaining as a numeric value
       const value = Number(subsResult.jobs_remaining);
       console.log(`[/api/credits] Returning jobs_remaining=${value} for user=${userId}`);
-      return NextResponse.json({ jobs_remaining: value }, { status: 200 });
+      return NextResponse.json({ jobs_remaining: value }, {
+        status: 200,
+        headers: {
+          'Cache-Control': 'private, max-age=30, stale-while-revalidate=60'
+        }
+      });
     }
 
     // Not found -> treat as 0 (explicit)
     console.log(`[/api/credits] No jobs_remaining found for user=${userId}, returning 0`);
-    return NextResponse.json({ jobs_remaining: 0 }, { status: 200 });
+    return NextResponse.json({ jobs_remaining: 0 }, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'private, max-age=30, stale-while-revalidate=60'
+      }
+    });
   } catch (err: any) {
     // Always return JSON and log full error for debugging
     console.error("[/api/credits] Unexpected server error:", err);

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from "react";
 
 interface SessionContextType {
   sessionId: string | null;
@@ -12,6 +12,7 @@ interface SessionContextType {
   error: string | null;
   setError: (error: string | null) => void;
   clearSession: () => void;
+  isHydrated: boolean;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -24,6 +25,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
+  
+  // Debounce timer ref
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -36,23 +40,42 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Wrapper for setSessionId that also saves to localStorage
-  const setSessionId = (id: string | null) => {
-    if (typeof window !== "undefined") {
-      if (id) {
-        localStorage.setItem(SESSION_STORAGE_KEY, id);
-      } else {
-        localStorage.removeItem(SESSION_STORAGE_KEY);
-      }
+  // Wrapper for setSessionId that also saves to localStorage with debouncing
+  const setSessionId = useCallback((id: string | null) => {
+    // Clear existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
     }
+    
+    // Update state immediately for UI responsiveness
     setSessionIdState(id);
-  };
+    
+    // Debounce localStorage write (300ms)
+    debounceTimerRef.current = setTimeout(() => {
+      if (typeof window !== "undefined") {
+        if (id) {
+          localStorage.setItem(SESSION_STORAGE_KEY, id);
+        } else {
+          localStorage.removeItem(SESSION_STORAGE_KEY);
+        }
+      }
+    }, 300);
+  }, []);
 
-  const clearSession = () => {
+  const clearSession = useCallback(() => {
     setSessionId(null);
     setClientId(null);
     setError(null);
-  };
+  }, [setSessionId]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <SessionContext.Provider
@@ -66,6 +89,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         error,
         setError,
         clearSession,
+        isHydrated,
       }}
     >
       {children}

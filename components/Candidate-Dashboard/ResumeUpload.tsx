@@ -1,4 +1,4 @@
-import React, { useState, useRef, DragEvent, ChangeEvent } from "react";
+import React, { useState, useRef, DragEvent, ChangeEvent, useMemo, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -61,7 +61,8 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({
   onResumeUpdate,
   userId,
 }) => {
-  const [resumes, setResumes] = useState<Resume[]>(() => {
+  // Memoize initial resumes to prevent recalculation on every render
+  const initialResumes = useMemo(() => {
     if (!profileData?.resume_url) return [];
 
     return profileData.resume_url.map((url) => ({
@@ -69,43 +70,15 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({
       url,
       uploadedAt: extractDateFromUrl(url) || new Date().toISOString(),
     }));
-  });
+  }, [profileData?.resume_url]);
+
+  const [resumes, setResumes] = useState<Resume[]>(initialResumes);
 
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [uploading, setUploading] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = async (
-    e: ChangeEvent<HTMLInputElement>
-  ): Promise<void> => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      await processFiles(files);
-      // Reset the file input
-      e.target.value = "";
-    }
-  };
-
-  const handleDragOver = (e: DragEvent<HTMLDivElement>): void => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: DragEvent<HTMLDivElement>): void => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
-
-  const handleDrop = async (e: DragEvent<HTMLDivElement>): Promise<void> => {
-    e.preventDefault();
-    setIsDragging(false);
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      await processFiles(files);
-    }
-  };
-
-  const processFiles = async (files: FileList): Promise<void> => {
+  const processFiles = useCallback(async (files: FileList): Promise<void> => {
     setUploading(true);
 
     // File validation
@@ -189,7 +162,38 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({
     } finally {
       setUploading(false);
     }
-  };
+  }, [resumes, userId, onResumeUpdate]);
+
+  const handleFileChange = useCallback(async (
+    e: ChangeEvent<HTMLInputElement>
+  ): Promise<void> => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      await processFiles(files);
+      e.target.value = "";
+    }
+  }, [processFiles]);
+
+  const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>): void => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: DragEvent<HTMLDivElement>): void => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback(async (e: DragEvent<HTMLDivElement>): Promise<void> => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      await processFiles(files);
+    }
+  }, [processFiles]);
+
+
 
   const handleDelete = async (index: number): Promise<void> => {
   const resumeToDelete = resumes[index];
@@ -257,16 +261,16 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({
     });
   };
 
-  const handleUploadAreaClick = (): void => {
+  const handleUploadAreaClick = useCallback((): void => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
-  };
+  }, []);
 
   // Function to view resume (opens in new tab)
-  const viewResume = (url: string): void => {
+  const viewResume = useCallback((url: string): void => {
     window.open(url, "_blank");
-  };
+  }, []);
 
   return (
     <Card className="w-full gap-2">

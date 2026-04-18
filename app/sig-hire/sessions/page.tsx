@@ -2,11 +2,29 @@
 
 import React, { useEffect, useState, Suspense, useRef } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { createClient } from "@/utils/supabase/client";
 import { useMultiSession, SessionData } from "@/context/MultiSessionContext";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Loader2, Plus, Trash2, Users, ArrowRight } from "lucide-react";
+
+// Lazy load heavy components
+const ChromeButton = dynamic(() => import("@/components/Sig-Hire/ChromeButton"), {
+  loading: () => <div className="h-10 w-36 bg-white/10 rounded-full animate-pulse" />
+});
+const SigHireFooter = dynamic(() => import("@/components/Sig-Hire/footer").then(mod => ({ default: mod.SigHireFooter })));
+const GlowOrb = dynamic(() => import("@/components/landing/effects/GlowOrb"), {
+  ssr: false
+});
+const Particles = dynamic(() => import("@/components/ui/particles").then(mod => ({ default: mod.Particles })), {
+  ssr: false
+});
+const PageHeader = dynamic(() => import("@/components/Sig-Hire/PageHeader").then(mod => ({ default: mod.PageHeader })));
+
+import { useDriverGuide } from "@/hooks/useDriverGuide";
+import { sessionsGuide } from "@/lib/driver-config";
+import { showSuccess, showError, showConfirm } from "@/lib/swal";
 
 // Simple relative-time helper (no date-fns needed)
 function relativeDate(iso: string): string {
@@ -97,14 +115,7 @@ const SessionStepProgress = React.memo(function SessionStepProgress({ currentSte
     </div>
   );
 });
-import ChromeButton from "@/components/Sig-Hire/ChromeButton";
-import { useDriverGuide } from "@/hooks/useDriverGuide";
-import { sessionsGuide } from "@/lib/driver-config";
-import { SigHireFooter } from "@/components/Sig-Hire/footer";
-import GlowOrb from "@/components/landing/effects/GlowOrb";
-import { Particles } from "@/components/ui/particles";
-import { PageHeader } from "@/components/Sig-Hire/PageHeader";
-import { showSuccess, showError, showConfirm } from "@/lib/swal";
+
 
 function SessionsPageContent() {
   const router = useRouter();
