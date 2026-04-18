@@ -4,13 +4,13 @@ import { Instagram } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { FOOTER_LINKS, SOCIAL_LINKS, CONTACT } from "@/lib/constants";
-import { createClient } from "@/utils/supabase/client";
 
 export default function Footer() {
   const router = useRouter();
 
   const handleAuthClick = async (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
     e.preventDefault();
+    const { createClient } = await import("@/utils/supabase/client");
     const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -21,7 +21,7 @@ export default function Footer() {
     }
   };
   return (
-    <footer className="relative overflow-hidden  bg-black/80 backdrop-blur-sm " style={{ backgroundImage: 'url(/images/footer-bg.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+    <footer className="relative overflow-hidden bg-black/80 backdrop-blur-sm" style={{ backgroundImage: 'url(/images/footer-bg.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
       {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/80" />
       <div className="relative section-padding py-8 sm:py-12 lg:py-16">
@@ -47,9 +47,9 @@ export default function Footer() {
 
           {/* Company */}
           <div>
-            <h4 className="text-sm font-semibold text-white mb-4 tracking-wide uppercase">
+            <h3 className="text-sm font-semibold text-white mb-4 tracking-wide uppercase">
               Company
-            </h4>
+            </h3>
             <ul className="space-y-3">
               {FOOTER_LINKS.company.map((link) => (
                 <li key={link.label}>
@@ -66,9 +66,9 @@ export default function Footer() {
 
           {/* Discover */}
           <div>
-            <h4 className="text-sm font-semibold text-white mb-4 tracking-wide uppercase">
+            <h3 className="text-sm font-semibold text-white mb-4 tracking-wide uppercase">
               Discover
-            </h4>
+            </h3>
             <ul className="space-y-3">
               {FOOTER_LINKS.discover.map((link) => (
                 <li key={link.label}>
@@ -118,6 +118,7 @@ export default function Footer() {
                 href={SOCIAL_LINKS.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Follow us on Instagram"
                 className="text-white hover:text-gray-300 transition-colors"
               >
                 <Instagram size={20} />
@@ -126,6 +127,7 @@ export default function Footer() {
                 href={SOCIAL_LINKS.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Connect with us on LinkedIn"
                 className="text-white hover:text-gray-300 transition-colors"
               >
                 <svg

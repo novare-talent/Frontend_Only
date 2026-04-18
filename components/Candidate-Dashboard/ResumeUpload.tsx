@@ -1,4 +1,4 @@
-import React, { useState, useRef, DragEvent, ChangeEvent, useMemo, useCallback } from "react";
+import React, { useState, useRef, DragEvent, ChangeEvent, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -61,18 +61,25 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({
   onResumeUpdate,
   userId,
 }) => {
-  // Memoize initial resumes to prevent recalculation on every render
-  const initialResumes = useMemo(() => {
+  const [resumes, setResumes] = useState<Resume[]>(() => {
     if (!profileData?.resume_url) return [];
-
     return profileData.resume_url.map((url) => ({
       name: extractFileNameFromUrl(url),
       url,
       uploadedAt: extractDateFromUrl(url) || new Date().toISOString(),
     }));
-  }, [profileData?.resume_url]);
+  });
 
-  const [resumes, setResumes] = useState<Resume[]>(initialResumes);
+  // Sync when profileData changes (e.g. after parent re-fetches)
+  useEffect(() => {
+    setResumes(
+      profileData?.resume_url?.map((url) => ({
+        name: extractFileNameFromUrl(url),
+        url,
+        uploadedAt: extractDateFromUrl(url) || new Date().toISOString(),
+      })) ?? []
+    );
+  }, [profileData?.resume_url]);
 
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [uploading, setUploading] = useState<boolean>(false);
@@ -193,9 +200,7 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({
     }
   }, [processFiles]);
 
-
-
-  const handleDelete = async (index: number): Promise<void> => {
+  const handleDelete = useCallback(async (index: number): Promise<void> => {
   const resumeToDelete = resumes[index];
 
   // Show confirmation dialog
@@ -250,7 +255,7 @@ const ResumeManager: React.FC<ResumeManagerProps> = ({
   } catch {
     toast.error("Error", { description: "Error deleting resume. Please try again."});
   }
-};
+  }, [resumes, onResumeUpdate]);
 
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);

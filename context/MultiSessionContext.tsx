@@ -76,13 +76,9 @@ export function MultiSessionProvider({ children }: { children: ReactNode }) {
       return;
     }
     
-    console.log('[MultiSessionContext] Starting loadSessions for client:', clientId);
-    const startTime = performance.now();
     loadingRef.current = true;
     setIsLoading(true);
     try {
-      // Single optimized query with join
-      const queryStart = performance.now();
       const { data, error } = await supabase
         .from(SUPABASE_TABLE)
         .select(`
@@ -91,8 +87,7 @@ export function MultiSessionProvider({ children }: { children: ReactNode }) {
         `)
         .eq("profile_id", clientId)
         .order("created_at", { ascending: false })
-        .limit(50); // Add limit to prevent loading too many sessions
-      console.log(`[MultiSessionContext] Single query took: ${(performance.now() - queryStart).toFixed(2)}ms`);
+        .limit(50);
 
       if (error) {
         console.error("Error loading sessions:", error.message || JSON.stringify(error));
@@ -100,14 +95,10 @@ export function MultiSessionProvider({ children }: { children: ReactNode }) {
       }
 
       if (!data || data.length === 0) {
-        console.log('[MultiSessionContext] No sessions found');
         setSessions([]);
         return;
       }
 
-      console.log(`[MultiSessionContext] Found ${data.length} sessions`);
-      
-      const mapStart = performance.now();
       const transformedSessions = data.map((row: any) => ({
         session_id: row.id,
         client_id: row.profile_id,
@@ -120,10 +111,8 @@ export function MultiSessionProvider({ children }: { children: ReactNode }) {
         error: row.error,
         ranking_results: row.rankings,
       }));
-      console.log(`[MultiSessionContext] Data transformation took: ${(performance.now() - mapStart).toFixed(2)}ms`);
 
       setSessions(transformedSessions);
-      console.log(`[MultiSessionContext] Total loadSessions time: ${(performance.now() - startTime).toFixed(2)}ms`);
     } catch (err) {
       console.error("Failed to load sessions:", err);
     } finally {

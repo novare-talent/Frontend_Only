@@ -1,10 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Simple in-memory cache (resets on server restart)
-const sessionCache = new Map<string, { user: any; timestamp: number }>();
-const CACHE_TTL = 60000; // 1 minute
-
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -21,9 +17,9 @@ export async function updateSession(request: NextRequest) {
     "/auth/callback",
     "/iit-placements",
   ];
-  
+
   if (publicPaths.some((p) => path.startsWith(p))) {
-    return supabaseResponse; // Skip all auth checks for public routes
+    return supabaseResponse;
   }
 
   const supabase = createServerClient(
@@ -47,21 +43,7 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Get session token for caching
-  const sessionToken = request.cookies.get('sb-access-token')?.value || 
-                       request.cookies.get('sb-localhost-auth-token')?.value;
-  const cached = sessionToken ? sessionCache.get(sessionToken) : null;
-  
-  let user;
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    user = cached.user;
-  } else {
-    const { data: { user: fetchedUser } } = await supabase.auth.getUser();
-    user = fetchedUser;
-    if (sessionToken && user) {
-      sessionCache.set(sessionToken, { user, timestamp: Date.now() });
-    }
-  }
+  const { data: { user } } = await supabase.auth.getUser();
 
   // 🔒 If not signed in → redirect to sign-in
   if (!user) {
@@ -106,12 +88,6 @@ export async function updateSession(request: NextRequest) {
 
   // 🧭 Client Routes
   if (path.startsWith("/client")) {
-    if (!user) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/sign-in";
-      return NextResponse.redirect(url);
-    }
-
     const { data: profile, error } = await supabase
       .from("profiles")
       .select("role")
@@ -127,12 +103,6 @@ export async function updateSession(request: NextRequest) {
 
   // 🧠 Admin-only routes
   if (path.startsWith("/admin")) {
-    if (!user) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/sign-in";
-      return NextResponse.redirect(url);
-    }
-
     const { data: profile, error } = await supabase
       .from("profiles")
       .select("role")

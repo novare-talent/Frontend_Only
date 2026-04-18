@@ -2,11 +2,10 @@
 
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import ThreeGrid from "@/components/landing/effects/ThreeGrid";
 import GlowOrb from "@/components/landing/effects/GlowOrb";
 import GlowButton from "@/components/landing/ui/GlowButton";
 import SocialProofBar from "./SocialProofBar";
-import { createClient } from "@/utils/supabase/client";
+import ThreeGrid from "@/components/landing/effects/ThreeGrid";
 
 export default function Hero() {
   const router = useRouter();
@@ -16,6 +15,7 @@ export default function Hero() {
     path: string
   ) => {
     e.preventDefault();
+    const { createClient } = await import("@/utils/supabase/client");
     const supabase = createClient();
     const {
       data: { session },
@@ -85,19 +85,14 @@ export default function Hero() {
 
         {/* ── Card Grid ──────────────────────────────────────────────── */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
+          transition={{ duration: 0.3, delay: 0.6 }}
           className="mt-10 w-full px-4"
         >
           {/* ZenHyre Card */}
           <div className="flex justify-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.9, ease: "easeOut" }}
-              className="w-full max-w-4xl"
-            >
+            <div className="w-full max-w-4xl">
               <div className="relative glass rounded-3xl p-8 sm:p-12 md:p-16 border-2 border-[var(--color-violet-accent)] bg-gradient-to-br from-[var(--color-violet-accent)]/20 to-transparent text-center overflow-hidden group hover:border-[var(--color-violet-accent)]/80 transition-all duration-500">
                 {/* Animated background glow effect */}
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
@@ -105,7 +100,7 @@ export default function Hero() {
                 </div>
 
                 <div className="relative z-10">
-                  <h3 className="text-3xl sm:text-4xl md:text-5xl font-extrabold gradient-text mb-2">ZenHyre</h3>
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold gradient-text mb-2">ZenHyre</h2>
                   <p className="text-base sm:text-lg text-white/70 mb-10 md:mb-12">Connecting Elite Talent Network — IITs, IIMs & Top Institutes</p>
                   
                   <div className="flex flex-col sm:flex-row gap-4 sm:gap-4">
@@ -149,7 +144,7 @@ export default function Hero() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </motion.div>
 

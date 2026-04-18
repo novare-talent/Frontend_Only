@@ -1,15 +1,13 @@
+import dynamic from "next/dynamic";
 import Navbar from "@/components/landing/layout/Navbar";
 import Hero from "@/components/landing/sections/Hero";
-import WhyTheOnePercent from "@/components/landing/sections/WhyTheOnePercent";
-import HowItWorks from "@/components/landing/sections/HowItWorks";
-import NovareStandard from "@/components/landing/sections/NovareStandard";
-import Zenhyre from "@/components/landing/sections/Zenhyre";
-import Team from "@/components/landing/sections/Team";
-import Testimonials from "@/components/landing/sections/Testimonials";
-import FAQs from "@/components/landing/sections/FAQs";
-import FinalCTA from "@/components/landing/sections/FinalCTA";
 import Footer from "@/components/landing/layout/Footer";
+import BelowFoldSections from "@/components/landing/sections/BelowFoldSections";
 import { ProgressiveBlur } from "@/components/landing/ui/progressive-blur";
+
+// SSR'd (just below fold, important for immediate scroll)
+const Zenhyre = dynamic(() => import("@/components/landing/sections/Zenhyre"));
+const WhyTheOnePercent = dynamic(() => import("@/components/landing/sections/WhyTheOnePercent"));
 
 export default function Home() {
   return (<>
@@ -19,12 +17,7 @@ export default function Home() {
       {/* <SocialProofBar /> */}
       <Zenhyre />
       <WhyTheOnePercent />
-      <HowItWorks />
-      <NovareStandard />
-      <Testimonials />
-      <Team />
-      <FAQs />
-      <FinalCTA />
+      <BelowFoldSections />
       <Footer />
     </main>
       <div className="fixed bottom-0 inset-x-0 h-16 pointer-events-none z-50">

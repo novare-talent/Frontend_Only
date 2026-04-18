@@ -14,6 +14,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - Public routes (/, /sign-in, /sign-up, /iit-placements, etc.)
      */
-    '/((?!_next/static|_next/image|favicon.ico|^/$|^/sign-in|^/sign-up|^/error|^/forgot-password|^/auth/update-password|^/auth/callback|^/iit-placements|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

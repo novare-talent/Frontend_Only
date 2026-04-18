@@ -69,7 +69,8 @@ export async function POST(req: NextRequest) {
 
     const { data: updated, error: updateError } = await supabaseAdmin
       .from("subscriptions")
-      .update({ evaluations_remaining: newValue } as never)
+      // @ts-expect-error — supabase types not regenerated yet; evaluations_remaining column exists at runtime
+      .update({ evaluations_remaining: newValue })
       .eq("id", subs.id)
       .select()
       .single() as { data: { evaluations_remaining: number | null } | null; error: unknown };
@@ -79,7 +80,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ ok: true, evaluations_remaining: Number(updated?.evaluations_remaining ?? newValue) }, { status: 200 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[/api/consume-evaluation] Unexpected error:", err);
     return NextResponse.json({ error: "Unexpected server error", details: String(err) }, { status: 500 });
   }

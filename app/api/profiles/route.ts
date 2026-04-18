@@ -2,9 +2,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 
-// Mark as dynamic route
 export const dynamic = 'force-dynamic';
-export const revalidate = 300;
 
 function getSupabase() {
   return createClient(
@@ -62,7 +60,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(normalized, {
       headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+        'Cache-Control': 'private, max-age=300, stale-while-revalidate=600'
       }
     })
   } catch (e: any) {

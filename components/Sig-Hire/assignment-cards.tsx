@@ -84,74 +84,74 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
   const { startTour } = useDriverGuide("assignments", assignmentsGuide, false);
 
   useEffect(() => {
-    const fetchJobId = async () => {
+    const fetchAllData = async () => {
       if (!sessionId) return;
+      
       try {
+        // Fetch job ID first
         const { data: jobData, error: jobError } = await supabase
           .from('jobs').select('job_id').eq('form_id', sessionId).single();
+        
         if (jobError) {
           if (jobError.code !== 'PGRST116') {
             console.error('Job fetch error:', jobError);
           }
           return;
         }
-        if (jobData) setJobId(jobData.job_id);
-      } catch (err) { console.error('Error fetching job ID:', err); }
-    };
-    fetchJobId();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId]);
-
-  useEffect(() => {
-    const fetchCandidates = async () => {
-      if (!sessionId || !candidateIds || candidateIds.length === 0) return;
-      try {
-        const rankingsResponse = await fetchRankings(sessionId);
-        if (rankingsResponse.candidates?.length > 0) {
-          const selected = rankingsResponse.candidates.filter(c => candidateIds.includes(c.cid));
-          setCandidates(selected.length > 0 ? selected : candidateIds.map(id => ({ cid: id, name: `Candidate ${id.substring(0, 8)}`, email: 'email@example.com', jd_score: 0, total_score: 0 } as Candidate)));
-        } else {
-          setCandidates(candidateIds.map(id => ({ cid: id, name: `Candidate ${id.substring(0, 8)}`, email: 'email@example.com', jd_score: 0, total_score: 0 } as Candidate)));
+        
+        if (!jobData) return;
+        const fetchedJobId = jobData.job_id;
+        setJobId(fetchedJobId);
+        
+        // Fetch all data in parallel once we have jobId
+        const [assignmentResult, previousResult, candidatesResult] = await Promise.all([
+          // Fetch assignment
+          supabase.from('assignments').select('assignment_json, assignment_pdf_url, job_id')
+            .eq('job_id', fetchedJobId).eq('candidate_id', '00000000-0000-0000-0000-000000000000').single(),
+          // Fetch previous assignments
+          supabase.from('assignments').select('*')
+            .eq('job_id', fetchedJobId).neq('candidate_id', '00000000-0000-0000-0000-000000000000').order('created_at', { ascending: false }),
+          // Fetch candidates
+          candidateIds && candidateIds.length > 0 ? fetchRankings(sessionId) : Promise.resolve(null)
+        ]);
+        
+        // Process assignment data
+        if (!assignmentResult.error && assignmentResult.data) {
+          setAssignmentData(typeof assignmentResult.data.assignment_json === 'string' 
+            ? JSON.parse(assignmentResult.data.assignment_json) 
+            : assignmentResult.data.assignment_json);
+          setAssignmentId(fetchedJobId);
         }
+        
+        // Process previous assignments
+        if (!previousResult.error) {
+          setPreviousAssignments(previousResult.data || []);
+        }
+        
+        // Process candidates
+        if (candidatesResult && candidateIds) {
+          if (candidatesResult.candidates?.length > 0) {
+            const selected = candidatesResult.candidates.filter(c => candidateIds.includes(c.cid));
+            setCandidates(selected.length > 0 ? selected : candidateIds.map(id => ({ 
+              cid: id, name: `Candidate ${id.substring(0, 8)}`, email: 'email@example.com', jd_score: 0, total_score: 0 
+            } as Candidate)));
+          } else {
+            setCandidates(candidateIds.map(id => ({ 
+              cid: id, name: `Candidate ${id.substring(0, 8)}`, email: 'email@example.com', jd_score: 0, total_score: 0 
+            } as Candidate)));
+          }
+        }
+        
+        setIsLoadingPrevious(false);
       } catch (err) {
-        console.error('Error fetching candidates:', err);
-        if (candidateIds) setCandidates(candidateIds.map(id => ({ cid: id, name: `Candidate ${id.substring(0, 8)}`, email: 'email@example.com', jd_score: 0, total_score: 0 } as Candidate)));
+        console.error('Error fetching data:', err);
+        setIsLoadingPrevious(false);
       }
     };
-    fetchCandidates();
-  }, [sessionId, candidateIds]);
-
-  useEffect(() => {
-    const fetchAssignment = async () => {
-      if (!jobId) return;
-      try {
-        const { data, error } = await supabase.from('assignments').select('assignment_json, assignment_pdf_url, job_id')
-          .eq('job_id', jobId).eq('candidate_id', '00000000-0000-0000-0000-000000000000').single();
-        if (!error && data) {
-          setAssignmentData(typeof data.assignment_json === 'string' ? JSON.parse(data.assignment_json) : data.assignment_json);
-          setAssignmentId(jobId);
-        }
-      } catch (err) { console.error('Error fetching assignment:', err); }
-    };
-    fetchAssignment();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jobId]);
-
-  useEffect(() => {
-    const fetchPreviousAssignments = async () => {
-      if (!jobId) return;
-      setIsLoadingPrevious(true);
-      try {
-        const { data, error } = await supabase.from('assignments').select('*')
-          .eq('job_id', jobId).neq('candidate_id', '00000000-0000-0000-0000-000000000000').order('created_at', { ascending: false });
-        if (error) { console.error('Error fetching previous assignments:', error); setPreviousAssignments([]); return; }
-        setPreviousAssignments(data || []);
-      } catch (err) { console.error('Error loading previous assignments:', err); setPreviousAssignments([]); }
-      finally { setIsLoadingPrevious(false); }
-    };
-    fetchPreviousAssignments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jobId]);
+    
+    setIsLoadingPrevious(true);
+    fetchAllData();
+  }, [sessionId, candidateIds, supabase]);
 
   const handleFileDrop = (e: React.DragEvent) => {
     e.preventDefault(); e.stopPropagation(); setIsDragOver(false);
@@ -222,10 +222,11 @@ export function SectionCards({ sessionId, candidateIds }: SectionCardsProps) {
     try {
       const mappingResult = await createCandidateMappings({ job_id: jobId, session_id: sessionId || '', candidates: candidates.map(c => ({ cid: c.cid, name: c.name || 'Candidate', email: c.email || 'unknown@example.com' })) });
       if (!mappingResult.success) { setError(mappingResult.error || 'Failed to create candidate mappings'); setIsSending(false); return; }
-      const candidateUUIDs = mappingResult.data!.mappings.map((m: any) => m.candidate_id);
+      if (!mappingResult.data) { setError('No mapping data returned'); setIsSending(false); return; }
+      const candidateUUIDs = mappingResult.data.mappings.map((m: any) => m.candidate_id);
       const result = await bulkCreateAssignments({ job_id: jobId, session_id: sessionId || '', candidate_ids: candidateUUIDs });
       if (!result.success) { setError(result.error || 'Failed to send assignments'); setIsSending(false); return; }
-      const links = mappingResult.data!.mappings.map((mapping: any) => {
+      const links = mappingResult.data.mappings.map((mapping: any) => {
         const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
         return { candidateId: mapping.candidate_id, rankingCid: mapping.ranking_cid, name: mapping.name || 'Candidate', email: mapping.email || 'unknown@example.com', link: `${baseUrl}/submission?job_id=${jobId}&candidate_id=${mapping.candidate_id}` };
       });
