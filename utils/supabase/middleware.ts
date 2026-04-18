@@ -1,8 +1,30 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+// Simple in-memory cache (resets on server restart)
+const sessionCache = new Map<string, { user: any; timestamp: number }>();
+const CACHE_TTL = 60000; // 1 minute
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
+
+  const path = request.nextUrl.pathname;
+
+  // PUBLIC routes that don't require login - skip auth check entirely
+  const publicPaths = [
+    "/",
+    "/sign-in",
+    "/sign-up",
+    "/error",
+    "/forgot-password",
+    "/auth/update-password",
+    "/auth/callback",
+    "/iit-placements",
+  ];
+  
+  if (publicPaths.some((p) => path.startsWith(p))) {
+    return supabaseResponse; // Skip all auth checks for public routes
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,27 +47,24 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Always get user first
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Get session token for caching
+  const sessionToken = request.cookies.get('sb-access-token')?.value || 
+                       request.cookies.get('sb-localhost-auth-token')?.value;
+  const cached = sessionToken ? sessionCache.get(sessionToken) : null;
+  
+  let user;
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    user = cached.user;
+  } else {
+    const { data: { user: fetchedUser } } = await supabase.auth.getUser();
+    user = fetchedUser;
+    if (sessionToken && user) {
+      sessionCache.set(sessionToken, { user, timestamp: Date.now() });
+    }
+  }
 
-  const path = request.nextUrl.pathname;
-
-  // PUBLIC routes that don't require login
-  const publicPaths = [
-    "/",
-    "/sign-in",
-    "/sign-up",
-    "/error",
-    "/forgot-password",
-    "/auth/update-password", // Add this - critical for password reset
-    "/auth/callback", // Also add callback if you use it
-  ];
-  const isPublic = publicPaths.some((p) => path.startsWith(p));
-
-  // 🔒 If not signed in and not on a public path → redirect to sign-in
-  if (!user && !isPublic) {
+  // 🔒 If not signed in → redirect to sign-in
+  if (!user) {
     const url = request.nextUrl.clone();
     url.pathname = "/sign-in";
     return NextResponse.redirect(url);
