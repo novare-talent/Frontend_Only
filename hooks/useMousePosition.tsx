@@ -47,6 +47,8 @@ export function MousePositionProvider({ children }: { children: ReactNode }) {
   const isTouchRef = useRef(false);
   const reducedMotionRef = useRef(false);
   const startTimeRef = useRef(Date.now());
+  const frameCountRef = useRef(0);
+  const UPDATE_INTERVAL = 3; // Only update React state every 3 frames (~50ms at 60fps)
 
   const animate = useCallback(() => {
     if (reducedMotionRef.current) {
@@ -87,13 +89,18 @@ export function MousePositionProvider({ children }: { children: ReactNode }) {
       LERP_FACTOR
     );
 
-    setPosition({
-      nx: smoothRef.current.nx,
-      ny: smoothRef.current.ny,
-      x: smoothRef.current.x,
-      y: smoothRef.current.y,
-      isTouch: isTouchRef.current,
-    });
+    // Only update React state every N frames to reduce re-renders
+    frameCountRef.current++;
+    if (frameCountRef.current >= UPDATE_INTERVAL) {
+      frameCountRef.current = 0;
+      setPosition({
+        nx: smoothRef.current.nx,
+        ny: smoothRef.current.ny,
+        x: smoothRef.current.x,
+        y: smoothRef.current.y,
+        isTouch: isTouchRef.current,
+      });
+    }
 
     rafRef.current = requestAnimationFrame(animate);
   }, []);

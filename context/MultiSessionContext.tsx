@@ -81,13 +81,18 @@ export function MultiSessionProvider({ children }: { children: ReactNode }) {
     loadingRef.current = true;
     setIsLoading(true);
     try {
+      // Single optimized query with join
       const queryStart = performance.now();
       const { data, error } = await supabase
         .from(SUPABASE_TABLE)
-        .select("*")
+        .select(`
+          *,
+          jobs!jobs_form_id_fkey(job_id)
+        `)
         .eq("profile_id", clientId)
-        .order("created_at", { ascending: false });
-      console.log(`[MultiSessionContext] Sessions query took: ${(performance.now() - queryStart).toFixed(2)}ms`);
+        .order("created_at", { ascending: false })
+        .limit(50); // Add limit to prevent loading too many sessions
+      console.log(`[MultiSessionContext] Single query took: ${(performance.now() - queryStart).toFixed(2)}ms`);
 
       if (error) {
         console.error("Error loading sessions:", error.message || JSON.stringify(error));
@@ -102,29 +107,11 @@ export function MultiSessionProvider({ children }: { children: ReactNode }) {
 
       console.log(`[MultiSessionContext] Found ${data.length} sessions`);
       
-      const sessionIds = data.map((row: any) => row.id);
-      
-      // Only query jobs if we have sessions
-      let jobsMap = new Map();
-      if (sessionIds.length > 0) {
-        const jobsQueryStart = performance.now();
-        const { data: jobsData } = await supabase
-          .from("jobs")
-          .select("job_id, form_id")
-          .in("form_id", sessionIds)
-          .limit(100); // Add limit to prevent full table scan
-        console.log(`[MultiSessionContext] Jobs query took: ${(performance.now() - jobsQueryStart).toFixed(2)}ms, found ${jobsData?.length || 0} jobs`);
-        
-        jobsMap = new Map(
-          (jobsData || []).map((job: any) => [job.form_id, job.job_id])
-        );
-      }
-      
       const mapStart = performance.now();
       const transformedSessions = data.map((row: any) => ({
         session_id: row.id,
         client_id: row.profile_id,
-        job_id: jobsMap.get(row.id),
+        job_id: row.jobs?.[0]?.job_id,
         job_name: row.queries?.[0]?.job_name || "Job Ranking Session",
         status: row.status,
         candidates_count: row.candidate_meta ? Object.keys(row.candidate_meta).length : 0,

@@ -53,7 +53,7 @@ interface StepProgressProps {
   maxUnlockedStep: number;
   onStepClick?: (step: number) => void;
 }
-function SessionStepProgress({ currentStep, maxUnlockedStep, onStepClick }: StepProgressProps) {
+const SessionStepProgress = React.memo(function SessionStepProgress({ currentStep, maxUnlockedStep, onStepClick }: StepProgressProps) {
   return (
     <div className="py-3 border-t border-b border-white/5 my-3">
       <div className="flex items-start">
@@ -96,7 +96,7 @@ function SessionStepProgress({ currentStep, maxUnlockedStep, onStepClick }: Step
       </div>
     </div>
   );
-}
+});
 import ChromeButton from "@/components/Sig-Hire/ChromeButton";
 import { useDriverGuide } from "@/hooks/useDriverGuide";
 import { sessionsGuide } from "@/lib/driver-config";
