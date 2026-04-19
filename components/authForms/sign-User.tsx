@@ -105,7 +105,7 @@ export function SignUpForm({
 
     if (!emailRegex.test(userFormData.email)) {
       toast.error("Invalid Email Domain", {
-        description: "Only IIT institutional emails are allowed.",
+        description: "Only IIT verified emails are allowed.",
         duration: 5000,
         position: "top-right",
       });
@@ -205,7 +205,7 @@ export function SignUpForm({
               });
 
           if (uploadError) {
-            toast.error("Profile Image Upload Failed", {
+            toast.error("Profile Image Failed to Upload", {
               description:
                 "Your account was created but we couldn't upload your profile image. You can update it later.",
               duration: 5000,
@@ -282,7 +282,7 @@ export function SignUpForm({
       }
 
       toast.success("Account Created Successfully!", {
-        description: "Please check your email to confirm your account.",
+        description: "Please check your entered email to confirm your account and proceed to login.",
         duration: 10000,
         position: "top-right",
       });
@@ -327,7 +327,7 @@ export function SignUpForm({
     if (blockedEmailRegex.test(clientFormData.email)) {
       toast.error("Invalid Company Email", {
         description:
-          "Please use your official company email — Gmail and IIT emails are not allowed for clients.",
+          "Please use your official company email — Gmails are not allowed for clients.",
         duration: 6000,
         position: "top-right",
       });
