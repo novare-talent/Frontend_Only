@@ -6,6 +6,7 @@ import GlowOrb from "@/components/landing/effects/GlowOrb";
 import GlowButton from "@/components/landing/ui/GlowButton";
 import SocialProofBar from "./SocialProofBar";
 import ThreeGrid from "@/components/landing/effects/ThreeGrid";
+import { getUserRole, getDashboardPathByRole } from "@/utils/getUserRole";
 
 export default function Hero() {
   const router = useRouter();
@@ -20,9 +21,14 @@ export default function Hero() {
     const {
       data: { session },
     } = await supabase.auth.getSession();
+    
     if (session) {
-      router.push("/Dashboard");
+      // User is logged in - get their role and route accordingly
+      const role = await getUserRole();
+      const dashboardPath = getDashboardPathByRole(role);
+      router.push(dashboardPath);
     } else {
+      // User not logged in - go to sign up
       router.push(path);
     }
   };

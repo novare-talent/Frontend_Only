@@ -95,8 +95,15 @@ export async function updateSession(request: NextRequest) {
       .single();
 
     if (error || !profile || profile.role !== "client") {
+      // Redirect to appropriate dashboard based on actual role
       const url = request.nextUrl.clone();
-      url.pathname = "/";
+      if (profile?.role === "admin") {
+        url.pathname = "/admin";
+      } else if (profile?.role === "user") {
+        url.pathname = "/Dashboard";
+      } else {
+        url.pathname = "/sign-in";
+      }
       return NextResponse.redirect(url);
     }
   }
@@ -110,8 +117,15 @@ export async function updateSession(request: NextRequest) {
       .single();
 
     if (error || !profile || profile.role !== "admin") {
+      // Redirect to appropriate dashboard based on actual role
       const url = request.nextUrl.clone();
-      url.pathname = "/";
+      if (profile?.role === "client") {
+        url.pathname = "/client";
+      } else if (profile?.role === "user") {
+        url.pathname = "/Dashboard";
+      } else {
+        url.pathname = "/sign-in";
+      }
       return NextResponse.redirect(url);
     }
   }

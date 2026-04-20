@@ -8,6 +8,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { NAV_LINKS, SOCIAL_LINKS } from "@/lib/constants";
 import GlowButton from "@/components/landing/ui/GlowButton";
+import { getUserRole, getDashboardPathByRole } from "@/utils/getUserRole";
+
 interface NavbarProps {
   simplified?: boolean;
 }
@@ -23,7 +25,10 @@ export default function Navbar({ simplified = false }: NavbarProps) {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (session) {
-      router.push("/Dashboard");
+      // User is logged in - get their role and route accordingly
+      const role = await getUserRole();
+      const dashboardPath = getDashboardPathByRole(role);
+      router.push(dashboardPath);
     } else {
       router.push("/sign-in");
     }
