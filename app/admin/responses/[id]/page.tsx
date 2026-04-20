@@ -14,6 +14,7 @@ import { useParams } from "next/navigation";
 import { User, Mail, Phone, Calendar } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
 
 type FormResponse = {
   id: string;
@@ -24,6 +25,8 @@ type FormResponse = {
   answers?: Record<string, any>;
   created_at?: string;
 };
+
+const ITEMS_PER_PAGE = 50;
 
 function formatIST(dateString: string | null | undefined) {
   if (!dateString) return "—";
@@ -51,36 +54,73 @@ function parseAnswers(answers: any): Record<string, string> {
 }
 
 export default function AdminFormResponsesPage() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
   const supabase = createClient();
 
   const [jobTitle, setJobTitle] = useState<string>("Untitled Job");
   const [responses, setResponses] = useState<FormResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [formId, setFormId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchResponses = async () => {
       try {
         setLoading(true);
+        setError(null);
 
-        // Fetch job title
-        const { data: job } = await supabase
+        if (!id) {
+          setError("Job ID not available");
+          setResponses([]);
+          return;
+        }
+
+        // Fetch job title and form_id
+        const { data: job, error: jobError } = await supabase
           .from("jobs")
-          .select("Job_Name, Job_Description")
+          .select("Job_Name, Job_Description, form_id")
           .eq("job_id", id)
           .maybeSingle();
 
+        if (jobError) {
+          console.error("Error fetching job:", jobError);
+        }
+
         setJobTitle(job?.Job_Name || job?.Job_Description || "Untitled Job");
 
-        // Fetch all responses for the job
-        const { data: responseRows, error } = await supabase
-          .from("responses")
-          .select("id, profile_id, full_name, email, phone, answers, created_at, resume_url, job_id")
-          .eq("job_id", id)
-          .order("created_at", { ascending: false });
+        const resolvedFormId = job?.form_id ?? null;
+        setFormId(resolvedFormId);
 
-        if (error) {
-          console.error("Error fetching responses:", error);
+        if (!resolvedFormId) {
+          setError("No form linked to this job.");
+          setResponses([]);
+          return;
+        }
+
+        // Get total count
+        const { count: totalResponseCount, error: countError } = await supabase
+          .from("responses")
+          .select("*", { count: "exact", head: true })
+          .eq("form_id", resolvedFormId);
+
+        if (!countError && totalResponseCount !== null) {
+          setTotalCount(totalResponseCount);
+          setHasMore(totalResponseCount > ITEMS_PER_PAGE);
+        }
+
+        // Fetch responses
+        const { data: responseRows, error: fetchError } = await supabase
+          .from("responses")
+          .select("id, profile_id, form_id, answers, created_at")
+          .eq("form_id", resolvedFormId)
+          .order("created_at", { ascending: false })
+          .limit(ITEMS_PER_PAGE);
+
+        if (fetchError) {
+          setError(`Error fetching responses: ${fetchError.message}`);
           setResponses([]);
           return;
         }
@@ -90,58 +130,104 @@ export default function AdminFormResponsesPage() {
           return;
         }
 
-        // Get all unique profile IDs
-        const profileIds = Array.from(
-          new Set(
-            responseRows
-              .map((r) => r.profile_id)
-              .filter((id): id is string => Boolean(id))
-          )
-        );
-
-        // Fetch profile data for all candidates
-        let profileMap: Record<string, any> = {};
-        if (profileIds.length > 0) {
-          const { data: profiles } = await supabase
-            .from("profiles")
-            .select("id, first_name, last_name, email, phone")
-            .in("id", profileIds);
-
-          if (profiles) {
-            profileMap = Object.fromEntries(profiles.map((p) => [p.id, p]));
-          }
-        }
-
-        // Enrich responses with profile data
-        const enrichedResponses: FormResponse[] = responseRows.map((r) => {
-          const profile = profileMap[r.profile_id] || {};
-          const parsedAnswers = parseAnswers(r.answers);
-
-          return {
-            id: r.id,
-            profile_id: r.profile_id,
-            full_name: profile.first_name || parsedAnswers["Full Name"] || "Unknown",
-            email: profile.email || parsedAnswers["Email Address"],
-            phone: profile.phone || parsedAnswers["Phone Number"],
-            answers: parsedAnswers,
-            created_at: r.created_at,
-          };
-        });
-
+        const enrichedResponses = await enrichWithProfiles(responseRows);
         setResponses(enrichedResponses);
+      } catch (err) {
+        setError(`Unexpected error: ${err instanceof Error ? err.message : JSON.stringify(err)}`);
+        setResponses([]);
       } finally {
         setLoading(false);
       }
     };
 
     if (id) fetchResponses();
-  }, [id, supabase]);
+  }, [id]);
+
+  const enrichWithProfiles = async (responseRows: any[]): Promise<FormResponse[]> => {
+    const profileIds = Array.from(
+      new Set(responseRows.map((r) => r.profile_id).filter((pid): pid is string => Boolean(pid)))
+    );
+
+    const profileMap: Record<string, any> = {};
+    if (profileIds.length > 0) {
+      const batchSize = 100;
+      for (let i = 0; i < profileIds.length; i += batchSize) {
+        const batch = profileIds.slice(i, i + batchSize);
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, first_name, last_name, email, phone")
+          .in("id", batch);
+
+        if (profiles) {
+          profiles.forEach((p) => { profileMap[p.id] = p; });
+        }
+      }
+    }
+
+    return responseRows.map((r) => {
+      const profile = profileMap[r.profile_id] || {};
+      const parsedAnswers = parseAnswers(r.answers);
+      const fullName = profile.first_name
+        ? `${profile.first_name} ${profile.last_name || ""}`.trim()
+        : parsedAnswers["Full Name"] || "Unknown";
+
+      return {
+        id: r.id,
+        profile_id: r.profile_id,
+        full_name: fullName,
+        email: profile.email || parsedAnswers["Email Address"],
+        phone: profile.phone || parsedAnswers["Phone Number"],
+        answers: parsedAnswers,
+        created_at: r.created_at,
+      };
+    });
+  };
+
+  const loadMore = async () => {
+    if (!formId) return;
+    try {
+      const { data: responseRows, error } = await supabase
+        .from("responses")
+        .select("id, profile_id, form_id, answers, created_at")
+        .eq("form_id", formId)
+        .order("created_at", { ascending: false })
+        .range(responses.length, responses.length + ITEMS_PER_PAGE - 1);
+
+      if (error || !responseRows || responseRows.length === 0) {
+        setHasMore(false);
+        return;
+      }
+
+      const enrichedResponses = await enrichWithProfiles(responseRows);
+      setResponses((prev) => [...prev, ...enrichedResponses]);
+      setHasMore(responses.length + responseRows.length < totalCount);
+    } catch (err) {
+      console.error("Error loading more responses:", err);
+    }
+  };
 
   if (loading) {
     return (
       <p className="text-center mt-10 text-muted-foreground">
         Loading responses...
       </p>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-6 py-10">
+        <Card className="border-0 bg-transparent border-red-200 bg-red-50 dark:bg-red-950/20">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold tracking-tight text-red-600 dark:text-red-400">
+              Error Loading Responses
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-red-700 dark:text-red-300 font-mono text-sm break-all">{error}</p>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -154,10 +240,7 @@ export default function AdminFormResponsesPage() {
               Form Responses
             </CardTitle>
             <CardDescription>
-              Job:{" "}
-              <span className="font-semibold text-primary">
-                {jobTitle}
-              </span>
+              Job: <span className="font-semibold text-primary">{jobTitle}</span>
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -183,11 +266,8 @@ export default function AdminFormResponsesPage() {
               Form Responses
             </CardTitle>
             <CardDescription>
-              Job:{" "}
-              <span className="font-semibold text-primary">
-                {jobTitle}
-              </span>{" "}
-              • {responses.length} response{responses.length !== 1 ? "s" : ""}
+              Job: <span className="font-semibold text-primary">{jobTitle}</span>{" "}
+              • Showing {responses.length} of {totalCount} response{totalCount !== 1 ? "s" : ""}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -199,21 +279,15 @@ export default function AdminFormResponsesPage() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.08 }}
-              whileHover={{
-                y: -4,
-                scale: 1.01,
-              }}
+              whileHover={{ y: -4, scale: 1.01 }}
               className="relative rounded-xl border border-border bg-muted/20 p-6 transition-all
                          hover:border-primary/40 hover:shadow-[0_0_0_1px_hsl(var(--primary)/0.4),0_12px_40px_-12px_hsl(var(--primary)/0.4)]"
             >
-              {/* Candidate Header */}
               <div className="mb-4 space-y-1">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
                   <User className="size-4 text-primary" />
                   {response.full_name || "Unknown Candidate"}
-                  <span className="text-sm text-muted-foreground">
-                    (#{index + 1})
-                  </span>
+                  <span className="text-sm text-muted-foreground">(#{index + 1})</span>
                 </h3>
 
                 <div className="flex flex-wrap gap-4 text-sm">
@@ -222,13 +296,11 @@ export default function AdminFormResponsesPage() {
                       <Mail className="size-4" /> {response.email}
                     </p>
                   )}
-
                   {response.phone && (
                     <p className="text-muted-foreground flex items-center gap-1">
                       <Phone className="size-4" /> {response.phone}
                     </p>
                   )}
-
                   {response.created_at && (
                     <p className="text-muted-foreground flex items-center gap-1">
                       <Calendar className="size-4" />
@@ -240,16 +312,12 @@ export default function AdminFormResponsesPage() {
 
               <Separator className="mb-4" />
 
-              {/* Form Answers */}
               <div className="space-y-3">
                 {Object.entries(response.answers || {}).map(([key, value]) => {
-                  // Skip if value is selected_resume (file URL), just show badge
                   if (key === "selected_resume" && typeof value === "string") {
                     return (
                       <div key={key}>
-                        <p className="text-sm font-medium text-muted-foreground mb-1">
-                          Resume:
-                        </p>
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Resume:</p>
                         <a
                           href={value}
                           target="_blank"
@@ -262,7 +330,6 @@ export default function AdminFormResponsesPage() {
                     );
                   }
 
-                  // Skip empty values
                   if (!value) return null;
 
                   const displayValue =
@@ -272,9 +339,7 @@ export default function AdminFormResponsesPage() {
 
                   return (
                     <div key={key} className="text-sm">
-                      <p className="font-medium text-foreground mb-1">
-                        {key}:
-                      </p>
+                      <p className="font-medium text-foreground mb-1">{key}:</p>
                       <p className="text-muted-foreground pl-3 border-l-2 border-primary/30 py-1">
                         {displayValue}
                       </p>
@@ -283,7 +348,6 @@ export default function AdminFormResponsesPage() {
                 })}
               </div>
 
-              {/* Badge with response ID */}
               <div className="mt-4 pt-4 border-t border-border">
                 <Badge variant="outline" className="text-xs">
                   Response ID: {response.id.slice(0, 8)}...
@@ -291,6 +355,14 @@ export default function AdminFormResponsesPage() {
               </div>
             </motion.div>
           ))}
+
+          {hasMore && (
+            <div className="flex justify-center pt-6">
+              <Button onClick={loadMore} variant="outline" className="px-8">
+                Load More Responses
+              </Button>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>

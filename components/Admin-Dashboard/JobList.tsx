@@ -35,6 +35,7 @@ export default function JobList() {
   const [hasResponses, setHasResponses] = useState<Record<string, boolean>>({});
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [responseCounts, setResponseCounts] = useState<Record<string, number>>({});
   const [notification, setNotification] = useState<{
     type: "success" | "error" | "info";
     title: string;
@@ -139,17 +140,23 @@ export default function JobList() {
 
   const checkResponsesStatus = async (jobId: string) => {
     const supabase = createClient();
-    const { data } = await supabase
+    const { count } = await supabase
       .from("responses")
-      .select("id")
-      .eq("job_id", jobId)
-      .limit(1)
-      .maybeSingle();
+      .select("id", { count: "exact", head: true })
+      .eq("job_id", jobId);
 
+    const hasResponses = !!count && count > 0;
     setHasResponses(prev => ({
       ...prev,
-      [jobId]: !!data
+      [jobId]: hasResponses
     }));
+
+    if (count && count > 0) {
+      setResponseCounts(prev => ({
+        ...prev,
+        [jobId]: count
+      }));
+    }
   };
 
   const handleActivateJob = async (jobId: string) => {
@@ -377,7 +384,7 @@ export default function JobList() {
                   className="gap-2"
                 >
                   <FileText className="size-4" />
-                  Form Responses
+                  Responses ({responseCounts[job.job_id] || 0})
                 </Button>
               )}
 
