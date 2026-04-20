@@ -394,34 +394,6 @@ export default function JobsGrid() {
     setLoading(false);
   };
 
-  // Helper function to parse level field and segregate jobs and internships
-  const parseJobsAndInternships = (allJobs: JobWithFormStatus[]) => {
-    const jobs: JobWithFormStatus[] = [];
-    const internships: JobWithFormStatus[] = [];
-
-    allJobs.forEach((job) => {
-      const level = job.level?.toLowerCase() || "";
-      
-      // Check if it's an internship
-      if (level === "internship" || level.includes("intern")) {
-        internships.push(job);
-      }
-      // Check if it's a job (starts with "job")
-      else if (level.startsWith("job")) {
-        jobs.push(job);
-      }
-      // If parsing fails, default to internship as specified
-      else {
-        internships.push(job);
-      }
-    });
-
-    jobs.sort(sortByDeadline);
-    internships.sort(sortByDeadline);
-
-    return { jobs, internships };
-  };
-
   // Active jobs first (soonest deadline first), expired jobs last (most recently closed first)
   const sortByDeadline = (a: JobWithFormStatus, b: JobWithFormStatus) => {
     const now = Date.now();
@@ -440,6 +412,28 @@ export default function JobsGrid() {
 
     // Both expired: most recently closed first
     return new Date(b.closingTime!).getTime() - new Date(a.closingTime!).getTime();
+  };
+
+  // Helper function to parse level field and segregate jobs and internships
+  const parseJobsAndInternships = (allJobs: JobWithFormStatus[]) => {
+    const jobs: JobWithFormStatus[] = [];
+    const internships: JobWithFormStatus[] = [];
+
+    allJobs.forEach((job) => {
+      const level = job.level?.toLowerCase() || "";
+      if (level === "internship" || level.includes("intern")) {
+        internships.push(job);
+      } else if (level.startsWith("job")) {
+        jobs.push(job);
+      } else {
+        internships.push(job);
+      }
+    });
+
+    jobs.sort(sortByDeadline);
+    internships.sort(sortByDeadline);
+
+    return { jobs, internships };
   };
 
   // Get current data based on active tab
