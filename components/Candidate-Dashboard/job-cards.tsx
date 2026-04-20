@@ -394,7 +394,7 @@ export default function JobsGrid() {
     setLoading(false);
   };
 
-  // Active jobs first (soonest deadline first), expired jobs last (most recently closed first)
+  // Active jobs sorted by newest creation first; expired jobs pushed to bottom
   const sortByDeadline = (a: JobWithFormStatus, b: JobWithFormStatus) => {
     const now = Date.now();
     const aExpired = a.closingTime ? new Date(a.closingTime).getTime() < now : false;
@@ -402,16 +402,10 @@ export default function JobsGrid() {
 
     if (aExpired !== bExpired) return aExpired ? 1 : -1;
 
-    if (!aExpired) {
-      // Both active: soonest deadline first (no deadline goes last)
-      if (!a.closingTime && !b.closingTime) return 0;
-      if (!a.closingTime) return 1;
-      if (!b.closingTime) return -1;
-      return new Date(a.closingTime).getTime() - new Date(b.closingTime).getTime();
-    }
-
-    // Both expired: most recently closed first
-    return new Date(b.closingTime!).getTime() - new Date(a.closingTime!).getTime();
+    // Both active or both expired: sort by created_at descending (newest first)
+    const dateA = new Date(a.created_at || 0).getTime();
+    const dateB = new Date(b.created_at || 0).getTime();
+    return dateB - dateA;
   };
 
   // Helper function to parse level field and segregate jobs and internships
