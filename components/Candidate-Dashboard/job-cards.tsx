@@ -416,17 +416,30 @@ export default function JobsGrid() {
       }
     });
 
-    // Sort both arrays by created_at to maintain order
-    const sortByCreatedAt = (a: JobWithFormStatus, b: JobWithFormStatus) => {
-      const dateA = new Date(a.created_at || 0).getTime();
-      const dateB = new Date(b.created_at || 0).getTime();
-      return dateB - dateA; // Descending order (newest first)
-    };
-
-    jobs.sort(sortByCreatedAt);
-    internships.sort(sortByCreatedAt);
+    jobs.sort(sortByDeadline);
+    internships.sort(sortByDeadline);
 
     return { jobs, internships };
+  };
+
+  // Active jobs first (soonest deadline first), expired jobs last (most recently closed first)
+  const sortByDeadline = (a: JobWithFormStatus, b: JobWithFormStatus) => {
+    const now = Date.now();
+    const aExpired = a.closingTime ? new Date(a.closingTime).getTime() < now : false;
+    const bExpired = b.closingTime ? new Date(b.closingTime).getTime() < now : false;
+
+    if (aExpired !== bExpired) return aExpired ? 1 : -1;
+
+    if (!aExpired) {
+      // Both active: soonest deadline first (no deadline goes last)
+      if (!a.closingTime && !b.closingTime) return 0;
+      if (!a.closingTime) return 1;
+      if (!b.closingTime) return -1;
+      return new Date(a.closingTime).getTime() - new Date(b.closingTime).getTime();
+    }
+
+    // Both expired: most recently closed first
+    return new Date(b.closingTime!).getTime() - new Date(a.closingTime!).getTime();
   };
 
   // Get current data based on active tab
@@ -436,14 +449,10 @@ export default function JobsGrid() {
         return jobs;
       case "internships":
         return internships;
-      default:
-        // For "all" tab, combine and sort by created_at
+      default: {
         const combined = [...jobs, ...internships];
-        return combined.sort((a, b) => {
-          const dateA = new Date(a.created_at || 0).getTime();
-          const dateB = new Date(b.created_at || 0).getTime();
-          return dateB - dateA; // Descending order (newest first)
-        });
+        return combined.sort(sortByDeadline);
+      }
     }
   };
 
