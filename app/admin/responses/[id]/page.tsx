@@ -64,7 +64,6 @@ export default function AdminFormResponsesPage() {
   const [hasMore, setHasMore] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [formId, setFormId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchResponses = async () => {
@@ -78,10 +77,10 @@ export default function AdminFormResponsesPage() {
           return;
         }
 
-        // Fetch job title and form_id
+        // Fetch job title
         const { data: job, error: jobError } = await supabase
           .from("jobs")
-          .select("Job_Name, Job_Description, form_id")
+          .select("Job_Name, Job_Description")
           .eq("job_id", id)
           .maybeSingle();
 
@@ -91,31 +90,22 @@ export default function AdminFormResponsesPage() {
 
         setJobTitle(job?.Job_Name || job?.Job_Description || "Untitled Job");
 
-        const resolvedFormId = job?.form_id ?? null;
-        setFormId(resolvedFormId);
-
-        if (!resolvedFormId) {
-          setError("No form linked to this job.");
-          setResponses([]);
-          return;
-        }
-
-        // Get total count
+        // Get total count by job_id
         const { count: totalResponseCount, error: countError } = await supabase
           .from("responses")
-          .select("*", { count: "exact", head: true })
-          .eq("form_id", resolvedFormId);
+          .select("id", { count: "exact", head: true })
+          .eq("job_id", id);
 
         if (!countError && totalResponseCount !== null) {
           setTotalCount(totalResponseCount);
           setHasMore(totalResponseCount > ITEMS_PER_PAGE);
         }
 
-        // Fetch responses
+        // Fetch responses by job_id
         const { data: responseRows, error: fetchError } = await supabase
           .from("responses")
-          .select("id, profile_id, form_id, answers, created_at")
-          .eq("form_id", resolvedFormId)
+          .select("id, profile_id, answers, created_at")
+          .eq("job_id", id)
           .order("created_at", { ascending: false })
           .limit(ITEMS_PER_PAGE);
 
@@ -184,12 +174,12 @@ export default function AdminFormResponsesPage() {
   };
 
   const loadMore = async () => {
-    if (!formId) return;
+    if (!id) return;
     try {
       const { data: responseRows, error } = await supabase
         .from("responses")
-        .select("id, profile_id, form_id, answers, created_at")
-        .eq("form_id", formId)
+        .select("id, profile_id, answers, created_at")
+        .eq("job_id", id)
         .order("created_at", { ascending: false })
         .range(responses.length, responses.length + ITEMS_PER_PAGE - 1);
 
