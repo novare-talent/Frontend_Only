@@ -18,6 +18,10 @@ import {
 
 import { motion, AnimatePresence } from "framer-motion";
 
+const SB_BASE = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/training`;
+const sbPdf = (file: string) => `${SB_BASE}/pdfs/${encodeURIComponent(file)}`;
+const sbImg = (file: string) => `${SB_BASE}/images/${encodeURIComponent(file)}`;
+
 const allCourses = [
   {
     id: "AI_ML_Engineer",
@@ -122,6 +126,70 @@ const allCourses = [
     level: "Advanced",
     pdfUrl: "/Training/Resource on Analyst roles (part 3).docx.pdf",
     imageUrl: "/Training/Images/Analyst (part 3).png",
+  },
+  {
+    id: "Robotics_Engineer",
+    title: "Robotics Engineer",
+    description: "Engineers intelligent, autonomous robotic systems",
+    level: "Beginner",
+    pdfUrl: sbPdf("Robotics Engineer_ A Beginner's Guide.pdf"),
+    imageUrl: sbImg("Robotics.png"),
+  },
+  {
+    id: "Prompt_Engineer",
+    title: "Prompt Engineer",
+    description: "Designs optimized inputs for AI systems",
+    level: "Beginner",
+    pdfUrl: sbPdf("PROMPT ENGINEER.pdf"),
+    imageUrl: sbImg("Prompt engineer.png"),
+  },
+  {
+    id: "MLOps_Engineer",
+    title: "MLOps Engineer",
+    description: "Operationalizes machine learning models at scale",
+    level: "Intermediate",
+    pdfUrl: sbPdf("MLOps ENGINEER.pdf"),
+    imageUrl: sbImg("MLOps Engineer.png"),
+  },
+  {
+    id: "Full_Stack_Engineer",
+    title: "Full Stack Engineer",
+    description: "Builds integrated frontend and backend systems",
+    level: "Beginner",
+    pdfUrl: sbPdf("FULL STACK ENGINEER (1).pdf"),
+    imageUrl: sbImg("Full stack Engineer.png"),
+  },
+  {
+    id: "DevOps_Engineer",
+    title: "DevOps Engineer",
+    description: "Automates scalable infrastructure and deployment pipelines",
+    level: "Intermediate",
+    pdfUrl: sbPdf("DevOPs ENGINEER.pdf"),
+    imageUrl: sbImg("DevOps Engineer.png"),
+  },
+  {
+    id: "Cybersecurity_Engineer",
+    title: "Cybersecurity Engineer",
+    description: "Secures systems against evolving digital threats",
+    level: "Beginner",
+    pdfUrl: sbPdf("CYBERSECURITYENGINEER (2) (1).pdf"),
+    imageUrl: sbImg("Cybersecurity.png"),
+  },
+  {
+    id: "CFA_Introduction",
+    title: "CFA: Introduction",
+    description: "Analyzes financial data for strategic investments",
+    level: "Beginner",
+    pdfUrl: sbPdf("Chartered Financial Analyst (CFA)  (1).pdf"),
+    imageUrl: sbImg("CFA.png"),
+  },
+  {
+    id: "App_Developer",
+    title: "App Developer",
+    description: "Develops performant, user-centric mobile applications",
+    level: "Beginner",
+    pdfUrl: sbPdf("App Developer.pdf"),
+    imageUrl: sbImg("App developer.png"),
   },
 ];
 
