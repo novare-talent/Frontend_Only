@@ -24,6 +24,7 @@ import {
   Info,
   Calendar,
   Clock,
+  MailCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -53,6 +54,7 @@ export type JobCardProps = {
   onDelete?: (jobId: string) => void;
   duration?: string | null;
   closingTime?: string | null;
+  rejectionEmailsSent?: boolean;
 };
 
 function formatIST(dateString: string | null | undefined) {
@@ -81,6 +83,7 @@ export function JobCard({
   onDelete,
   duration,
   closingTime,
+  rejectionEmailsSent = false,
 }: JobCardProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -390,19 +393,21 @@ export function JobCard({
           </Button>
         </div>
 
-        <CardHeader className="gap-3">
-          <CardTitle className="text-balance text-xl font-semibold leading-tight">
-            {href ? (
-              <a
-                href={href}
-                className="text-primary underline-offset-4 hover:underline"
-              >
-                {title || "Untitled Job"}
-              </a>
-            ) : (
-              <span className="text-foreground">{title || "Untitled Job"}</span>
-            )}
-          </CardTitle>
+        <CardHeader className="gap-3 pr-20">
+          <div className="flex items-start justify-between gap-2">
+            <CardTitle className="text-balance text-xl font-semibold leading-tight">
+              {href ? (
+                <a
+                  href={href}
+                  className="text-primary underline-offset-4 hover:underline"
+                >
+                  {title || "Untitled Job"}
+                </a>
+              ) : (
+                <span className="text-foreground">{title || "Untitled Job"}</span>
+              )}
+            </CardTitle>
+          </div>
 
           <CardDescription className="flex flex-wrap items-center gap-2 text-sm">
             <span className="inline-flex items-center gap-1 text-muted-foreground">
@@ -432,7 +437,16 @@ export function JobCard({
           )}
         </CardContent>
 
-        <CardFooter className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+        <CardFooter className="flex flex-col gap-3 text-sm text-muted-foreground">
+          {rejectionEmailsSent && (
+            <div className="w-full">
+              <Badge className="gap-1.5 bg-green-500/15 text-green-600 border border-green-500/30 hover:bg-green-500/20 whitespace-nowrap">
+                <MailCheck className="size-3.5" />
+                Rejection emails sent
+              </Badge>
+            </div>
+          )}
+          <div className="w-full flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Button
               variant="default"
@@ -510,6 +524,7 @@ export function JobCard({
                 )}
               </div>
             )}
+          </div>
           </div>
 
         </CardFooter>

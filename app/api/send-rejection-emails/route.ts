@@ -1,0 +1,262 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import OpenAI from "openai";
+import { Resend } from "resend";
+
+const SUPABASE_URL =
+  process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+
+function getSupabaseAdmin() {
+  return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+}
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+async function extractTextFromPdf(url: string): Promise<string> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return "";
+    const buffer = Buffer.from(await response.arrayBuffer());
+    // pdf-parse v2 is ESM — the module itself is the callable function
+    const pdfModule = await import("pdf-parse");
+    const data = await (pdfModule as any)(buffer);
+    return data.text.slice(0, 8000); // Cap at 8k chars to stay within token limits
+  } catch {
+    return "";
+  }
+}
+
+async function generateRejectionEmail(params: {
+  candidateName: string;
+  jobTitle: string;
+  jobDescription: string;
+  resumeText: string;
+  evalJustification: string;
+  skillsMatch: number;
+  experienceRelevance: number;
+  communicationClarity: number;
+  finalScore: number;
+}): Promise<{ subject: string; body: string }> {
+  const {
+    candidateName,
+    jobTitle,
+    jobDescription,
+    resumeText,
+    evalJustification,
+    skillsMatch,
+    experienceRelevance,
+    communicationClarity,
+    finalScore,
+  } = params;
+  const firstName = candidateName.split(" ")[0] || candidateName;
+
+  const prompt = `You are an HR manager at a company. Write a personalized rejection email for a job applicant.
+
+STRICT RULES — violating any of these makes the email unusable:
+1. NEVER use placeholder text like [Job Title], [specific technologies], [X years], [specific area], etc.
+2. Use the EXACT job title provided — do not substitute it with anything.
+3. Use ONLY the specific information given below — do not invent or generalize.
+4. Every rejection reason must cite a concrete gap found in the evaluation data below.
+
+---
+CANDIDATE NAME: ${candidateName}
+JOB TITLE: ${jobTitle}
+
+JOB DESCRIPTION (excerpt):
+${jobDescription.slice(0, 2500)}
+
+AI EVALUATION SUMMARY (use this as the primary source for rejection reasons):
+- Justification: ${evalJustification || "No detailed justification available."}
+- Skills Match Score: ${skillsMatch}/100
+- Experience Relevance Score: ${experienceRelevance}/100
+- Communication Clarity Score: ${communicationClarity}/100
+- Overall Final Score: ${finalScore}/100
+
+RESUME CONTENT (supplementary — use if evaluation summary lacks specifics):
+${resumeText || "Resume text could not be extracted."}
+---
+
+Write an email that:
+- Opens with "Dear ${firstName},"
+- Thanks them for applying to the "${jobTitle}" role (use this exact title)
+- Explains 3-4 specific rejection reasons derived directly from the evaluation justification and scores above — name actual technologies, skills, or experience areas mentioned in the JD or evaluation
+- Frames each reason constructively as an area for growth
+- Ends warmly, wishing them well
+- Closes with "Hiring Team - Novare Talent"
+- Uses clean HTML with inline styles (paragraphs + <ul> bullet list for reasons)
+- Does NOT include <html>, <head>, or <body> tags
+
+Return a JSON object with exactly:
+- "subject": the email subject line mentioning the actual job title
+- "body": the full HTML email body`;
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: [{ role: "user", content: prompt }],
+    response_format: { type: "json_object" },
+    temperature: 0.4,
+    max_tokens: 1400,
+  });
+
+  try {
+    const result = JSON.parse(
+      completion.choices[0].message.content ?? "{}"
+    );
+    return {
+      subject: result.subject || `Your Application for ${jobTitle} — Update`,
+      body:
+        result.body ||
+        `<p>Dear ${firstName},</p><p>Thank you for your interest in the ${jobTitle} position. After careful review, we have decided to move forward with other candidates. We wish you the best in your search.</p><p>Hiring Team - Novare Talent</p>`,
+    };
+  } catch {
+    return {
+      subject: `Your Application for ${jobTitle} — Update`,
+      body: `<p>Dear ${firstName},</p><p>Thank you for applying for the ${jobTitle} role. After careful consideration, we will not be moving forward with your application at this time. We appreciate your interest and wish you well.</p><p>Hiring Team - Novare Talent</p>`,
+    };
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const { jobId, candidateIds } = await req.json();
+
+    if (!jobId || !Array.isArray(candidateIds) || candidateIds.length === 0) {
+      return NextResponse.json(
+        { error: "Missing jobId or candidateIds" },
+        { status: 400 }
+      );
+    }
+
+    // Auth check
+    const authHeader = req.headers.get("authorization") ?? "";
+    const token = authHeader.startsWith("Bearer ")
+      ? authHeader.split(" ")[1]
+      : null;
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const supabase = getSupabaseAdmin();
+    const { data: userData, error: authError } =
+      await supabase.auth.getUser(token);
+    if (authError || !userData?.user) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    }
+
+    // Fetch job
+    const { data: job, error: jobError } = await supabase
+      .from("jobs")
+      .select("Job_Name, Job_Description")
+      .eq("job_id", jobId)
+      .single();
+
+    if (jobError || !job) {
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    }
+
+    // Fetch evaluation data to get resume URLs per candidate
+    const { data: evalRow } = await supabase
+      .from("evaluations")
+      .select("results")
+      .eq("job_id", jobId)
+      .maybeSingle();
+
+    const evalCandidates: any[] = evalRow?.results?.candidates ?? [];
+    const evalMap: Record<string, any> = Object.fromEntries(
+      evalCandidates.map((c: any) => [c.profile_id, c])
+    );
+
+    // Fetch candidate profiles (only columns guaranteed to exist)
+    const { data: profiles, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, first_name, last_name, email")
+      .in("id", candidateIds);
+
+    if (profileError) {
+      console.error("[send-rejection-emails] profile fetch error:", profileError);
+      return NextResponse.json(
+        { error: "Failed to fetch profiles", details: profileError.message },
+        { status: 500 }
+      );
+    }
+
+    const fromEmail =
+      process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+    const results: { email: string; name: string; success: boolean; error?: string }[] = [];
+
+    for (const profile of profiles ?? []) {
+      const candidateName =
+        `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() ||
+        "Candidate";
+
+      // resume_url lives in evaluation results, not the profiles table
+      const resumeUrl = evalMap[profile.id]?.resume_url ?? "";
+
+      try {
+        const resumeText = resumeUrl
+          ? await extractTextFromPdf(resumeUrl)
+          : "";
+
+        const evalData = evalMap[profile.id] ?? {};
+
+        const { subject, body } = await generateRejectionEmail({
+          candidateName,
+          jobTitle: job.Job_Name || "the position",
+          jobDescription: job.Job_Description || "",
+          resumeText,
+          evalJustification: evalData.justification ?? "",
+          skillsMatch: evalData.skills_match ?? 0,
+          experienceRelevance: evalData.experience_relevance ?? 0,
+          communicationClarity: evalData.communication_clarity ?? 0,
+          finalScore: evalData.final_score ?? 0,
+        });
+
+        const { error: sendError } = await resend.emails.send({
+          from: fromEmail,
+          to: profile.email,
+          subject,
+          html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#222;">${body}</div>`,
+        });
+
+        if (sendError) {
+          results.push({
+            email: profile.email,
+            name: candidateName,
+            success: false,
+            error: sendError.message,
+          });
+        } else {
+          results.push({ email: profile.email, name: candidateName, success: true });
+        }
+      } catch (err: any) {
+        results.push({
+          email: profile.email,
+          name: candidateName,
+          success: false,
+          error: err?.message ?? "Unknown error",
+        });
+      }
+    }
+
+    // Mark job as rejection emails sent (column added via migration 003)
+    await (supabase.from("jobs") as any)
+      .update({ rejection_emails_sent: true })
+      .eq("job_id", jobId);
+
+    const successCount = results.filter((r) => r.success).length;
+
+    return NextResponse.json({
+      success: true,
+      message: `${successCount}/${results.length} rejection emails sent`,
+      results,
+    });
+  } catch (err: any) {
+    console.error("[send-rejection-emails]", err);
+    return NextResponse.json(
+      { error: err?.message ?? "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

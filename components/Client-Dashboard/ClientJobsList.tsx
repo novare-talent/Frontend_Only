@@ -22,6 +22,7 @@ type Job = {
   Applied_Candidates?: string[] | null;
   status: string;
   closingTime?: string | null;
+  rejection_emails_sent?: boolean | null;
 };
 
 export default function ClientJobs() {
@@ -199,6 +200,7 @@ export default function ClientJobs() {
                   className="hover:shadow-md transition-shadow"
                   duration={job.duration || undefined}
                   closingTime={job.closingTime || null}
+                  rejectionEmailsSent={!!job.rejection_emails_sent}
                 />
               </motion.div>
             ))}
