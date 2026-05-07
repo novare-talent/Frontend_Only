@@ -324,16 +324,15 @@ export default function TrainingPage() {
                 exit="exit"
                 whileHover={{
                   scale: 1.02,
-                  y: -4,
                   boxShadow:
-                    "0 0 18px color-mix(in srgb, var(--primary) 50%, transparent), 0 0 32px color-mix(in srgb, var(--primary) 25%, transparent)",
+                    "0 8px 28px color-mix(in srgb, var(--primary) 45%, transparent), 0 16px 48px color-mix(in srgb, var(--primary) 20%, transparent)",
                   transition: { duration: 0.35, ease: "easeOut" },
                 }}
-                className="will-change-transform transition-shadow rounded-2xl"
+                className="will-change-transform transition-shadow rounded-2xl h-full"
               >
                 <Card
                   isFooterBlurred
-                  className="relative overflow-hidden rounded-2xl border bg-card/80 shadow-sm"
+                  className="relative overflow-hidden rounded-2xl border bg-card/80 shadow-sm h-full"
                   radius="lg"
                 >
                   <div className="h-40 w-full overflow-hidden rounded-t-2xl">
@@ -352,10 +351,10 @@ export default function TrainingPage() {
                   <div className="p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold leading-tight">
+                        <h3 className="text-lg font-semibold leading-tight line-clamp-2">
                           {course.title}
                         </h3>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                           {course.description}
                         </p>
                       </div>
