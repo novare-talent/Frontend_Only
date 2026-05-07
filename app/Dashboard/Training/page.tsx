@@ -324,10 +324,10 @@ export default function TrainingPage() {
                 exit="exit"
                 whileHover={{
                   scale: 1.02,
-                  y: -6,
+                  y: -4,
                   boxShadow:
-                    "0 0 20px var(--primary), 0 0 40px var(--primary)",
-                  transition: { duration: 0.22 },
+                    "0 0 18px color-mix(in srgb, var(--primary) 50%, transparent), 0 0 32px color-mix(in srgb, var(--primary) 25%, transparent)",
+                  transition: { duration: 0.35, ease: "easeOut" },
                 }}
                 className="will-change-transform transition-shadow rounded-2xl"
               >
