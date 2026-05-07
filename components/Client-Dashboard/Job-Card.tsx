@@ -498,32 +498,52 @@ export function JobCard({
               </span>
             )}
 
-            <span className="text-green-600">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setDd(!dd)}
-                className="gap-2 hover:text-green-700"
+            <Popover open={dd} onOpenChange={setDd}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Users className="size-4" />
+                  Applied Candidates: {proposals}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="end"
+                side="top"
+                className="w-72 p-0 shadow-xl"
               >
-                <Users className="size-4" /> Applied Candidates: {proposals}
-              </Button>
-            </span>
-            {dd && (
-              <div className="absolute mt-64 sm:mt-48 sm:ml-64 w-64 bg-card border rounded-md shadow-md max-h-40 overflow-y-auto p-2">
+                <div className="flex items-center justify-between px-4 py-3 border-b">
+                  <p className="text-sm font-semibold text-foreground">Applied Candidates</p>
+                  <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                    {candidates.length}
+                  </span>
+                </div>
                 {candidates.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center">
-                    No candidates
-                  </p>
+                  <div className="px-4 py-6 text-center">
+                    <Users className="size-8 mx-auto mb-2 text-muted-foreground/40" />
+                    <p className="text-sm text-muted-foreground">No candidates yet</p>
+                  </div>
                 ) : (
-                  candidates.map((x, k) => (
-                    <div key={k} className="p-2 text-sm border-b last:border-0">
-                      <p className="font-medium">{x.name}</p>
-                      <p className="text-xs text-muted-foreground">{x.email}</p>
-                    </div>
-                  ))
+                  <div className="max-h-48 overflow-y-auto divide-y divide-border">
+                    {candidates.map((x, k) => (
+                      <div key={k} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 transition-colors">
+                        <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <span className="text-xs font-semibold text-primary">
+                            {x.name?.[0]?.toUpperCase() ?? "?"}
+                          </span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{x.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{x.email}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
-              </div>
-            )}
+              </PopoverContent>
+            </Popover>
           </div>
           </div>
 
