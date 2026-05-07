@@ -52,13 +52,14 @@ async function generateRejectionEmail(params: {
   } = params;
   const firstName = candidateName.split(" ")[0] || candidateName;
 
-  const prompt = `You are an HR manager at a company. Write a personalized rejection email for a job applicant.
+  const prompt = `You are an HR manager at Novare Talent. Write a personalized rejection email for a job applicant.
 
 STRICT RULES — violating any of these makes the email unusable:
 1. NEVER use placeholder text like [Job Title], [specific technologies], [X years], [specific area], etc.
 2. Use the EXACT job title provided — do not substitute it with anything.
 3. Use ONLY the specific information given below — do not invent or generalize.
 4. Every rejection reason must cite a concrete gap found in the evaluation data below.
+5. Do NOT include any closing line like "Thank you once again for your interest in our company" or similar phrases.
 
 ---
 CANDIDATE NAME: ${candidateName}
@@ -80,7 +81,7 @@ ${resumeText || "Resume text could not be extracted."}
 
 Write an email that:
 - Opens with "Dear ${firstName},"
-- Thanks them for applying to the "${jobTitle}" role (use this exact title)
+- Thanks them for applying to the "${jobTitle}" role on our platform Zenhyre by Novare Talent (use this exact title)
 - Explains 3-4 specific rejection reasons derived directly from the evaluation justification and scores above — name actual technologies, skills, or experience areas mentioned in the JD or evaluation
 - Frames each reason constructively as an area for growth
 - Ends warmly, wishing them well
