@@ -53,10 +53,13 @@ export function BillingPage() {
     message: string
   } | null>(null)
   const [hasSeenTour, setHasSeenTour] = useState(false)
-  
+  const [gstNumber, setGstNumber] = useState('')
+  const [isSavingGst, setIsSavingGst] = useState(false)
+
   const supabase = createClient()
 
   const AMOUNT_PER_JOB = 5000
+  const GST_RATE = 0.18
   const API_BASE_URL = '/api/payment-proxy'
 
   const showNotification = (type: 'success' | 'error' | 'info', title: string, message: string) => {
@@ -72,7 +75,7 @@ export function BillingPage() {
     try {
       const { data: subscription, error } = await supabase
         .from('subscriptions')
-        .select('jobs_remaining, evaluations_remaining')
+        .select('jobs_remaining, evaluations_remaining, gst_number')
         .eq('profile_id', profileId)
         .maybeSingle()
 
@@ -85,6 +88,7 @@ export function BillingPage() {
       if (subscription) {
         setCreditsRemaining(subscription.jobs_remaining || 0)
         setEvaluationsRemaining(subscription.evaluations_remaining || 0)
+        if (subscription.gst_number) setGstNumber(subscription.gst_number)
         return true
       } else {
         // No subscription found for this profile
@@ -118,7 +122,7 @@ export function BillingPage() {
             .select('id')
             .eq('id', user.id)
             .single()
-          
+
           if (!profileError && profile) {
             setProfileId(profile.id)
             await fetchSubscriptionData(profile.id)
@@ -220,6 +224,16 @@ export function BillingPage() {
     setIsProcessing(true)
 
     try {
+      // Persist GST number if provided
+      if (gstNumber.trim()) {
+        setIsSavingGst(true)
+        await supabase
+          .from('subscriptions')
+          .update({ gst_number: gstNumber.trim() })
+          .eq('profile_id', profileId)
+        setIsSavingGst(false)
+      }
+
       const requestUrl = `${API_BASE_URL}/start-payment/${profileId}?jobs=${jobsCount}`
 
       const controller = new AbortController()
@@ -321,7 +335,9 @@ export function BillingPage() {
     }
   }
 
-  const totalAmount = jobsCount * AMOUNT_PER_JOB
+  const baseAmount = jobsCount * AMOUNT_PER_JOB
+  const gstAmount = Math.round(baseAmount * GST_RATE)
+  const totalAmount = baseAmount + gstAmount
 
   const getNotificationIcon = () => {
     if (!notification) return null
@@ -577,7 +593,7 @@ export function BillingPage() {
           <DialogHeader>
             <DialogTitle>Add Job Credits</DialogTitle>
             <DialogDescription>
-              Purchase job posting credits. Each job credit costs ₹{AMOUNT_PER_JOB}.
+              Purchase job posting credits. ₹{AMOUNT_PER_JOB} + 18% GST per job.
             </DialogDescription>
           </DialogHeader>
           
@@ -607,14 +623,18 @@ export function BillingPage() {
                     <span className="font-medium">{jobsCount}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Price per job:</span>
-                    <span className="font-medium">₹{AMOUNT_PER_JOB}</span>
+                    <span className="text-muted-foreground">Base price ({jobsCount} × ₹{AMOUNT_PER_JOB}):</span>
+                    <span className="font-medium">₹{baseAmount.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">GST (18%):</span>
+                    <span className="font-medium">₹{gstAmount.toLocaleString()}</span>
                   </div>
                   <div className="border-t pt-2 mt-2">
                     <div className="flex justify-between">
                       <span className="font-semibold">Total Amount:</span>
                       <span className="font-bold text-purple-600 dark:text-purple-400">
-                        ₹{totalAmount}
+                        ₹{totalAmount.toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -622,12 +642,28 @@ export function BillingPage() {
               </CardContent>
             </Card>
 
+            <div className="grid gap-2">
+              <Label htmlFor="gst-number">GST Number <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <Input
+                id="gst-number"
+                type="text"
+                value={gstNumber}
+                onChange={(e) => setGstNumber(e.target.value.toUpperCase())}
+                placeholder="e.g. 22AAAAA0000A1Z5"
+                disabled={isProcessing}
+                maxLength={15}
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter your GST number to receive a tax invoice.
+              </p>
+            </div>
+
             <div className="space-y-3">
               <div id="where-money-goes" className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-3">
                 <div className="flex gap-2">
                   <Info className="h-4 w-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
                   <div className="text-xs text-green-900 dark:text-green-300">
-                    <p className="font-medium mb-1">Paying ₹{AMOUNT_PER_JOB} INR gives you:</p>
+                    <p className="font-medium mb-1">Paying ₹{AMOUNT_PER_JOB} + GST gives you:</p>
                     <p>1) A credit to create and publish your job/internship opening</p>
                     <p>2) Evaluate candidates once whenever you feel you have sufficient candidates</p>
                   </div>
