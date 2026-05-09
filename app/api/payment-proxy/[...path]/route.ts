@@ -48,13 +48,17 @@ async function proxyRequest(
   }
 }
 
+function buildBackendUrl(request: Request, pathStr: string): string {
+  const { search } = new URL(request.url);
+  return `https://payments.novaretalent.com/${pathStr}${search}`;
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params;
-  const pathStr = path.join('/');
-  const backendUrl = `https://payments.novaretalent.com/${pathStr}`;
+  const backendUrl = buildBackendUrl(request, path.join('/'));
   return proxyRequest(request, 'POST', backendUrl);
 }
 
@@ -63,8 +67,7 @@ export async function GET(
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params;
-  const pathStr = path.join('/');
-  const backendUrl = `https://payments.novaretalent.com/${pathStr}`;
+  const backendUrl = buildBackendUrl(request, path.join('/'));
   return proxyRequest(request, 'GET', backendUrl);
 }
 
@@ -73,8 +76,7 @@ export async function DELETE(
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params;
-  const pathStr = path.join('/');
-  const backendUrl = `https://payments.novaretalent.com/${pathStr}`;
+  const backendUrl = buildBackendUrl(request, path.join('/'));
   return proxyRequest(request, 'DELETE', backendUrl);
 }
 
@@ -83,8 +85,7 @@ export async function PUT(
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params;
-  const pathStr = path.join('/');
-  const backendUrl = `https://payments.novaretalent.com/${pathStr}`;
+  const backendUrl = buildBackendUrl(request, path.join('/'));
   return proxyRequest(request, 'PUT', backendUrl);
 }
 
@@ -93,7 +94,6 @@ export async function PATCH(
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params;
-  const pathStr = path.join('/');
-  const backendUrl = `https://payments.novaretalent.com/${pathStr}`;
+  const backendUrl = buildBackendUrl(request, path.join('/'));
   return proxyRequest(request, 'PATCH', backendUrl);
 }
