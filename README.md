@@ -280,7 +280,8 @@ Recruiter Journey
 └── 7. Responses (/client/responses/[id])
     ├── View all applications
     ├── Per-candidate deep dive (/client/responses/[id]/[profileId])
-    └── Send rejection emails (Resend + Novare Talent branding)
+    ├── Send AI-generated personalized rejection emails (Resend + Zenhyre by Novare Talent branding)
+    └── Rejection email status badge shown on job cards once sent
 ```
 
 #### Key Components (Recruiter)
@@ -313,6 +314,7 @@ Candidate Journey
 ├── 3. Browse Jobs (/Dashboard/Jobs)
 │   ├── Available openings
 │   ├── Filter by type, location, stipend
+│   ├── Sorted: active jobs by creation date (newest first), expired slide to bottom
 │   └── Job detail page (/Dashboard/Jobs/[id])
 │
 ├── 4. Apply (/submission)
@@ -321,7 +323,11 @@ Candidate Journey
 │   └── Success page (/submission/success)
 │
 ├── 5. Training (/Dashboard/Training)
-│   └── Skill-building resources
+│   ├── Browse curated career guides with PDF + thumbnail
+│   ├── Courses: AI/ML Engineer, Data Analyst, Product Manager, Finance Analyst,
+│   │   Robotics Engineer, Prompt Engineer, MLOps Engineer, Full Stack Engineer,
+│   │   DevOps Engineer, Cybersecurity Engineer, CFA Introduction, App Developer
+│   └── PDFs and thumbnails served from Supabase Storage (training/ bucket)
 │
 └── 6. Account (/Dashboard/Account)
     └── Profile management
@@ -348,7 +354,9 @@ Admin Capabilities
 ├── Full job management (create, edit, delete)
 ├── User management (/admin/users, /admin/users/[id])
 ├── Evaluate all candidates (/admin/evaluate)
+│   └── Send AI-generated rejection emails per job with tracking
 ├── View all responses (/admin/responses)
+│   └── Job cards display live response counts
 └── Sidebar navigation with full platform access
 ```
 
@@ -474,6 +482,12 @@ MultiSessionContext.tsx
 ## Authentication & Roles
 
 ```
+Candidate Sign-Up — Allowed Email Domains
+─────────────────────────────────────────
+IIT institutional emails only: iitb.ac.in, iitbombay.org, iitm.ac.in, iitd.ac.in,
+iitk.ac.in, iitkgp.ac.in, iitg.ac.in, iitr.ac.in, and 20+ other IIT domains.
+Recruiters must use an official company email (IIT and gmail domains are blocked).
+
 Auth Flow
 ─────────
 Browser ──▶ middleware.ts (Edge) ──▶ utils/supabase/middleware.ts
@@ -572,7 +586,10 @@ Supabase PostgreSQL
 
 Storage Buckets
 ├── jd/          ← Job description PDFs
-└── submissions/ ← Assignment submissions
+├── submissions/ ← Assignment submissions
+└── training/    ← Training course assets
+    ├── pdfs/    ← Career guide PDFs
+    └── images/  ← Course thumbnail images
 ```
 
 ### SQL Migrations
@@ -620,6 +637,7 @@ migrations/
 ### Proxy Design Pattern
 ```typescript
 // All proxies forward path + query string to respective backend
+// query string (e.g. ?jobs=N) is preserved to avoid backend default fallbacks
 function buildBackendUrl(request: Request, pathStr: string): string {
   const { search } = new URL(request.url);
   return `https://<backend-host>/${pathStr}${search}`;
@@ -706,7 +724,8 @@ next.config.ts highlights
 ├── Image Optimization
 │   ├── formats: ['image/avif', 'image/webp']
 │   ├── deviceSizes: [640, 768, 1024, 1280, 1536, 1920, 2560, 3840]
-│   └── minimumCacheTTL: 60
+│   ├── minimumCacheTTL: 60
+│   └── remotePatterns: *.supabase.co/storage/v1/object/public/** (training images)
 │
 ├── Security Headers (applied to all routes)
 │   ├── Strict-Transport-Security (HSTS, max-age=63072000)
