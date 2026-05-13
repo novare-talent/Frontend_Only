@@ -367,57 +367,48 @@ export function JobCreateForm({
 
         {/* JD Upload */}
         <div className="space-y-2">
-          <Label htmlFor="jd-file" className="text-sm font-medium text-foreground">
-            Upload Your Job Description (PDF Only) <span className="text-destructive">*</span>
+          <Label htmlFor="jd-file" className={cn("text-sm font-medium", mode === "edit" ? "text-muted-foreground" : "text-foreground")}>
+            Upload Your Job Description (PDF Only) {mode !== "edit" && <span className="text-destructive">*</span>}
           </Label>
-          <p className="text-xs text-muted-foreground">Upload a detailed job description document (Max 5MB)</p>
-          <div className="relative">
+          <p className="text-xs text-muted-foreground">
+            {mode === "edit" ? "Job description PDF cannot be changed after posting." : "Upload a detailed job description document (Max 5MB)"}
+          </p>
+          <div className={cn("relative", mode === "edit" && "opacity-60 pointer-events-none cursor-not-allowed")}>
             <label
               htmlFor="jd-file"
               className={cn(
-                "flex cursor-pointer items-center justify-between rounded-lg border-2 border-dashed px-4 py-6 transition-all duration-200",
-                isDragOver
-                  ? "border-primary bg-primary/10 shadow-md"
-                  : "border-primary/40 bg-card/60 hover:border-primary hover:bg-primary/5 hover:shadow-sm"
+                "flex items-center justify-between rounded-lg border-2 border-dashed px-4 py-6 transition-all duration-200",
+                mode === "edit"
+                  ? "cursor-not-allowed border-muted-foreground/25 bg-muted/30"
+                  : cn(
+                      "cursor-pointer",
+                      isDragOver
+                        ? "border-primary bg-primary/10 shadow-md"
+                        : "border-primary/40 bg-card/60 hover:border-primary hover:bg-primary/5 hover:shadow-sm"
+                    )
               )}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
+              onDragOver={mode === "edit" ? undefined : handleDragOver}
+              onDragLeave={mode === "edit" ? undefined : handleDragLeave}
+              onDrop={mode === "edit" ? undefined : handleDrop}
             >
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-foreground">
                   {value.jdFileName ? value.jdFileName : isDragOver ? "Drop PDF file here" : "Drag & drop PDF or click to upload"}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {value.jdFileName ? "Click to change file" : "Only PDF format supported (Max 5MB)"}
+                  {mode === "edit" ? "Cannot be changed" : value.jdFileName ? "Click to change file" : "Only PDF format supported (Max 5MB)"}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                {value.jdFileName && (
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleFileSelect(null);
-                    }}
-                  >
-                    ×
-                  </Button>
-                )}
-                <Button type="button" variant="outline" size="sm" className="pointer-events-none">
-                  {value.jdFileName ? "Change" : "Choose PDF"}
-                </Button>
-              </div>
+              <Button type="button" variant="outline" size="sm" className="pointer-events-none" disabled={mode === "edit"}>
+                {value.jdFileName ? "Change" : "Choose PDF"}
+              </Button>
             </label>
             <input
               id="jd-file"
               type="file"
               accept=".pdf,application/pdf"
               className="sr-only"
+              disabled={mode === "edit"}
               onChange={(e) => {
                 const f = e.target.files?.[0] ?? null
                 if (f) {
