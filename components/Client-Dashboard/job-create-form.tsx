@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
+import { Lock } from "lucide-react"
 
 export type JobMeta = {
   title: string
@@ -238,8 +239,9 @@ export function JobCreateForm({
 
         {/* Closing Time */}
         <div className="grid gap-2">
-          <Label htmlFor="closing" className="text-sm font-medium text-foreground">
+          <Label htmlFor="closing" className="text-sm font-medium text-foreground flex items-center gap-1.5">
             Application Deadline {mode !== "edit" && <span className="text-destructive">*</span>}
+            {mode === "edit" && <Lock className="h-3.5 w-3.5 text-muted-foreground" />}
           </Label>
           <Input
             id="closing"
@@ -254,7 +256,10 @@ export function JobCreateForm({
             className={mode === "edit" ? "opacity-60 cursor-not-allowed" : ""}
           />
           {mode === "edit" ? (
-            <p className="text-xs text-amber-600">The application deadline cannot be changed after a job is posted.</p>
+            <div className="flex items-start gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-400">
+              <Lock className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+              <span>The deadline is locked after posting. This prevents extending a job indefinitely on a single credit.</span>
+            </div>
           ) : (
             <p className="text-xs text-muted-foreground">Deadline must be within 15 days from today</p>
           )}
@@ -367,12 +372,19 @@ export function JobCreateForm({
 
         {/* JD Upload */}
         <div className="space-y-2">
-          <Label htmlFor="jd-file" className={cn("text-sm font-medium", mode === "edit" ? "text-muted-foreground" : "text-foreground")}>
+          <Label htmlFor="jd-file" className={cn("text-sm font-medium flex items-center gap-1.5", mode === "edit" ? "text-muted-foreground" : "text-foreground")}>
             Upload Your Job Description (PDF Only) {mode !== "edit" && <span className="text-destructive">*</span>}
+            {mode === "edit" && <Lock className="h-3.5 w-3.5" />}
           </Label>
-          <p className="text-xs text-muted-foreground">
-            {mode === "edit" ? "Job description PDF cannot be changed after posting." : "Upload a detailed job description document (Max 5MB)"}
-          </p>
+          {mode === "edit" ? (
+            <div className="flex items-start gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-400">
+              <Lock className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+              <span>The job description PDF is locked after posting. To change it, you would need to create a new job listing.</span>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">Upload a detailed job description document (Max 5MB)</p>
+          )}
+
           <div className={cn("relative", mode === "edit" && "opacity-60 pointer-events-none cursor-not-allowed")}>
             <label
               htmlFor="jd-file"
