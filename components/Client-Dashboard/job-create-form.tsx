@@ -239,18 +239,25 @@ export function JobCreateForm({
         {/* Closing Time */}
         <div className="grid gap-2">
           <Label htmlFor="closing" className="text-sm font-medium text-foreground">
-            Application Deadline <span className="text-destructive">*</span>
+            Application Deadline {mode !== "edit" && <span className="text-destructive">*</span>}
           </Label>
           <Input
             id="closing"
             type="datetime-local"
             value={value.closingTime}
-            onChange={(e) => set("closingTime", e.target.value)}
+            onChange={mode === "edit" ? undefined : (e) => set("closingTime", e.target.value)}
             min={minDate}
             max={maxDate}
             autoComplete="off"
+            disabled={mode === "edit"}
+            readOnly={mode === "edit"}
+            className={mode === "edit" ? "opacity-60 cursor-not-allowed" : ""}
           />
-          <p className="text-xs text-muted-foreground">Deadline must be within 15 days from {mode === "edit" ? "job creation" : "today"}</p>
+          {mode === "edit" ? (
+            <p className="text-xs text-amber-600">The application deadline cannot be changed after a job is posted.</p>
+          ) : (
+            <p className="text-xs text-muted-foreground">Deadline must be within 15 days from today</p>
+          )}
         </div>
 
         {/* Skills - Full Width Row */}

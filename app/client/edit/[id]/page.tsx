@@ -162,11 +162,9 @@ export default function EditJobPage() {
       const jobUpdateData: any = {
         Job_Name: meta.title,
         Job_Description: meta.description,
-        level: meta.experience,
         stipend: meta.stipend,
         location: meta.location,
         duration: meta.duration,
-        closingTime: meta.closingTime,
         tags: meta.tags,
       }
 
@@ -181,11 +179,6 @@ export default function EditJobPage() {
         transformedLevel = meta.experience ? `Job - ${meta.experience}` : "Job";
       }
       jobUpdateData.level = transformedLevel;
-
-      // Convert local time to UTC for closingTime
-      if (meta.closingTime) {
-        jobUpdateData.closingTime = new Date(meta.closingTime).toISOString();
-      }
 
       const { data: job, error: jobError } = await supabase
         .from('jobs')
