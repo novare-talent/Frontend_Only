@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/popover"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { CreditCard, Package, Loader2, CheckCircle2, XCircle, Info, RefreshCw } from "lucide-react"
+import { CreditCard, Package, Loader2, CheckCircle2, XCircle, Info, RefreshCw, Gift } from "lucide-react"
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { createClient } from "@/utils/supabase/client"
@@ -55,6 +55,9 @@ export function BillingPage() {
   const [hasSeenTour, setHasSeenTour] = useState(false)
   const [gstNumber, setGstNumber] = useState('')
   const [isSavingGst, setIsSavingGst] = useState(false)
+  const [referralCode, setReferralCode] = useState('')
+  const [isApplyingReferral, setIsApplyingReferral] = useState(false)
+  const [referralApplied, setReferralApplied] = useState(false)
 
   const supabase = createClient()
 
@@ -116,15 +119,17 @@ export function BillingPage() {
           const tourSeen = localStorage.getItem(`billing-modal-tour-seen-${user.id}`)
           setHasSeenTour(!!tourSeen)
           
-          // Fetch profile_id from profiles table
+          // Fetch profile_id and referral status from profiles table
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('id')
+            .select('id, referral_applied')
             .eq('id', user.id)
             .single()
 
           if (!profileError && profile) {
             setProfileId(profile.id)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            setReferralApplied(!!(profile as any).referral_applied)
             await fetchSubscriptionData(profile.id)
           } else {
             showNotification('error', 'Error', 'Failed to load profile data')
@@ -157,6 +162,51 @@ export function BillingPage() {
     }
     
     setIsRefreshing(false)
+  }
+
+  const handleApplyReferral = async () => {
+    if (!referralCode.trim()) {
+      showNotification('error', 'Missing Code', 'Please enter a referral code')
+      return
+    }
+
+    setIsApplyingReferral(true)
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      if (!token) {
+        showNotification('error', 'Authentication Required', 'You must be logged in to apply a referral code')
+        return
+      }
+
+      const response = await fetch('/api/apply-referral', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ code: referralCode.trim() }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        const isInvalidCode = response.status === 400 && data.error?.toLowerCase().includes('invalid referral')
+        const detail = data.details ? ` (${JSON.stringify(data.details)})` : ''
+        showNotification('error', isInvalidCode ? 'Invalid Code' : 'Error', (data.error || 'Failed to apply referral code') + detail)
+        return
+      }
+
+      setReferralApplied(true)
+      setCreditsRemaining(data.jobs_remaining)
+      setReferralCode('')
+      showNotification('success', 'Referral Applied!', '1 free job creation credit has been added to your account')
+    } catch {
+      showNotification('error', 'Error', 'Failed to apply referral code. Please try again.')
+    } finally {
+      setIsApplyingReferral(false)
+    }
   }
 
   const startTour = () => {
@@ -505,6 +555,73 @@ export function BillingPage() {
             </motion.div>
           </div>
         </div>
+
+        {/* Referral Code Section */}
+        {!referralApplied ? (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut", delay: 0.2 }}
+            className="mb-8"
+          >
+            <Card className="border border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/20">
+              <CardContent className="px-6 py-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="p-1.5 bg-purple-100 dark:bg-purple-900/50 rounded-md">
+                    <Gift className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <h3 className="font-semibold text-foreground">Have a Referral Code?</h3>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Enter a valid referral code to get 1 free job creation credit added to your account.
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                    placeholder="Enter referral code"
+                    disabled={isApplyingReferral}
+                    className="max-w-xs"
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleApplyReferral() }}
+                  />
+                  <Button
+                    onClick={handleApplyReferral}
+                    disabled={isApplyingReferral || !referralCode.trim()}
+                    className="bg-purple-600 hover:bg-purple-700 text-white"
+                  >
+                    {isApplyingReferral ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Applying...
+                      </>
+                    ) : (
+                      'Apply'
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut", delay: 0.2 }}
+            className="mb-8"
+          >
+            <Card className="border border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-950/20">
+              <CardContent className="px-6 py-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                  <p className="text-sm text-green-800 dark:text-green-300 font-medium">
+                    Referral code already applied to this account
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Payment History Section */}
         {/* <div>
