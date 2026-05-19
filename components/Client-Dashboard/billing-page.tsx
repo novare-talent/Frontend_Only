@@ -54,7 +54,7 @@ export function BillingPage() {
   } | null>(null)
   const [hasSeenTour, setHasSeenTour] = useState(false)
   const [gstNumber, setGstNumber] = useState('')
-  const [isSavingGst, setIsSavingGst] = useState(false)
+  const [isSavingGst, setIsSavingGst] = useState(false) // eslint-disable-line @typescript-eslint/no-unused-vars
   const [referralCode, setReferralCode] = useState('')
   const [isApplyingReferral, setIsApplyingReferral] = useState(false)
   const [referralApplied, setReferralApplied] = useState(false)
@@ -128,8 +128,7 @@ export function BillingPage() {
 
           if (!profileError && profile) {
             setProfileId(profile.id)
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            setReferralApplied(!!(profile as any).referral_applied)
+            setReferralApplied(!!(profile as Record<string, unknown>).referral_applied)
             await fetchSubscriptionData(profile.id)
           } else {
             showNotification('error', 'Error', 'Failed to load profile data')

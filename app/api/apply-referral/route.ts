@@ -91,15 +91,17 @@ export async function POST(req: NextRequest) {
       }
     } else {
       newJobsRemaining = 1;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const insertPayload: any = {
+        id: crypto.randomUUID(),
+        profile_id: userId,
+        jobs_remaining: 1,
+        evaluations_remaining: 0,
+        status: "paid",
+      };
       const { error: insertError } = await supabaseAdmin
         .from("subscriptions")
-        .insert({
-          id: crypto.randomUUID(),
-          profile_id: userId,
-          jobs_remaining: 1,
-          evaluations_remaining: 0,
-          status: "paid",
-        });
+        .insert(insertPayload);
 
       if (insertError) {
         return NextResponse.json({ error: "Failed to create subscription", details: insertError }, { status: 500 });
