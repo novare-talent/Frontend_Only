@@ -68,7 +68,7 @@ const allCourses = [
     title: "Founder's Office",
     description: "Strategies for startup success and growth.",
     level: "Beginner",
-    pdfUrl: "/Training/Founder_Office.pdf",
+    pdfUrl: sbPdf("Founder's Office.pdf"),
     imageUrl: "/Training/Images/Founder's office.png",
   },
   {
