@@ -545,7 +545,7 @@ export default function JobsGrid() {
 
       {currentData.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12">
-          <p className="text-center text-gray-500 text-md">
+          <p className="text-center text-muted-foreground text-md">
             {activeTab === "jobs" 
               ? "No jobs available at the moment."
               : activeTab === "internships"

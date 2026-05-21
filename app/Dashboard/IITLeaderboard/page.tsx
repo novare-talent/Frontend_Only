@@ -4,6 +4,44 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { GraduationCap, Users } from "lucide-react";
 
+// ─── Per-rank colour tokens ───────────────────────────────────────────────────
+// All tokens follow light-first convention; dark: overrides where needed.
+const RANK_THEME = {
+  1: {
+    crestBg:     "bg-gradient-to-br from-cyan-100 to-teal-100 dark:from-cyan-500/30 dark:to-teal-600/30",
+    crestBorder: "border-cyan-400 dark:border-cyan-400",
+    crestGlow:   "shadow-[0_0_18px_2px_rgba(34,211,238,0.25)]",
+    icon:        "text-cyan-600 dark:text-cyan-300",
+    rankNum:     "text-cyan-600 dark:text-cyan-300",
+    label:       "text-foreground",
+    count:       "text-cyan-600 dark:text-cyan-400",
+    rankLabel:   "text-cyan-600 dark:text-cyan-400",
+    platform:    "from-cyan-200/70 to-cyan-50/40 dark:from-cyan-500/25 dark:to-teal-500/10 border-cyan-300 dark:border-cyan-500/30",
+  },
+  2: {
+    crestBg:     "bg-gradient-to-br from-slate-200 to-slate-100 dark:from-slate-400/25 dark:to-blue-500/20",
+    crestBorder: "border-slate-400",
+    crestGlow:   "shadow-[0_0_14px_2px_rgba(148,163,184,0.2)]",
+    icon:        "text-slate-600 dark:text-slate-300",
+    rankNum:     "text-slate-600 dark:text-slate-300",
+    label:       "text-foreground",
+    count:       "text-slate-700 dark:text-slate-300",
+    rankLabel:   "text-slate-500 dark:text-slate-400",
+    platform:    "from-slate-200/70 to-slate-100/40 dark:from-slate-500/20 dark:to-blue-600/10 border-slate-300 dark:border-slate-500/30",
+  },
+  3: {
+    crestBg:     "bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-500/25 dark:to-orange-600/20",
+    crestBorder: "border-amber-500",
+    crestGlow:   "shadow-[0_0_14px_2px_rgba(245,158,11,0.2)]",
+    icon:        "text-amber-600 dark:text-amber-400",
+    rankNum:     "text-amber-600 dark:text-amber-400",
+    label:       "text-foreground",
+    count:       "text-amber-700 dark:text-amber-400",
+    rankLabel:   "text-amber-600 dark:text-amber-500",
+    platform:    "from-amber-100/70 to-amber-50/40 dark:from-amber-500/20 dark:to-orange-600/10 border-amber-300 dark:border-amber-500/30",
+  },
+} as const;
+
 // Ordered most-specific → least-specific so longer codes shadow shorter ones
 // e.g. "iitkgp" is checked before "iitk", "iitmandi" before "iitm", etc.
 const IIT_PATTERNS: [RegExp, string][] = [
@@ -66,42 +104,6 @@ const IIT_SHORT: Record<string, string> = {
   "IIT Goa": "IITGoa",
 };
 
-const RANK_THEME = {
-  1: {
-    crestBorder: "border-cyan-400",
-    crestBg: "from-cyan-500/30 to-teal-600/30",
-    crestGlow: "shadow-[0_0_18px_2px_rgba(34,211,238,0.35)]",
-    icon: "text-cyan-300",
-    rankNum: "text-cyan-300",
-    label: "text-white",
-    count: "text-cyan-400",
-    rankLabel: "text-cyan-400",
-    platform: "from-cyan-500/25 to-teal-500/10 border-cyan-500/30",
-  },
-  2: {
-    crestBorder: "border-slate-400",
-    crestBg: "from-slate-400/25 to-blue-500/20",
-    crestGlow: "shadow-[0_0_14px_2px_rgba(148,163,184,0.25)]",
-    icon: "text-slate-300",
-    rankNum: "text-slate-300",
-    label: "text-gray-300",
-    count: "text-slate-300",
-    rankLabel: "text-slate-400",
-    platform: "from-slate-500/20 to-blue-600/10 border-slate-500/30",
-  },
-  3: {
-    crestBorder: "border-amber-500",
-    crestBg: "from-amber-500/25 to-orange-600/20",
-    crestGlow: "shadow-[0_0_14px_2px_rgba(245,158,11,0.25)]",
-    icon: "text-amber-400",
-    rankNum: "text-amber-400",
-    label: "text-gray-300",
-    count: "text-amber-400",
-    rankLabel: "text-amber-500",
-    platform: "from-amber-500/20 to-orange-600/10 border-amber-500/30",
-  },
-} as const;
-
 function getMonthYear() {
   return new Date().toLocaleString("en-IN", { month: "long", year: "numeric" });
 }
@@ -111,7 +113,7 @@ function PodiumCrest({ name, rank }: { name: string; rank: 1 | 2 | 3 }) {
   const t = RANK_THEME[rank];
   return (
     <div
-      className={`flex flex-col items-center justify-center w-18 h-18 rounded-full border-2 bg-gradient-to-br ${t.crestBorder} ${t.crestBg} ${t.crestGlow} text-center`}
+      className={`flex flex-col items-center justify-center rounded-full border-2 ${t.crestBg} ${t.crestBorder} ${t.crestGlow} text-center`}
       style={{ width: 72, height: 72 }}
     >
       <GraduationCap className={`h-3.5 w-3.5 ${t.icon}`} />
@@ -212,7 +214,7 @@ const [loading, setLoading] = useState(true);
       <div className="max-w-3xl mx-auto w-full">
         {/* Title */}
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-black tracking-tight">The IIT leaderboard</h1>
+          <h1 className="text-3xl font-black tracking-tight text-foreground">The IIT leaderboard</h1>
           <p className="text-sm text-muted-foreground mt-1">
             IITians on Novare Talent &middot; {getMonthYear()}
           </p>
@@ -234,7 +236,7 @@ const [loading, setLoading] = useState(true);
           <>
             {/* Podium — top 3 */}
             {top3.length > 0 && (
-              <div className="rounded-xl bg-gray-900 dark:bg-gray-950 p-6 mb-4">
+              <div className="rounded-xl border bg-card p-6 mb-4">
                 <div className="flex items-end gap-3">
                   {podiumOrder.map((entry, i) =>
                     entry ? (
@@ -264,8 +266,8 @@ const [loading, setLoading] = useState(true);
                     <span className="text-xs font-bold text-muted-foreground shrink-0">
                       {String(i + 4).padStart(2, "0")}
                     </span>
-                    <span className="flex-1 font-medium text-xs truncate">{iit}</span>
-                    <span className="font-bold tabular-nums text-sm shrink-0">{count}</span>
+                    <span className="flex-1 font-medium text-xs truncate text-gray-800 dark:text-gray-200">{iit}</span>
+                    <span className="font-bold tabular-nums text-sm shrink-0 text-gray-900 dark:text-gray-100">{count}</span>
                   </div>
                 ))}
               </div>
@@ -276,7 +278,7 @@ const [loading, setLoading] = useState(true);
               <span className="text-sm font-semibold text-muted-foreground tracking-wide uppercase">
                 Total on Platform
               </span>
-              <span className="text-2xl font-black">{totalIITUsers}</span>
+              <span className="text-2xl font-black text-gray-900 dark:text-gray-100">{totalIITUsers}</span>
             </div>
 
             <p className="text-center text-xs text-muted-foreground mt-3">

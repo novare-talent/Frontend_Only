@@ -166,7 +166,7 @@ export default function AppliedJobsGrid() {
 
       {/* No Jobs */}
       {jobs.length === 0 && (
-        <p className="text-center text-gray-500 mb-4 mt-24 pt-20">
+        <p className="text-center text-muted-foreground mb-4 mt-24 pt-20">
           You haven’t applied to any jobs yet.
         </p>
       )}
