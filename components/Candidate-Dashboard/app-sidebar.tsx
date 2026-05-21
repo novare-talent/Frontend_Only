@@ -7,6 +7,7 @@ import {
   IconListDetails,
   IconTrendingUp,
   IconSparkles,
+  IconTrophy,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/Candidate-Dashboard/nav-main";
@@ -45,6 +46,11 @@ const data = {
       title: "IIT Placements",
       url: "/iit-placements",
       icon: IconTrendingUp,
+    },
+    {
+      title: "IIT Leaderboard",
+      url: "/Dashboard/IITLeaderboard",
+      icon: IconTrophy,
     },
     {
       title: "Try ArenaX",
