@@ -66,7 +66,7 @@ export default function JobTable() {
               jobs.map((job) => (
                 <TableRow key={job.id}>
                   <TableCell className="font-medium">{job.Job_Name}</TableCell>
-                  <TableCell className="text-sm text-gray-600">
+                  <TableCell className="text-sm text-muted-foreground">
                     {job.Job_Description}
                   </TableCell>
                   <TableCell>
@@ -80,7 +80,7 @@ export default function JobTable() {
                         View PDF
                       </a>
                     ) : (
-                      <span className="text-gray-400">N/A</span>
+                      <span className="text-muted-foreground">N/A</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -94,7 +94,7 @@ export default function JobTable() {
                         Open Form
                       </a>
                     ) : (
-                      <span className="text-gray-400">N/A</span>
+                      <span className="text-muted-foreground">N/A</span>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
@@ -109,7 +109,7 @@ export default function JobTable() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-gray-500">
+                <TableCell colSpan={5} className="text-center text-muted-foreground">
                   No jobs available.
                 </TableCell>
               </TableRow>
