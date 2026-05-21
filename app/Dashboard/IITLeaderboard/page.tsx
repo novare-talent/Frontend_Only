@@ -4,33 +4,41 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { GraduationCap, Users } from "lucide-react";
 
-const IIT_DOMAINS: Record<string, string> = {
-  "iitb.ac.in": "IIT Bombay",
-  "iitd.ac.in": "IIT Delhi",
-  "iitm.ac.in": "IIT Madras",
-  "iitkgp.ac.in": "IIT Kharagpur",
-  "kgpian.iitkgp.ac.in": "IIT Kharagpur",
-  "iitk.ac.in": "IIT Kanpur",
-  "iitr.ac.in": "IIT Roorkee",
-  "iitg.ac.in": "IIT Guwahati",
-  "iith.ac.in": "IIT Hyderabad",
-  "iitgn.ac.in": "IIT Gandhinagar",
-  "iitj.ac.in": "IIT Jodhpur",
-  "iitp.ac.in": "IIT Patna",
-  "iitrpr.ac.in": "IIT Ropar",
-  "iitmandi.ac.in": "IIT Mandi",
-  "iiti.ac.in": "IIT Indore",
-  "iitbhu.ac.in": "IIT BHU (Varanasi)",
-  "itbhu.ac.in": "IIT BHU (Varanasi)",
-  "iitbbs.ac.in": "IIT Bhubaneswar",
-  "iittp.ac.in": "IIT Tirupati",
-  "iitism.ac.in": "IIT (ISM) Dhanbad",
-  "iitjammu.ac.in": "IIT Jammu",
-  "iitbhilai.ac.in": "IIT Bhilai",
-  "iitdh.ac.in": "IIT Dharwad",
-  "iitpkd.ac.in": "IIT Palakkad",
-  "iitgoa.ac.in": "IIT Goa",
-};
+// Ordered most-specific → least-specific so longer codes shadow shorter ones
+// e.g. "iitkgp" is checked before "iitk", "iitmandi" before "iitm", etc.
+const IIT_PATTERNS: [RegExp, string][] = [
+  [/iitkgp|kgpian/,        "IIT Kharagpur"],
+  [/iitjammu/,             "IIT Jammu"],
+  [/iitbhilai/,            "IIT Bhilai"],
+  [/iitbhu|itbhu/,         "IIT BHU (Varanasi)"],
+  [/iitbbs/,               "IIT Bhubaneswar"],
+  [/iitism/,               "IIT (ISM) Dhanbad"],
+  [/iitmandi/,             "IIT Mandi"],
+  [/iitrpr/,               "IIT Ropar"],
+  [/iitgoa/,               "IIT Goa"],
+  [/iitgn/,                "IIT Gandhinagar"],
+  [/iitpkd/,               "IIT Palakkad"],
+  [/iittp/,                "IIT Tirupati"],
+  [/iitdh/,                "IIT Dharwad"],
+  [/iitb/,                 "IIT Bombay"],
+  [/iitd/,                 "IIT Delhi"],
+  [/iitm/,                 "IIT Madras"],
+  [/iitk/,                 "IIT Kanpur"],
+  [/iitr/,                 "IIT Roorkee"],
+  [/iitg/,                 "IIT Guwahati"],
+  [/iith/,                 "IIT Hyderabad"],
+  [/iitj/,                 "IIT Jodhpur"],
+  [/iitp/,                 "IIT Patna"],
+  [/iiti/,                 "IIT Indore"],
+];
+
+function detectIIT(domain: string): string | null {
+  const d = domain.toLowerCase();
+  for (const [pattern, name] of IIT_PATTERNS) {
+    if (pattern.test(d)) return name;
+  }
+  return null;
+}
 
 const IIT_SHORT: Record<string, string> = {
   "IIT Bombay": "IITB",
@@ -148,7 +156,7 @@ function PodiumCard({
 export default function IITLeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState<{ iit: string; count: number }[]>([]);
   const [totalIITUsers, setTotalIITUsers] = useState(0);
-  const [loading, setLoading] = useState(true);
+const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchLeaderboard() {
@@ -171,10 +179,11 @@ export default function IITLeaderboardPage() {
       }
 
       const counts: Record<string, number> = {};
+
       for (const email of allEmails) {
         const domain = email.split("@")[1]?.toLowerCase();
         if (!domain) continue;
-        const iit = IIT_DOMAINS[domain];
+        const iit = detectIIT(domain);
         if (iit) counts[iit] = (counts[iit] ?? 0) + 1;
       }
 
