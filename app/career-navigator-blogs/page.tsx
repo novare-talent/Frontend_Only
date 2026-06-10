@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Search, FileText, DownloadCloud, BookOpen, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import Navbar from "@/components/landing/layout/Navbar";
+import Image from "next/image";
 import { allBlogs, type BlogPost } from "./blogData";
 
 const levelColors: Record<string, string> = {
@@ -14,13 +14,37 @@ const levelColors: Record<string, string> = {
 
 const levelFilters = ["All", "Beginner", "Intermediate", "Advanced"] as const;
 
+function BlogHeader() {
+  return (
+    <header className="fixed top-0 left-0 right-0 h-14 z-50 flex items-center justify-between px-5 sm:px-8 bg-neutral-950/95 backdrop-blur-sm border-b border-white/10">
+      <a href="/" className="flex items-center gap-2 shrink-0">
+        <Image src="/images/logo.svg" alt="Novare Talent" width={130} height={24} />
+      </a>
+      <div className="flex items-center gap-2 sm:gap-3">
+        <a
+          href="https://arena.novaretalent.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 rounded-full border border-violet-500 text-violet-300 text-xs font-semibold px-3 sm:px-4 py-1.5 hover:bg-violet-500/20 transition-colors whitespace-nowrap"
+        >
+          Try ArenaX <sup className="text-[9px] leading-none">beta</sup>
+        </a>
+        <a
+          href="/sign-in"
+          className="inline-flex items-center rounded-full bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold px-3 sm:px-4 py-1.5 transition-colors whitespace-nowrap"
+        >
+          Start your Journey
+        </a>
+      </div>
+    </header>
+  );
+}
+
 export default function CareerNavigatorBlogsPage() {
   const [selectedId, setSelectedId] = useState<string>(allBlogs[0].id);
   const [search, setSearch] = useState("");
   const [levelFilter, setLevelFilter] = useState<string>("All");
   const mainRef = useRef<HTMLDivElement>(null);
-
-  const selected = allBlogs.find((b) => b.id === selectedId) ?? allBlogs[0];
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -35,24 +59,25 @@ export default function CareerNavigatorBlogsPage() {
     });
   }, [search, levelFilter]);
 
+  const selected = allBlogs.find((b) => b.id === selectedId) ?? allBlogs[0];
+
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [selectedId]);
 
-  const handleSelect = (id: string) => {
-    setSelectedId(id);
-  };
-
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Navbar />
+    <div className="flex flex-col bg-background" style={{ height: "100dvh" }}>
+      <BlogHeader />
+
+      {/* Spacer to push content below fixed header */}
+      <div className="h-14 shrink-0" />
 
       {/* Mobile topic pills */}
       <div className="md:hidden border-b bg-card/50 px-4 py-3 overflow-x-auto flex gap-2 shrink-0">
         {filtered.map((b) => (
           <button
             key={b.id}
-            onClick={() => handleSelect(b.id)}
+            onClick={() => setSelectedId(b.id)}
             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors ${
               b.id === selectedId
                 ? "bg-violet-600 text-white border-violet-600"
@@ -64,7 +89,8 @@ export default function CareerNavigatorBlogsPage() {
         ))}
       </div>
 
-      <div className="flex flex-1 overflow-hidden" style={{ height: "calc(100vh - 64px)" }}>
+      {/* Two-panel layout fills remaining viewport */}
+      <div className="flex flex-1 overflow-hidden min-h-0">
         {/* ── Sidebar ── */}
         <aside className="hidden md:flex flex-col w-72 shrink-0 border-r bg-card/40 overflow-hidden">
           <div className="p-4 border-b space-y-3">
@@ -109,7 +135,7 @@ export default function CareerNavigatorBlogsPage() {
               filtered.map((b) => (
                 <button
                   key={b.id}
-                  onClick={() => handleSelect(b.id)}
+                  onClick={() => setSelectedId(b.id)}
                   className={`w-full text-left px-3 py-2.5 flex items-start gap-3 transition-colors group ${
                     b.id === selectedId
                       ? "bg-violet-50 dark:bg-violet-950/30 border-l-2 border-violet-500"
@@ -153,10 +179,7 @@ export default function CareerNavigatorBlogsPage() {
         </aside>
 
         {/* ── Main blog content ── */}
-        <main
-          ref={mainRef}
-          className="flex-1 overflow-y-auto"
-        >
+        <main ref={mainRef} className="flex-1 overflow-y-auto">
           <BlogContent blog={selected} />
         </main>
       </div>
@@ -169,18 +192,12 @@ function BlogContent({ blog }: { blog: BlogPost }) {
     <article className="max-w-3xl mx-auto px-4 sm:px-8 py-10 pb-20">
       {/* Cover image */}
       <div className="w-full h-56 sm:h-72 rounded-2xl overflow-hidden mb-8 bg-muted shadow-md">
-        <img
-          src={blog.imageUrl}
-          alt={blog.title}
-          className="w-full h-full object-cover"
-        />
+        <img src={blog.imageUrl} alt={blog.title} className="w-full h-full object-cover" />
       </div>
 
       {/* Meta row */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
-        <span
-          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border ${levelColors[blog.level]}`}
-        >
+        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border ${levelColors[blog.level]}`}>
           {blog.level}
         </span>
         <span className="text-xs text-muted-foreground">{blog.readTime}</span>
@@ -218,9 +235,7 @@ function BlogContent({ blog }: { blog: BlogPost }) {
             <h2 className="font-serif text-2xl font-semibold text-foreground mb-3">{section.heading}</h2>
             <div className="space-y-4">
               {section.body.split("\n\n").map((para, j) => (
-                <p key={j} className="text-base leading-8 text-foreground/80">
-                  {para}
-                </p>
+                <p key={j} className="text-base leading-8 text-foreground/80">{para}</p>
               ))}
             </div>
           </section>
@@ -232,10 +247,7 @@ function BlogContent({ blog }: { blog: BlogPost }) {
         <h2 className="font-serif text-xl font-semibold text-foreground mb-4">Key Tools &amp; Skills</h2>
         <div className="flex flex-wrap gap-2">
           {blog.keyTools.map((tool) => (
-            <span
-              key={tool}
-              className="rounded-full bg-muted border border-border px-3 py-1 text-xs font-medium text-foreground/70"
-            >
+            <span key={tool} className="rounded-full bg-muted border border-border px-3 py-1 text-xs font-medium text-foreground/70">
               {tool}
             </span>
           ))}
@@ -252,12 +264,7 @@ function BlogContent({ blog }: { blog: BlogPost }) {
         {blog.pdfUrl ? (
           <>
             <div className="w-full h-[560px] rounded-xl overflow-hidden border bg-muted mb-5">
-              <iframe
-                src={blog.pdfUrl}
-                title={`${blog.title} PDF`}
-                className="w-full h-full"
-                style={{ border: "none" }}
-              />
+              <iframe src={blog.pdfUrl} title={`${blog.title} PDF`} className="w-full h-full" style={{ border: "none" }} />
             </div>
             <div className="flex gap-3 flex-wrap">
               <a
