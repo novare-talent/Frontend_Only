@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { Search, FileText, DownloadCloud, BookOpen, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
+import Link from "next/link";
 import { allBlogs, type BlogPost } from "./blogData";
 
 const levelColors: Record<string, string> = {
@@ -17,9 +18,9 @@ const levelFilters = ["All", "Beginner", "Intermediate", "Advanced"] as const;
 function BlogHeader() {
   return (
     <header className="fixed top-0 left-0 right-0 h-14 z-50 flex items-center justify-between px-5 sm:px-8 bg-neutral-950/95 backdrop-blur-sm border-b border-white/10">
-      <a href="/" className="flex items-center gap-2 shrink-0">
+      <Link href="/" className="flex items-center gap-2 shrink-0">
         <Image src="/images/logo.svg" alt="Novare Talent" width={130} height={24} />
-      </a>
+      </Link>
       <div className="flex items-center gap-2 sm:gap-3">
         <a
           href="https://arena.novaretalent.com"
