@@ -142,14 +142,13 @@ export default function CareerNavigatorBlogsPage() {
                       : "hover:bg-muted/50 border-l-2 border-transparent"
                   }`}
                 >
-                  <div
-                    className="shrink-0 h-10 w-10 rounded-lg overflow-hidden bg-muted mt-0.5"
-                    style={{
-                      backgroundImage: `url(${b.imageUrl})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                    }}
-                  />
+                  <div className="shrink-0 h-10 w-10 rounded-lg overflow-hidden bg-muted mt-0.5">
+                    <img
+                      src={b.imageUrl}
+                      alt={b.title}
+                      className="w-full h-full object-cover object-bottom"
+                    />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p
                       className={`text-xs font-medium leading-snug line-clamp-2 ${
@@ -192,7 +191,7 @@ function BlogContent({ blog }: { blog: BlogPost }) {
     <article className="max-w-3xl mx-auto px-4 sm:px-8 py-10 pb-20">
       {/* Cover image */}
       <div className="w-full h-56 sm:h-72 rounded-2xl overflow-hidden mb-8 bg-muted shadow-md">
-        <img src={blog.imageUrl} alt={blog.title} className="w-full h-full object-cover" />
+        <img src={blog.imageUrl} alt={blog.title} className="w-full h-full object-cover object-bottom" />
       </div>
 
       {/* Meta row */}
