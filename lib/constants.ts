@@ -235,6 +235,7 @@ export const FOOTER_LINKS = {
     { label: "SigHyre", href: "/sig-hire" },
     { label: "ArenaX", href: "https://arena.novaretalent.com" },
     { label: "Career Navigator", href: "https://www.careernavigator4u.com" },
+    { label: "Career Navigator Blogs", href: "/career-navigator-blogs" },
     { label: "IIT Placements", href: "/iit-placements" },
   ],
   legal: [

@@ -16,6 +16,7 @@ export async function updateSession(request: NextRequest) {
     "/auth/update-password",
     "/auth/callback",
     "/iit-placements",
+    "/career-navigator-blogs",
   ];
 
   if (publicPaths.some((p) => path.startsWith(p))) {
