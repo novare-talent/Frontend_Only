@@ -97,7 +97,7 @@ export default function CareerNavigatorBlogsPage() {
             <div className="flex items-center gap-2">
               <BookOpen className="h-5 w-5 text-violet-500" />
               <h1 className="font-serif font-semibold text-base text-foreground leading-tight">
-                Career Navigator<br />Blogs
+                Career Blogs
               </h1>
             </div>
 
@@ -146,7 +146,7 @@ export default function CareerNavigatorBlogsPage() {
                     <img
                       src={b.imageUrl}
                       alt={b.title}
-                      className="w-full h-full object-cover object-bottom"
+                      className="w-full h-full object-contain"
                     />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -191,7 +191,7 @@ function BlogContent({ blog }: { blog: BlogPost }) {
     <article className="max-w-3xl mx-auto px-4 sm:px-8 py-10 pb-20">
       {/* Cover image */}
       <div className="w-full h-56 sm:h-72 rounded-2xl overflow-hidden mb-8 bg-muted shadow-md">
-        <img src={blog.imageUrl} alt={blog.title} className="w-full h-full object-cover object-bottom" />
+        <img src={blog.imageUrl} alt={blog.title} className="w-full h-full object-contain" />
       </div>
 
       {/* Meta row */}

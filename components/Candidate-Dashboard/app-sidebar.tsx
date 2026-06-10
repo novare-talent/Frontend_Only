@@ -38,7 +38,7 @@ const data = {
       icon: IconFileDescription,
     },
     {
-      title: "Training",
+      title: "Career Blogs",
       url: "/Dashboard/Training",
       icon: IconListDetails,
     },
