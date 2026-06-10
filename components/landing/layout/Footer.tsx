@@ -143,21 +143,26 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Career Navigator Blogs CTA */}
-        <div className="mt-10 mb-2 rounded-xl border border-white/20 bg-white/5 backdrop-blur-sm p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        {/* Career Blogs CTA */}
+        <div className="mt-10 mb-2 rounded-xl border border-violet-500/40 bg-violet-600/10 backdrop-blur-sm p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ring-1 ring-violet-500/20">
           <div>
-            <p className="text-xs font-semibold tracking-widest uppercase text-violet-300 mb-1">
-              Free Resource
-            </p>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="inline-flex items-center rounded-full bg-violet-500 text-white text-[10px] font-bold tracking-wider uppercase px-2 py-0.5">
+                New
+              </span>
+              <p className="text-xs font-semibold tracking-widest uppercase text-violet-300">
+                Free Resource
+              </p>
+            </div>
             <h3 className="text-white font-semibold text-lg leading-snug">
-              Career Navigator Blogs
+              Career Blogs
             </h3>
             <p className="text-sm text-white/70 mt-1 max-w-md">
               In-depth career guides for 20+ tech and business roles — read free, no sign-up needed.
             </p>
           </div>
           <a
-            href="/career-navigator-blogs"
+            href="/career-blogs"
             className="shrink-0 inline-flex items-center gap-2 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium px-5 py-2.5 transition-colors"
           >
             Explore Blogs →
