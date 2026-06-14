@@ -17,6 +17,7 @@ export async function updateSession(request: NextRequest) {
     "/auth/callback",
     "/iit-placements",
     "/career-blogs",
+    "/submission",
   ];
 
   if (publicPaths.some((p) => path.startsWith(p))) {

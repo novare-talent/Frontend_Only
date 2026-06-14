@@ -1,24 +1,49 @@
+import { createClient } from "@supabase/supabase-js";
+
+const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+
+async function verifyToken(authHeader: string | null): Promise<{ userId: string; token: string } | null> {
+  if (!authHeader?.startsWith("Bearer ")) return null;
+  const token = authHeader.slice(7);
+  const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const { data, error } = await supabaseAdmin.auth.getUser(token);
+  if (error || !data.user) return null;
+  return { userId: data.user.id, token };
+}
+
 async function proxyRequest(
   request: Request,
   method: string,
-  backendUrl: string
+  backendUrl: string,
+  userId: string,
+  token: string
 ) {
   try {
-    const contentType = request.headers.get('content-type');
-    
+    const contentType = request.headers.get("content-type") ?? "";
     let body: BodyInit | undefined;
-    
-    if (method !== 'GET' && method !== 'DELETE') {
-      // For methods with body (POST, PUT, PATCH)
-      if (contentType?.includes('multipart/form-data')) {
-        // For FormData, pass the body as binary buffer
-        const buffer = await request.arrayBuffer();
-        body = buffer;
-      } else if (contentType?.includes('application/json') || contentType?.includes('application/x-www-form-urlencoded')) {
-        // For JSON and form data, pass as text
-        body = await request.text();
+    let forwardContentType = contentType || undefined;
+
+    if (method !== "GET" && method !== "DELETE") {
+      if (contentType.includes("multipart/form-data")) {
+        body = await request.arrayBuffer();
+      } else if (
+        contentType.includes("application/json") ||
+        contentType.includes("application/x-www-form-urlencoded")
+      ) {
+        let text = await request.text();
+        // Inject profile_id from the verified token, overriding any caller-supplied value.
+        // This prevents a user from crediting a different account.
+        try {
+          const parsed = JSON.parse(text);
+          parsed.profile_id = userId;
+          text = JSON.stringify(parsed);
+          forwardContentType = "application/json";
+        } catch {
+          // Not valid JSON — forward as-is
+        }
+        body = text;
       } else {
-        // For other content types, read as text
         body = await request.text();
       }
     }
@@ -26,8 +51,11 @@ async function proxyRequest(
     const response = await fetch(backendUrl, {
       method,
       headers: {
-        // Forward original content-type if present
-        ...(contentType && { 'Content-Type': contentType }),
+        ...(forwardContentType && { "Content-Type": forwardContentType }),
+        // Forward the verified JWT so the Python service can independently validate
+        Authorization: `Bearer ${token}`,
+        // Also send profile_id as a header for backends that read it from there
+        "X-Profile-Id": userId,
       },
       body: body || undefined,
     });
@@ -36,14 +64,14 @@ async function proxyRequest(
     return new Response(responseData, {
       status: response.status,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": response.headers.get("content-type") ?? "application/json",
       },
     });
   } catch (error) {
-    console.error('Proxy error:', error);
+    console.error("Payment proxy error:", error);
     return new Response(
-      JSON.stringify({ error: 'Backend request failed', details: error instanceof Error ? error.message : String(error) }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: "Backend request failed", details: error instanceof Error ? error.message : String(error) }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 }
@@ -53,47 +81,39 @@ function buildBackendUrl(request: Request, pathStr: string): string {
   return `https://payments.novaretalent.com/${pathStr}${search}`;
 }
 
-export async function POST(
+async function handleRequest(
   request: Request,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
+  method: string,
+  params: Promise<{ path: string[] }>
+): Promise<Response> {
+  const auth = await verifyToken(request.headers.get("authorization"));
+  if (!auth) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
   const { path } = await params;
-  const backendUrl = buildBackendUrl(request, path.join('/'));
-  return proxyRequest(request, 'POST', backendUrl);
+  const backendUrl = buildBackendUrl(request, path.join("/"));
+  return proxyRequest(request, method, backendUrl, auth.userId, auth.token);
 }
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const { path } = await params;
-  const backendUrl = buildBackendUrl(request, path.join('/'));
-  return proxyRequest(request, 'GET', backendUrl);
+export async function POST(request: Request, { params }: { params: Promise<{ path: string[] }> }) {
+  return handleRequest(request, "POST", params);
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const { path } = await params;
-  const backendUrl = buildBackendUrl(request, path.join('/'));
-  return proxyRequest(request, 'DELETE', backendUrl);
+export async function GET(request: Request, { params }: { params: Promise<{ path: string[] }> }) {
+  return handleRequest(request, "GET", params);
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const { path } = await params;
-  const backendUrl = buildBackendUrl(request, path.join('/'));
-  return proxyRequest(request, 'PUT', backendUrl);
+export async function DELETE(request: Request, { params }: { params: Promise<{ path: string[] }> }) {
+  return handleRequest(request, "DELETE", params);
 }
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const { path } = await params;
-  const backendUrl = buildBackendUrl(request, path.join('/'));
-  return proxyRequest(request, 'PATCH', backendUrl);
+export async function PUT(request: Request, { params }: { params: Promise<{ path: string[] }> }) {
+  return handleRequest(request, "PUT", params);
+}
+
+export async function PATCH(request: Request, { params }: { params: Promise<{ path: string[] }> }) {
+  return handleRequest(request, "PATCH", params);
 }

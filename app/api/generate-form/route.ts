@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import OpenAI from 'openai'
 import { v4 as uuidv4 } from 'uuid'
+import { validateStorageUrl } from '@/utils/validateStorageUrl'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!
@@ -38,6 +39,12 @@ export async function POST(request: NextRequest) {
 
     if (!jdUrl) {
       return NextResponse.json({ error: 'JD URL is required' }, { status: 400 })
+    }
+
+    try {
+      validateStorageUrl(jdUrl)
+    } catch (e: any) {
+      return NextResponse.json({ error: e.message ?? 'Invalid URL' }, { status: 400 })
     }
 
     console.log('Fetching PDF from:', jdUrl)

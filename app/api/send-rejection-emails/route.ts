@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
 import { Resend } from "resend";
+import { validateStorageUrl } from "@/utils/validateStorageUrl";
 
 const SUPABASE_URL =
   process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
@@ -16,6 +17,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function extractTextFromPdf(url: string): Promise<string> {
   try {
+    validateStorageUrl(url);
     const response = await fetch(url);
     if (!response.ok) return "";
     const buffer = Buffer.from(await response.arrayBuffer());

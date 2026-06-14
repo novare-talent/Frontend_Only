@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/utils/supabase/server"
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import PDFParser from "pdf2json"
+import { validateStorageUrl } from "@/utils/validateStorageUrl"
 
 const m = new Map<string,{c:number,t:number}>()
 const R = 5
@@ -73,6 +74,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No JD PDF found for this job." }, { status: 400 })
 
     /* ----------------------- 5️⃣ Extract JD Text ----------------------- */
+    validateStorageUrl(job.JD_pdf)
     console.log("Downloading JD PDF from:", job.JD_pdf)
     const pdfResponse = await fetch(job.JD_pdf)
     if (!pdfResponse.ok) throw new Error(`Failed to fetch PDF: ${pdfResponse.statusText}`)
@@ -281,6 +283,7 @@ async function extractResumeText(resumeUrl: string): Promise<string | null> {
       return null
     }
 
+    validateStorageUrl(resumeUrl)
     const response = await fetch(resumeUrl)
     if (!response.ok) {
       throw new Error(`Failed to fetch resume: ${response.statusText}`)
