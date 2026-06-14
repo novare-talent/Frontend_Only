@@ -40,10 +40,32 @@ const nextConfig: NextConfig = {
   
   // Headers for security and performance
   async headers() {
+    // Content-Security-Policy prevents stored XSS from AI-generated content reaching the DOM.
+    // unsafe-inline is required by Next.js (inline scripts/styles); unsafe-eval by Turbopack HMR.
+    // Tighten these when migrating to nonce-based CSP.
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https:",
+      `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com https://generativelanguage.googleapis.com`,
+      "font-src 'self' data:",
+      "frame-src 'none'",
+      "object-src 'none'",
+      "media-src 'self' blob:",
+      "worker-src blob:",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join("; ")
+
     return [
       {
         source: '/:path*',
         headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: csp,
+          },
           {
             key: 'X-DNS-Prefetch-Control',
             value: 'on',
@@ -59,10 +81,6 @@ const nextConfig: NextConfig = {
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
           },
           {
             key: 'Referrer-Policy',

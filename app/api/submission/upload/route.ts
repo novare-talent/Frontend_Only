@@ -1,19 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Note: This runs on the server side, so we need to use server-side Supabase client
-// For now, we'll use the edge runtime approach
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
+// Rate limit: max 5 uploads per IP per 5 minutes
+const uploadRateMap = new Map<string, { count: number; resetAt: number }>()
+const UPLOAD_LIMIT = 5
+const UPLOAD_WINDOW_MS = 5 * 60_000
+
+function checkUploadRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const entry = uploadRateMap.get(ip)
+  if (!entry || now > entry.resetAt) {
+    uploadRateMap.set(ip, { count: 1, resetAt: now + UPLOAD_WINDOW_MS })
+    return true
+  }
+  if (entry.count >= UPLOAD_LIMIT) return false
+  entry.count++
+  return true
+}
+
 export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders });
 }
 
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local"
+  if (!checkUploadRateLimit(ip)) {
+    return NextResponse.json(
+      { error: "Too many uploads. Please wait a few minutes and try again." },
+      { status: 429, headers: corsHeaders }
+    )
+  }
+
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;

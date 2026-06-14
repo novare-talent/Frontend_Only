@@ -338,18 +338,48 @@ async function evaluateCandidateWithRetry(
   return null
 }
 
+/* ----------------------- Helper: Clamp number to range ----------------------- */
+function clamp(n: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, n))
+}
+
+/* ----------------------- Helper: Validate evaluation schema ----------------------- */
+function validateEvaluation(obj: any): { valid: boolean; errors: string[] } {
+  const stringFields = ["skills_match", "experience_relevance", "communication_clarity", "overall_fit", "justification"]
+  const scoreFields = ["skills_score", "experience_score", "communication_score", "fit_score"]
+  const errors: string[] = []
+
+  for (const f of stringFields) {
+    if (!obj[f] || typeof obj[f] !== "string") errors.push(`Missing or invalid field: ${f}`)
+  }
+  for (const f of scoreFields) {
+    const v = Number(obj[f])
+    if (isNaN(v) || v < 0 || v > 100) errors.push(`Score out of range [0-100]: ${f} = ${obj[f]}`)
+  }
+  return { valid: errors.length === 0, errors }
+}
+
+/* ----------------------- Helper: Compute final_score from sub-scores in code ----------------------- */
+function computeFinalScore(obj: any): number {
+  const skills = clamp(Number(obj.skills_score), 0, 100)
+  const experience = clamp(Number(obj.experience_score), 0, 100)
+  const communication = clamp(Number(obj.communication_score), 0, 100)
+  const fit = clamp(Number(obj.fit_score), 0, 100)
+  // Weighted formula: skills 35% | experience 30% | communication 15% | fit 20%
+  return Math.round(skills * 0.35 + experience * 0.30 + communication * 0.15 + fit * 0.20)
+}
+
 /* ----------------------- Helper: Evaluate Candidate ----------------------- */
 async function evaluateCandidate(
-  candidate: any, 
-  jobDescription: string, 
+  candidate: any,
+  jobDescription: string,
   resumeText: string | null
 ) {
   try {
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash", // Using stable model instead of experimental
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
     })
 
-    // Prepare candidate info without resume content
     const candidateInfo = {
       name: candidate.name,
       email: candidate.email,
@@ -361,14 +391,18 @@ async function evaluateCandidate(
 You are an AI recruiter. Evaluate this candidate for the given job description.
 ${resumeText ? 'A resume has been provided.' : 'NOTE: No resume available - evaluate based on form responses only.'}
 
-Return ONLY a valid JSON object with this exact structure (no markdown, no extra text):
+Return ONLY a valid JSON object with this exact structure (no markdown, no extra text).
+All score fields must be integers between 0 and 100.
 
 {
   "skills_match": "brief assessment (max 400 chars)",
+  "skills_score": 75,
   "experience_relevance": "brief assessment (max 400 chars)",
+  "experience_score": 70,
   "communication_clarity": "brief assessment (max 400 chars)",
+  "communication_score": 80,
   "overall_fit": "brief assessment (max 400 chars)",
-  "final_score": 75,
+  "fit_score": 72,
   "justification": "brief justification (max 400 chars)"
 }
 
@@ -383,8 +417,7 @@ ${resumeText ? `\nResume Content:\n${resumeText.substring(0, 3000)}` : '\nNo res
 
     const result = await model.generateContent(prompt)
     const text = result.response.text().trim()
-    
-    // Extract JSON from response
+
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
       console.error("Invalid Gemini response:", text)
@@ -392,8 +425,18 @@ ${resumeText ? `\nResume Content:\n${resumeText.substring(0, 3000)}` : '\nNo res
     }
 
     const evaluation = JSON.parse(jsonMatch[0])
-    
-    // Add note if evaluated without resume
+
+    // Validate schema — on failure mark for human review rather than silently dropping
+    const { valid, errors } = validateEvaluation(evaluation)
+    if (!valid) {
+      console.warn("Evaluation schema validation failed:", errors, "Raw:", evaluation)
+      evaluation.needs_review = true
+      evaluation.review_reason = `Schema errors: ${errors.join("; ")}`
+    }
+
+    // Always compute final_score in code from numeric sub-scores — never trust the model's arithmetic
+    evaluation.final_score = computeFinalScore(evaluation)
+
     if (!resumeText) {
       evaluation.note = "Evaluated without resume"
     }

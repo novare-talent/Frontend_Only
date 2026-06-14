@@ -65,9 +65,12 @@ export async function POST(request: NextRequest) {
     const mappedQuestions = formData.questions.map((q: any) => ({
       id: uuidv4(),
       type: q.type.toLowerCase() as 'text' | 'radio' | 'multi',
-      title: q.title,
+      // Strip any HTML tags from AI output before storing — prevents stored XSS
+      title: String(q.title ?? '').replace(/<[^>]*>/g, '').trim(),
       required: true,
-      ...(q.options && { options: q.options })
+      ...(q.options && {
+        options: q.options.map((o: any) => String(o ?? '').replace(/<[^>]*>/g, '').trim())
+      })
     }))
 
     const formRecord = {
