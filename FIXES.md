@@ -16,6 +16,9 @@
 | 5 | Feedback #2 | Auth — Proxy routes forward no Authorization | Critical | ✅ Fixed |
 | 6 | Feedback #24 | Design — `/submission` blocked by middleware | Medium | ✅ Fixed |
 | 7 | Build error | CSS — `tw-animate-css` unresolvable import | Build | ✅ Fixed |
+| 8 | Feedback #16 | Correctness — `final_score` computed in AI prompt, no schema validation | High | ✅ Fixed |
+| 9 | Feedback #23 | Security — No CSP; AI content stored/rendered unsanitized | Medium | ✅ Fixed |
+| 10 | Feedback #19 | Correctness — No server-side dedup on responses; unthrottled uploads | Medium | ✅ Fixed |
 
 ---
 
@@ -330,6 +333,151 @@ Changed to an explicit subpath import that bypasses exports map resolution entir
 ```
 
 Explicit file paths in CSS `@import` are resolved by the filesystem, not the package exports map, so they work regardless of the bundler's exports condition support.
+
+---
+
+---
+
+### Fix 8 — AI `final_score` Computed in Prompt, No Schema Validation
+**Feedback issue:** #16 · **Severity:** High · **Commit:** `36862ec`
+
+#### Technical Problem
+The evaluation prompt asked Gemini to produce a `final_score` integer directly:
+
+```
+"final_score": 75,
+```
+
+Two problems:
+1. **LLMs don't reliably compute arithmetic.** The prompt implied a weighted formula but left the AI to pick any number. A confident-sounding model could return 75 while sub-scores implied 45.
+2. **No schema validation.** `JSON.parse()` was called on the model's response with no field or type checking. On parse success with missing/wrong-typed fields, the bad evaluation was stored as-is. On parse failure, `evaluateCandidateWithRetry` returned `null` and the candidate was **silently dropped** from results — never reviewed, never rejected, just gone.
+
+#### Fix Applied
+**Part A — numeric sub-scores in prompt:**
+The prompt now requests explicit integer scores (0–100) for each dimension:
+```
+"skills_score": 75,
+"experience_score": 70,
+"communication_score": 80,
+"fit_score": 72,
+```
+
+**Part B — `final_score` computed in code:**
+```typescript
+function computeFinalScore(obj: any): number {
+  const skills      = clamp(Number(obj.skills_score), 0, 100)
+  const experience  = clamp(Number(obj.experience_score), 0, 100)
+  const communication = clamp(Number(obj.communication_score), 0, 100)
+  const fit         = clamp(Number(obj.fit_score), 0, 100)
+  // Weighted: skills 35% | experience 30% | communication 15% | fit 20%
+  return Math.round(skills * 0.35 + experience * 0.30 + communication * 0.15 + fit * 0.20)
+}
+// Called unconditionally — overrides any final_score the model may have included
+evaluation.final_score = computeFinalScore(evaluation)
+```
+
+**Part C — schema validation with human-review flag:**
+```typescript
+function validateEvaluation(obj: any): { valid: boolean; errors: string[] } {
+  // Checks all 5 string fields and 4 numeric score fields
+  // Returns { valid: false, errors: [...] } on any violation
+}
+// On failure: mark needs_review instead of dropping
+const { valid, errors } = validateEvaluation(evaluation)
+if (!valid) {
+  evaluation.needs_review = true
+  evaluation.review_reason = `Schema errors: ${errors.join("; ")}`
+}
+```
+
+Candidates with schema errors now appear in results with a `needs_review: true` flag — visible to the reviewer instead of silently disappearing.
+
+---
+
+### Fix 9 — No Content-Security-Policy; AI Content Stored Unsanitized
+**Feedback issue:** #23 · **Severity:** Medium (Security) · **Commit:** `36862ec`
+
+#### Technical Problem
+Two compounding issues:
+
+1. **No CSP.** `next.config.ts` had `X-XSS-Protection: 1; mode=block`, which is deprecated, not supported by modern browsers, and covers only reflected XSS (not stored). The only working defense against stored XSS is a Content-Security-Policy that blocks inline script injection.
+
+2. **AI output stored unsanitized.** In `generate-form/route.ts`, question `title` and `options` from the OpenAI response were saved to the `forms` table verbatim:
+   ```typescript
+   title: q.title,  // raw LLM output — could contain <script>alert(1)</script>
+   ```
+   Any XSS payload from a compromised or prompt-injected model call would flow: AI → DB `forms.form.questions[].title` → client DOM when candidates view the form.
+
+#### Fix Applied
+**Part A — CSP header in `next.config.ts`:**
+```typescript
+const csp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",  // required by Next.js + Turbopack
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com https://generativelanguage.googleapis.com",
+  "font-src 'self' data:",
+  "frame-src 'none'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join("; ")
+```
+
+Removed `X-XSS-Protection` (deprecated). `unsafe-inline` and `unsafe-eval` are currently required by Next.js — the path to tighten these is a nonce-based CSP, which is a future hardening step.
+
+**Part B — strip HTML from AI output before DB write:**
+```typescript
+// app/api/generate-form/route.ts
+title: String(q.title ?? '').replace(/<[^>]*>/g, '').trim(),
+options: q.options.map((o: any) => String(o ?? '').replace(/<[^>]*>/g, '').trim())
+```
+
+Regex strips all HTML tags at the source before any string touches the DB. Even if the model is prompt-injected to output `<script>`, it becomes empty string.
+
+---
+
+### Fix 10 — No Server-Side Dedup on Form Responses; Unthrottled Upload Endpoint
+**Feedback issue:** #19 · **Severity:** Medium · **Commit:** `36862ec`
+
+#### Technical Problem
+**Part A — client-side-only dedup:**
+`JobForm.tsx` checked for duplicate submissions via a Supabase query on mount:
+```typescript
+const { data: existing } = await supabaseClient.from("responses").select("id")
+  .eq("form_id", formId).eq("profile_id", profileRow.id).maybeSingle()
+if (existing) setAlreadySubmitted(true)
+```
+But the actual INSERT was also done client-side via the anon Supabase key. Any user with browser devtools could skip the UI guard and call `supabase.from("responses").insert(...)` directly, submitting the same form 500× and triggering 500 GPT evaluations.
+
+**Part B — unthrottled public upload endpoint:**
+`/api/submission/upload` accepted unlimited file uploads per IP with no rate limiting.
+
+#### Fix Applied
+**Part A — new server-side submit route:**
+Created `app/api/responses/submit/route.ts`:
+```typescript
+// 1. Rate limit: 3 submissions per IP per 60s
+if (!checkRateLimit(ip)) return 429
+
+// 2. Auth: must be authenticated (SSR Supabase session)
+const { data: { user } } = await supabase.auth.getUser()
+if (!user) return 401
+
+// 3. Server-side dedup check before insert
+const { data: existing } = await supabase.from("responses")
+  .select("id").eq("form_id", form_id).eq("profile_id", user.id).maybeSingle()
+if (existing) return 409 "Already submitted"
+
+// 4. Insert — also handles 23505 unique constraint error as a race-condition fallback
+await supabase.from("responses").insert([{ form_id, profile_id: user.id, ... }])
+```
+
+`JobForm.tsx` now calls `POST /api/responses/submit` instead of inserting via the anon client directly.
+
+**Part B — rate limit on upload:**
+Added IP-based rate limiting to `app/api/submission/upload/route.ts`: max 5 uploads per IP per 5 minutes, returning 429 before any file processing begins.
 
 ---
 
