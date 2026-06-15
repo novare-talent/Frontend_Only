@@ -13,7 +13,7 @@ export function useAuthRedirect() {
     const checkAuth = async () => {
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (session) {
         const redirect = searchParams.get("redirect");
         if (redirect) {

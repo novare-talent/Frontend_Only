@@ -36,7 +36,7 @@ export function LoginForm({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setUserInput({ ...userInput, [name]: value })
-    
+
     if (name === 'email') {
       setIsEmailValid(validateEmail(value))
     }
