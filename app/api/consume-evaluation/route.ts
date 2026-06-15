@@ -61,7 +61,8 @@ export async function POST(req: NextRequest) {
     // Atomic conditional decrement — single SQL statement, no race condition.
     // Returns the new evaluations_remaining value, or null if it was already 0.
     // Requires the decrement_evaluations(sub_id uuid) Postgres function (see db/functions.sql).
-    const { data: newValue, error: rpcError } = await supabaseAdmin
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: newValue, error: rpcError } = await (supabaseAdmin as any)
       .rpc("decrement_evaluations", { sub_id: subs.id }) as { data: number | null; error: unknown };
 
     if (rpcError) {
