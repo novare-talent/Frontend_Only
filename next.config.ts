@@ -45,10 +45,10 @@ const nextConfig: NextConfig = {
     // Tighten these when migrating to nonce-based CSP.
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
-      `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com https://generativelanguage.googleapis.com`,
+      `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com https://generativelanguage.googleapis.com https://unpkg.com https://cdn.jsdelivr.net`,
       "font-src 'self' data:",
       "frame-src 'none'",
       "object-src 'none'",
