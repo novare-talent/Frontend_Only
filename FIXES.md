@@ -19,6 +19,8 @@
 | 8 | Feedback #16 | Correctness — `final_score` computed in AI prompt, no schema validation | High | ✅ Fixed |
 | 9 | Feedback #23 | Security — No CSP; AI content stored/rendered unsanitized | Medium | ✅ Fixed |
 | 10 | Feedback #19 | Correctness — No server-side dedup on responses; unthrottled uploads | Medium | ✅ Fixed |
+| 11 | Feedback #25 | Reliability — Proxy hardcoded IP, no timeout, no query-string forwarding | Medium | ✅ Fixed |
+| 12 | Feedback #24 | Performance — Middleware makes up to 3 redundant profile DB queries | Medium | ✅ Fixed |
 
 ---
 
@@ -478,6 +480,65 @@ await supabase.from("responses").insert([{ form_id, profile_id: user.id, ... }])
 
 **Part B — rate limit on upload:**
 Added IP-based rate limiting to `app/api/submission/upload/route.ts`: max 5 uploads per IP per 5 minutes, returning 429 before any file processing begins.
+
+---
+
+---
+
+### Fix 11 — Proxy Hardcoded IP, No Timeout, No Query-String Forwarding
+**Feedback issue:** #25 · **Severity:** Medium
+
+**Problem:**
+`assignment-proxy` had the EC2 backend address hardcoded as a plaintext HTTP IP (`http://3.111.81.83:8000`). All 4 proxy routes (`assignment-proxy`, `evaluate-proxy`, `form-proxy`, `ranking-proxy`) had no request timeout — a slow or dead backend would hold the Vercel serverless function open indefinitely, burning CPU and eventually timing out with an opaque 504 on the client. Additionally, query strings from the incoming request (e.g., `?job_id=123`) were silently dropped and never forwarded to the backend.
+
+**Fix:**
+
+1. **Hardcoded IP → env var** (`app/api/assignment-proxy/[...path]/route.ts`):
+   ```typescript
+   const ASSIGNMENT_BACKEND_URL = process.env.ASSIGNMENT_BACKEND_URL ?? "http://3.111.81.83:8000";
+   ```
+   Fallback keeps existing behavior; set `ASSIGNMENT_BACKEND_URL` in `.env.local` / Vercel env to override.
+
+2. **Request timeout** (all 4 proxies): Added `AbortSignal.timeout(30_000)` to the `fetch()` call:
+   ```typescript
+   signal: AbortSignal.timeout(PROXY_TIMEOUT_MS), // 30 s
+   ```
+   On timeout the `catch` block already returns a 500 with the error message, which will now include `TimeoutError`.
+
+3. **Query-string forwarding** (all 4 proxies):
+   ```typescript
+   const { search } = new URL(request.url);
+   const backendUrl = `${BASE_URL}/${path.join('/')}${search}`;
+   ```
+
+**Files changed:**
+- `app/api/assignment-proxy/[...path]/route.ts`
+- `app/api/evaluate-proxy/[...path]/route.ts`
+- `app/api/form-proxy/[...path]/route.ts`
+- `app/api/ranking-proxy/[...path]/route.ts`
+
+---
+
+### Fix 12 — Middleware Triple Profile Query Collapsed to One
+**Feedback issue:** #24 · **Severity:** Medium
+
+**Problem:**
+The middleware had 3 separate `supabase.from("profiles").select("role")` calls — one per guarded route section (`/Dashboard`, `/client`, `/admin`). While only one block runs per request, the code was structurally fragile: every future edit risked adding a fourth query, and the `/Dashboard` block contained a dead redundant `if (!user)` check that could never be true (user already checked 10 lines above).
+
+**Fix:**
+Replaced all 3 profile query blocks with a single guarded fetch:
+```typescript
+const needsRoleCheck = path.startsWith("/Dashboard") || path.startsWith("/client") || path.startsWith("/admin");
+if (needsRoleCheck) {
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  const role = profile?.role;
+  // inline redirect logic for each section
+}
+```
+Redirect logic is identical in behavior; redundant `if (!user)` removed.
+
+**Files changed:**
+- `utils/supabase/middleware.ts`
 
 ---
 

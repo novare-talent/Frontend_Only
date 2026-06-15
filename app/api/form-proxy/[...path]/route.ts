@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+const PROXY_TIMEOUT_MS = 30_000;
 
 async function verifyToken(authHeader: string | null): Promise<string | null> {
   if (!authHeader?.startsWith("Bearer ")) return null;
@@ -38,6 +39,7 @@ async function proxyRequest(
         Authorization: `Bearer ${token}`,
       },
       body: body || undefined,
+      signal: AbortSignal.timeout(PROXY_TIMEOUT_MS),
     });
 
     const responseData = await response.text();
@@ -67,7 +69,8 @@ async function handleRequest(
     });
   }
   const { path } = await params;
-  const backendUrl = `https://form.novaretalent.com/${path.join('/')}`;
+  const { search } = new URL(request.url);
+  const backendUrl = `https://form.novaretalent.com/${path.join('/')}${search}`;
   return proxyRequest(request, method, backendUrl, token);
 }
 
