@@ -393,19 +393,25 @@ export default function JobForm({
         return;
       }
 
-      const { error: responseError } = await supabaseClient.from("responses").insert([
-        {
+      // Submit via server route — enforces auth, rate limiting, and server-side dedup
+      const submitRes = await fetch("/api/responses/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           form_id: formId,
           profile_id: profileId,
           job_id: jobId,
           answers,
-        },
-      ]);
+          resume_url: finalResumeUrl ?? null,
+        }),
+      });
 
-      if (responseError) {
-        toast.error("Error", {
-          description: "Failed to submit application.",
-        });
+      if (!submitRes.ok) {
+        const { error: submitErr } = await submitRes.json().catch(() => ({ error: "Failed to submit application." }));
+        if (submitRes.status === 409) {
+          setAlreadySubmitted(true);
+        }
+        toast.error("Error", { description: submitErr ?? "Failed to submit application." });
         setSubmitting(false);
         return;
       }

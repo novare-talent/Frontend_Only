@@ -253,7 +253,17 @@ export default function NewJobPage() {
             }
           : null;
 
-      // Insert job first
+      // === Consume credit FIRST before any DB writes ===
+      // This prevents a user from getting a job without paying a credit.
+      // If the subsequent DB insert fails, contact support for a manual refund
+      // (that edge case is far less risky than a free job creation).
+      const consumeResult = await consumeJobCredit();
+      if (!consumeResult.ok) {
+        toast.error("Insufficient Credits", { description: consumeResult.message === "no_token" ? "Please log in again." : "No job credits remaining. Please upgrade your plan." });
+        return;
+      }
+
+      // Insert job
       const { error: jobError } = await supabase.from("jobs").insert(jobData).select().single();
 
       if (jobError) {
@@ -273,16 +283,6 @@ export default function NewJobPage() {
           throw formError;
         }
         createdFormId = formId;
-      }
-
-      // === Consume a job credit on the server (service role) ===
-      const consumeResult = await consumeJobCredit();
-      if (!consumeResult.ok) {
-        // rollback job & form if consume failed
-        await supabase.from("jobs").delete().eq("job_id", jobId);
-        if (createdFormId) await supabase.from("forms").delete().eq("form_id", createdFormId);
-        toast.error("Error", { description: `Failed to deduct job credit: ${consumeResult.message ?? "unknown"}. Creation rolled back.` });
-        return;
       }
 
       toast.success("Success", { description: "Job created and credit consumed successfully!" });

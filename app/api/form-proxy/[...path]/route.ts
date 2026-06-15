@@ -1,24 +1,32 @@
+import { createClient } from "@supabase/supabase-js";
+
+const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+
+async function verifyToken(authHeader: string | null): Promise<string | null> {
+  if (!authHeader?.startsWith("Bearer ")) return null;
+  const token = authHeader.slice(7);
+  const { data, error } = await createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY).auth.getUser(token);
+  if (error || !data.user) return null;
+  return token;
+}
+
 async function proxyRequest(
   request: Request,
   method: string,
-  backendUrl: string
+  backendUrl: string,
+  token: string
 ) {
   try {
     const contentType = request.headers.get('content-type');
-    
     let body: BodyInit | undefined;
-    
+
     if (method !== 'GET' && method !== 'DELETE') {
-      // For methods with body (POST, PUT, PATCH)
       if (contentType?.includes('multipart/form-data')) {
-        // For FormData, pass the body as binary buffer
-        const buffer = await request.arrayBuffer();
-        body = buffer;
+        body = await request.arrayBuffer();
       } else if (contentType?.includes('application/json') || contentType?.includes('application/x-www-form-urlencoded')) {
-        // For JSON and form data, pass as text
         body = await request.text();
       } else {
-        // For other content types, read as text
         body = await request.text();
       }
     }
@@ -26,8 +34,8 @@ async function proxyRequest(
     const response = await fetch(backendUrl, {
       method,
       headers: {
-        // Forward original content-type if present
         ...(contentType && { 'Content-Type': contentType }),
+        Authorization: `Bearer ${token}`,
       },
       body: body || undefined,
     });
@@ -35,12 +43,10 @@ async function proxyRequest(
     const responseData = await response.text();
     return new Response(responseData, {
       status: response.status,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': response.headers.get('content-type') ?? 'application/json' },
     });
   } catch (error) {
-    console.error('Form Proxy error:', error);
+    console.error('Form proxy error:', error);
     return new Response(
       JSON.stringify({ error: 'Backend request failed', details: error instanceof Error ? error.message : String(error) }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
@@ -48,52 +54,39 @@ async function proxyRequest(
   }
 }
 
-export async function POST(
+async function handleRequest(
   request: Request,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
+  method: string,
+  params: Promise<{ path: string[] }>
+): Promise<Response> {
+  const token = await verifyToken(request.headers.get("authorization"));
+  if (!token) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
   const { path } = await params;
-  const pathStr = path.join('/');
-  const backendUrl = `https://form.novaretalent.com/${pathStr}`;
-  return proxyRequest(request, 'POST', backendUrl);
+  const backendUrl = `https://form.novaretalent.com/${path.join('/')}`;
+  return proxyRequest(request, method, backendUrl, token);
 }
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const { path } = await params;
-  const pathStr = path.join('/');
-  const backendUrl = `https://form.novaretalent.com/${pathStr}`;
-  return proxyRequest(request, 'GET', backendUrl);
+export async function POST(request: Request, { params }: { params: Promise<{ path: string[] }> }) {
+  return handleRequest(request, 'POST', params);
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const { path } = await params;
-  const pathStr = path.join('/');
-  const backendUrl = `https://form.novaretalent.com/${pathStr}`;
-  return proxyRequest(request, 'DELETE', backendUrl);
+export async function GET(request: Request, { params }: { params: Promise<{ path: string[] }> }) {
+  return handleRequest(request, 'GET', params);
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const { path } = await params;
-  const pathStr = path.join('/');
-  const backendUrl = `https://form.novaretalent.com/${pathStr}`;
-  return proxyRequest(request, 'PUT', backendUrl);
+export async function DELETE(request: Request, { params }: { params: Promise<{ path: string[] }> }) {
+  return handleRequest(request, 'DELETE', params);
 }
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const { path } = await params;
-  const pathStr = path.join('/');
-  const backendUrl = `https://form.novaretalent.com/${pathStr}`;
-  return proxyRequest(request, 'PATCH', backendUrl);
+export async function PUT(request: Request, { params }: { params: Promise<{ path: string[] }> }) {
+  return handleRequest(request, 'PUT', params);
+}
+
+export async function PATCH(request: Request, { params }: { params: Promise<{ path: string[] }> }) {
+  return handleRequest(request, 'PATCH', params);
 }

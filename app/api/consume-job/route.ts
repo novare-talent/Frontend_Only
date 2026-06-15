@@ -41,15 +41,14 @@ export async function POST(req: NextRequest) {
     }
     const userId = user.id;
 
-    // Find most recent subscription for this profile
-    // NOTE: change .eq("profile_id", userId) if your FK uses another column (user_id, owner_id, etc.)
+    // Find most recent subscription row id for this profile
     const { data: subs, error: subsError } = await supabaseAdmin
       .from("subscriptions")
-      .select("id, jobs_remaining, status, created_at")
+      .select("id")
       .eq("profile_id", userId)
       .order("created_at", { ascending: false })
       .limit(1)
-      .maybeSingle() as { data: { id: string; jobs_remaining: number | null; status: string; created_at: string } | null; error: unknown };
+      .maybeSingle() as { data: { id: string } | null; error: unknown };
 
     if (subsError) {
       return NextResponse.json({ error: "Error reading subscriptions", details: subsError }, { status: 500 });
@@ -59,27 +58,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No subscription found" }, { status: 404 });
     }
 
-    const current = Number(subs.jobs_remaining ?? 0);
-    if (current <= 0) {
-      return NextResponse.json({ error: "No jobs remaining", jobs_remaining: current }, { status: 400 });
+    // Atomic conditional decrement — single SQL statement, no race condition.
+    // Returns the new jobs_remaining value, or null if jobs_remaining was already 0.
+    // Requires the decrement_jobs(sub_id uuid) Postgres function (see db/functions.sql).
+    const { data: newValue, error: rpcError } = await supabaseAdmin
+      .rpc("decrement_jobs", { sub_id: subs.id }) as { data: number | null; error: unknown };
+
+    if (rpcError) {
+      return NextResponse.json({ error: "Failed to decrement jobs_remaining", details: rpcError }, { status: 500 });
     }
 
-    // Decrement jobs_remaining by 1
-    const newValue = current - 1;
-
-    const { data: updated, error: updateError } = await supabaseAdmin
-      .from("subscriptions")
-      // @ts-expect-error — supabase types not regenerated yet; jobs_remaining column exists at runtime
-      .update({ jobs_remaining: newValue })
-      .eq("id", subs.id)
-      .select()
-      .single() as { data: { jobs_remaining: number | null } | null; error: unknown };
-
-    if (updateError) {
-      return NextResponse.json({ error: "Failed to decrement jobs_remaining", details: updateError }, { status: 500 });
+    if (newValue === null) {
+      return NextResponse.json({ error: "No jobs remaining", jobs_remaining: 0 }, { status: 400 });
     }
 
-    return NextResponse.json({ ok: true, jobs_remaining: Number(updated?.jobs_remaining ?? newValue) }, { status: 200 });
+    return NextResponse.json({ ok: true, jobs_remaining: newValue }, { status: 200 });
   } catch (err: unknown) {
     console.error("[/api/consume-job] Unexpected error:", err);
     return NextResponse.json({ error: "Unexpected server error", details: String(err) }, { status: 500 });

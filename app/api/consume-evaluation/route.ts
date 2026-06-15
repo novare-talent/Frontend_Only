@@ -41,15 +41,14 @@ export async function POST(req: NextRequest) {
     }
     const userId = user.id;
 
-    // Find most recent subscription for this profile
-    // NOTE: change .eq("profile_id", userId) if your FK uses another column (user_id, owner_id, etc.)
+    // Find most recent subscription row id for this profile
     const { data: subs, error: subsError } = await supabaseAdmin
       .from("subscriptions")
-      .select("id, evaluations_remaining, status, created_at")
+      .select("id")
       .eq("profile_id", userId)
       .order("created_at", { ascending: false })
       .limit(1)
-      .maybeSingle() as { data: { id: string; evaluations_remaining: number | null; status: string; created_at: string } | null; error: unknown };
+      .maybeSingle() as { data: { id: string } | null; error: unknown };
 
     if (subsError) {
       return NextResponse.json({ error: "Error reading subscriptions", details: subsError }, { status: 500 });
@@ -59,27 +58,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No subscription found" }, { status: 404 });
     }
 
-    const current = Number(subs.evaluations_remaining ?? 0);
-    if (current <= 0) {
-      return NextResponse.json({ error: "No evaluations remaining", evaluations_remaining: current }, { status: 400 });
+    // Atomic conditional decrement — single SQL statement, no race condition.
+    // Returns the new evaluations_remaining value, or null if it was already 0.
+    // Requires the decrement_evaluations(sub_id uuid) Postgres function (see db/functions.sql).
+    const { data: newValue, error: rpcError } = await supabaseAdmin
+      .rpc("decrement_evaluations", { sub_id: subs.id }) as { data: number | null; error: unknown };
+
+    if (rpcError) {
+      return NextResponse.json({ error: "Failed to decrement evaluations_remaining", details: rpcError }, { status: 500 });
     }
 
-    // Decrement evaluations_remaining by 1
-    const newValue = current - 1;
-
-    const { data: updated, error: updateError } = await supabaseAdmin
-      .from("subscriptions")
-      // @ts-expect-error — supabase types not regenerated yet; evaluations_remaining column exists at runtime
-      .update({ evaluations_remaining: newValue })
-      .eq("id", subs.id)
-      .select()
-      .single() as { data: { evaluations_remaining: number | null } | null; error: unknown };
-
-    if (updateError) {
-      return NextResponse.json({ error: "Failed to decrement evaluations_remaining", details: updateError }, { status: 500 });
+    if (newValue === null) {
+      return NextResponse.json({ error: "No evaluations remaining", evaluations_remaining: 0 }, { status: 400 });
     }
 
-    return NextResponse.json({ ok: true, evaluations_remaining: Number(updated?.evaluations_remaining ?? newValue) }, { status: 200 });
+    return NextResponse.json({ ok: true, evaluations_remaining: newValue }, { status: 200 });
   } catch (err: unknown) {
     console.error("[/api/consume-evaluation] Unexpected error:", err);
     return NextResponse.json({ error: "Unexpected server error", details: String(err) }, { status: 500 });
