@@ -54,80 +54,32 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // 🧭 Dashboard Routes (for regular users)
-  if (path.startsWith("/Dashboard")) {
-    if (!user) {
+  // Role-gated sections — one profile query covers all three route sections
+  const needsRoleCheck = path.startsWith("/Dashboard") || path.startsWith("/client") || path.startsWith("/admin");
+  if (needsRoleCheck) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    const role = profile?.role;
+
+    if (path.startsWith("/Dashboard") && role !== "user") {
       const url = request.nextUrl.clone();
-      url.pathname = "/sign-in";
+      url.pathname = role === "admin" ? "/admin" : role === "client" ? "/client" : "/";
       return NextResponse.redirect(url);
     }
 
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    // Allow users with 'user' role to access dashboard
-    if (error || !profile || profile.role !== "user") {
-      // If not a regular user, redirect based on their actual role
-      if (profile?.role === "admin") {
-        const url = request.nextUrl.clone();
-        url.pathname = "/admin";
-        return NextResponse.redirect(url);
-      } else if (profile?.role === "client") {
-        const url = request.nextUrl.clone();
-        url.pathname = "/client";
-        return NextResponse.redirect(url);
-      } else {
-        // Unknown role or error - redirect to home
-        const url = request.nextUrl.clone();
-        url.pathname = "/";
-        return NextResponse.redirect(url);
-      }
-    }
-  }
-
-  // 🧭 Client Routes
-  if (path.startsWith("/client")) {
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (error || !profile || profile.role !== "client") {
-      // Redirect to appropriate dashboard based on actual role
+    if (path.startsWith("/client") && role !== "client") {
       const url = request.nextUrl.clone();
-      if (profile?.role === "admin") {
-        url.pathname = "/admin";
-      } else if (profile?.role === "user") {
-        url.pathname = "/Dashboard";
-      } else {
-        url.pathname = "/sign-in";
-      }
+      url.pathname = role === "admin" ? "/admin" : role === "user" ? "/Dashboard" : "/sign-in";
       return NextResponse.redirect(url);
     }
-  }
 
-  // 🧠 Admin-only routes
-  if (path.startsWith("/admin")) {
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (error || !profile || profile.role !== "admin") {
-      // Redirect to appropriate dashboard based on actual role
+    if (path.startsWith("/admin") && role !== "admin") {
       const url = request.nextUrl.clone();
-      if (profile?.role === "client") {
-        url.pathname = "/client";
-      } else if (profile?.role === "user") {
-        url.pathname = "/Dashboard";
-      } else {
-        url.pathname = "/sign-in";
-      }
+      url.pathname = role === "client" ? "/client" : role === "user" ? "/Dashboard" : "/sign-in";
       return NextResponse.redirect(url);
     }
   }
