@@ -285,6 +285,13 @@ export function BillingPage() {
 
       const requestUrl = `${API_BASE_URL}/start-payment/${profileId}?jobs=${jobsCount}`
 
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        showNotification('error', 'Authentication Required', 'Session expired. Please sign in again.')
+        setIsProcessing(false)
+        return
+      }
+
       const controller = new AbortController()
       const timeoutId = setTimeout(() => {
         controller.abort()
@@ -297,6 +304,7 @@ export function BillingPage() {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
           },
           mode: 'cors',
           signal: controller.signal,
