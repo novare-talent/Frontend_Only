@@ -5,6 +5,17 @@
 
 ---
 
+## Production Prerequisites
+
+Before these fixes go live, complete these manual steps:
+
+| Step | Action | Urgency |
+|------|--------|---------|
+| **DB functions** | Run `db/functions.sql` in the Supabase SQL Editor. Creates `decrement_jobs()` and `decrement_evaluations()`. Without this, `/api/consume-job` and `/api/consume-evaluation` return 500 on every call. | **Required before deploying Fix 2** |
+| **Env var** | Set `ASSIGNMENT_BACKEND_URL` in Vercel dashboard (or `.env.local`) to the EC2 backend URL. Current code falls back to the old hardcoded plaintext HTTP IP if unset. | Recommended |
+
+---
+
 ## Fix Index
 
 | # | Issue Ref | Area | Severity | Status |
@@ -302,39 +313,39 @@ const publicPaths = [
 ---
 
 ### Fix 7 — `tw-animate-css` CSS Import Not Resolving
-**Type:** Build error · **Severity:** Blocker · **Commit:** `6b93302`
+**Type:** Build error · **Severity:** Blocker · **Commits:** `6b93302`, `bdc443d`
 
 #### Technical Problem
-`app/globals.css` contained:
-```css
-@import "tw-animate-css";
-```
-
-The `tw-animate-css` package (v1.3.6) defines its CSS entry point via the `exports["."].style` field in `package.json`:
+`app/globals.css` had `@import "tw-animate-css"`. The `tw-animate-css` package exposes its CSS only via the `exports["."].style` field:
 ```json
 "exports": {
   ".": { "style": "./dist/tw-animate.css" }
 }
 ```
 
-`@tailwindcss/postcss` (Tailwind v4's PostCSS plugin) resolves `@import` statements for npm packages, but it resolves by the `style` condition in the exports map. In Next.js 15, the webpack CSS processing chain (`css-loader` → `postcss-loader`) does **not** support the `exports` field's `style` condition — it only resolves bare package names to the `main` field or `index.css` at the package root. Since there is no `index.css` at the root of `tw-animate-css`, webpack threw:
+The `style` export condition is resolved by `@tailwindcss/postcss` (Tailwind v4's PostCSS plugin). When `postcss.config.mjs` was missing from the repo (accidentally deleted in a prior commit), Next.js fell back to default PostCSS with no Tailwind plugin, losing `style`-condition resolution. Webpack's CSS pipeline cannot resolve bare package names via `exports.style`, causing:
 
 ```
-Module not found: Can't resolve 'tw-animate-css'
+Package path ./dist/tw-animate.css is not exported from package tw-animate-css
 ```
 
 #### Fix Applied
-Changed to an explicit subpath import that bypasses exports map resolution entirely:
+Two-part fix:
+
+1. **Restored `postcss.config.mjs`** with `@tailwindcss/postcss`:
+   ```js
+   // postcss.config.mjs
+   const config = { plugins: ["@tailwindcss/postcss"] };
+   export default config;
+   ```
+
+2. **Kept `@import "tw-animate-css"`** (root import) in `app/globals.css` — this is correctly resolved via the `style` condition when `@tailwindcss/postcss` is present.
 
 ```css
-/* Before */
-@import "tw-animate-css";
-
-/* After */
-@import "tw-animate-css/dist/tw-animate.css";
+/* app/globals.css */
+@import "tailwindcss";
+@import "tw-animate-css";   ← resolved via exports.style by @tailwindcss/postcss
 ```
-
-Explicit file paths in CSS `@import` are resolved by the filesystem, not the package exports map, so they work regardless of the bundler's exports condition support.
 
 ---
 
@@ -415,19 +426,23 @@ Two compounding issues:
 ```typescript
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",  // required by Next.js + Turbopack
+  // unsafe-inline: Next.js inline scripts/styles; unsafe-eval: Turbopack HMR; wasm-unsafe-eval: WebAssembly (dotlottie, pdfjs)
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com https://generativelanguage.googleapis.com",
+  // unpkg.com + cdn.jsdelivr.net: @lottiefiles/dotlottie-react fetches its WASM renderer from CDN at runtime
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com https://generativelanguage.googleapis.com https://unpkg.com https://cdn.jsdelivr.net",
   "font-src 'self' data:",
   "frame-src 'none'",
   "object-src 'none'",
+  "media-src 'self' blob:",
+  "worker-src blob:",
   "base-uri 'self'",
   "form-action 'self'",
 ].join("; ")
 ```
 
-Removed `X-XSS-Protection` (deprecated). `unsafe-inline` and `unsafe-eval` are currently required by Next.js — the path to tighten these is a nonce-based CSP, which is a future hardening step.
+Removed `X-XSS-Protection` (deprecated). `unsafe-inline` and `unsafe-eval` are currently required by Next.js — the path to tighten these is a nonce-based CSP, which is a future hardening step. `wasm-unsafe-eval` is required by both `@lottiefiles/dotlottie-react` (Lottie animations) and `pdfjs-dist` (PDF preview) for WebAssembly instantiation. The CDN entries in `connect-src` are for the dotlottie WASM binary fetched at runtime from `unpkg.com` (primary) and `cdn.jsdelivr.net` (fallback) — blocking these produced "WASM loading failed from all sources" errors in the browser console.
 
 **Part B — strip HTML from AI output before DB write:**
 ```typescript
@@ -486,7 +501,7 @@ Added IP-based rate limiting to `app/api/submission/upload/route.ts`: max 5 uplo
 ---
 
 ### Fix 11 — Proxy Hardcoded IP, No Timeout, No Query-String Forwarding
-**Feedback issue:** #25 · **Severity:** Medium
+**Feedback issue:** #25 · **Severity:** Medium · **Commit:** `dc64ec0`
 
 **Problem:**
 `assignment-proxy` had the EC2 backend address hardcoded as a plaintext HTTP IP (`http://3.111.81.83:8000`). All 4 proxy routes (`assignment-proxy`, `evaluate-proxy`, `form-proxy`, `ranking-proxy`) had no request timeout — a slow or dead backend would hold the Vercel serverless function open indefinitely, burning CPU and eventually timing out with an opaque 504 on the client. Additionally, query strings from the incoming request (e.g., `?job_id=123`) were silently dropped and never forwarded to the backend.
@@ -520,7 +535,7 @@ Added IP-based rate limiting to `app/api/submission/upload/route.ts`: max 5 uplo
 ---
 
 ### Fix 12 — Middleware Triple Profile Query Collapsed to One
-**Feedback issue:** #24 · **Severity:** Medium
+**Feedback issue:** #24 · **Severity:** Medium · **Commit:** `dc64ec0`
 
 **Problem:**
 The middleware had 3 separate `supabase.from("profiles").select("role")` calls — one per guarded route section (`/Dashboard`, `/client`, `/admin`). While only one block runs per request, the code was structurally fragile: every future edit risked adding a fourth query, and the `/Dashboard` block contained a dead redundant `if (!user)` check that could never be true (user already checked 10 lines above).
