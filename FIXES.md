@@ -32,6 +32,10 @@ Before these fixes go live, complete these manual steps:
 | 10 | Feedback #19 | Correctness — No server-side dedup on responses; unthrottled uploads | Medium | ✅ Fixed |
 | 11 | Feedback #25 | Reliability — Proxy hardcoded IP, no timeout, no query-string forwarding | Medium | ✅ Fixed |
 | 12 | Feedback #24 | Performance — Middleware makes up to 3 redundant profile DB queries | Medium | ✅ Fixed |
+| 13 | Feedback #13 | Correctness — No idempotency on rejection email batches | High | ✅ Fixed |
+| 14 | Feedback #14 | Cost — No cap on AI evaluation fan-out | High | ✅ Fixed |
+| 15 | Feedback #18 | Correctness — Assignment submissions ignored in AI evaluation | Medium | ✅ Fixed |
+| 16 | Bug | Correctness — Evaluation results data structure mismatch (page showed no candidates) | Bug | ✅ Fixed |
 
 ---
 
@@ -554,6 +558,102 @@ Redirect logic is identical in behavior; redundant `if (!user)` removed.
 
 **Files changed:**
 - `utils/supabase/middleware.ts`
+
+---
+
+### Fix 13 — No Idempotency on Rejection Email Batches
+**Feedback issue:** #13 · **Severity:** High · **Commit:** TBD
+
+#### Technical Problem
+`send-rejection-emails/route.ts` had no guard against re-triggering. Clicking "Send Rejection Emails" twice (or a retried client request after a timeout) re-sent emails to every already-rejected candidate. The `rejection_emails_sent` job-level flag was set **after** all emails sent, so a mid-flight timeout left the flag unset and the next retry re-sent from the top.
+
+#### Fix Applied
+**Job-level guard:** Read `rejection_emails_sent` from the jobs table at the start of the handler. Return 409 before doing any work if true.
+
+**Per-candidate guard:** Read the `evaluations.results.candidates` array and filter out any candidate with `rejection_sent: true`. After each successful Resend API call, add the `profile_id` to a `sentIds` array. After the loop, update the evaluations JSONB — setting `rejection_sent: true` for each successfully sent candidate. The job-level flag is only set after at least one email succeeds.
+
+Files changed:
+- `app/api/send-rejection-emails/route.ts`
+
+---
+
+### Fix 14 — No Cap on AI Evaluation Fan-Out
+**Feedback issue:** #14 · **Severity:** High · **Commit:** TBD
+
+#### Technical Problem
+`/api/evaluate` fetched all responses for a form with no limit. A job with 2000 applicants would trigger 2000 resume downloads and 2000 Gemini calls from a single button click, with no rate limit or spend ceiling.
+
+#### Fix Applied
+Added `MAX_CANDIDATES = 500` check immediately after fetching responses. If `responses.length > 500`, the route returns HTTP 400 before any AI calls begin:
+
+```typescript
+const MAX_CANDIDATES = 500
+if (responses.length > MAX_CANDIDATES) {
+  return NextResponse.json(
+    { error: `Too many candidates (${responses.length}). Evaluation is capped at ${MAX_CANDIDATES} per run.` },
+    { status: 400 }
+  )
+}
+```
+
+Files changed:
+- `app/api/evaluate/route.ts`
+
+---
+
+### Fix 15 — Assignment Submissions Ignored in AI Evaluation
+**Feedback issue:** #18 · **Severity:** Medium · **Commit:** TBD
+
+#### Technical Problem
+The `assignments` table stores coding/task submissions via `submission_file_url`, but `/api/evaluate` never queried this table. The AI evaluated candidates solely on form responses and resume PDFs, ignoring the most structured signal collected: a submitted code or work artifact.
+
+#### Fix Applied
+After fetching responses, the route now queries `assignments` for all candidates in the job (excluding the template row keyed by `00000000-...`). A `candidate_id → submission_file_url` map is built and merged into each candidate. During batch evaluation, the route attempts to fetch text-based submissions (`.py`, `.js`, `.ts`, `.java`, `.txt`, etc.) via `extractAssignmentText()` and injects the content into the Gemini prompt:
+
+```
+Assignment Submission:
+<candidate's submitted code / text, capped at 2000 chars>
+```
+
+Each stored candidate now also has `has_assignment: true/false`, surfaced in the evaluation page UI.
+
+Files changed:
+- `app/api/evaluate/route.ts`
+
+---
+
+### Fix 16 — Evaluation Results Data Structure Mismatch
+**Type:** Bug · **Severity:** High (evaluation pages showed zero candidates) · **Commit:** TBD
+
+#### Technical Problem
+`/api/evaluate` stored candidates as a flat array: `results: evaluated[]`. The admin and client evaluate pages read `evalRow.results.candidates` (nested object), so they always got `undefined` → fell back to `[]` → rendered "No candidates evaluated yet." for every completed evaluation. Additionally, the route stored each candidate with `id` and `name` keys while the pages expected `profile_id` and `full_name`. AI scores were nested under a `results` sub-object while the pages expected them flat on the candidate.
+
+#### Fix Applied
+The route now stores: `results: { candidates: evaluated }`. Each candidate entry uses the page-expected key names and flat structure:
+
+```typescript
+{
+  profile_id: candidate.id,     // was: id
+  full_name: candidate.name,    // was: name
+  skills_match: evalResult.skills_score,           // numeric score, flat
+  experience_relevance: evalResult.experience_score,
+  communication_clarity: evalResult.communication_score,
+  overall_fit: evalResult.fit_score,
+  final_score: evalResult.final_score,
+  justification: evalResult.justification,
+  skills_assessment: evalResult.skills_match,      // text assessment kept separately
+  // ...
+  rejection_sent: false,
+}
+```
+
+The `send-rejection-emails` route's `evalMap` keying was also updated to use `c.profile_id ?? c.id` to handle both old and new records during the transition.
+
+Files changed:
+- `app/api/evaluate/route.ts`
+- `app/api/send-rejection-emails/route.ts`
+- `app/admin/evaluate/[id]/page.tsx`
+- `app/client/evaluate/[id]/page.tsx`
 
 ---
 

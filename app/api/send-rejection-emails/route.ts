@@ -148,10 +148,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    // Fetch job
+    // Fetch job — include rejection_emails_sent for job-level idempotency (#13)
     const { data: job, error: jobError } = await supabase
       .from("jobs")
-      .select("Job_Name, Job_Description")
+      .select("Job_Name, Job_Description, rejection_emails_sent")
       .eq("job_id", jobId)
       .single();
 
@@ -159,7 +159,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    // Fetch evaluation data to get resume URLs per candidate
+    // Job-level idempotency: all emails already sent for this job (#13)
+    if ((job as any).rejection_emails_sent) {
+      return NextResponse.json(
+        { error: "Rejection emails already sent for this job", alreadySent: true },
+        { status: 409 }
+      );
+    }
+
+    // Fetch evaluation data to get resume URLs and per-candidate sent status
     const { data: evalRow } = await supabase
       .from("evaluations")
       .select("results")
@@ -167,8 +175,16 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     const evalCandidates: any[] = evalRow?.results?.candidates ?? [];
+    // Key by profile_id; fall back to id for older evaluation records
     const evalMap: Record<string, any> = Object.fromEntries(
-      evalCandidates.map((c: any) => [c.profile_id, c])
+      evalCandidates.map((c: any) => [c.profile_id ?? c.id, c])
+    );
+
+    // Per-candidate idempotency: skip candidates who already received a rejection (#13)
+    const alreadySentIds = new Set(
+      evalCandidates
+        .filter((c: any) => c.rejection_sent)
+        .map((c: any) => c.profile_id ?? c.id)
     );
 
     // Fetch candidate profiles (only columns guaranteed to exist)
@@ -185,11 +201,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Only process candidates who haven't received an email yet
+    const profilesToProcess = (profiles ?? []).filter(p => !alreadySentIds.has(p.id));
+
+    if (profilesToProcess.length === 0) {
+      return NextResponse.json({
+        success: true,
+        message: "All selected candidates have already received rejection emails",
+        results: [],
+      });
+    }
+
     const fromEmail =
       process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
     const results: { email: string; name: string; success: boolean; error?: string }[] = [];
+    const sentIds: string[] = [];
 
-    for (const profile of profiles ?? []) {
+    for (const profile of profilesToProcess) {
       const candidateName =
         `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() ||
         "Candidate";
@@ -232,6 +260,7 @@ export async function POST(req: NextRequest) {
           });
         } else {
           results.push({ email: profile.email, name: candidateName, success: true });
+          sentIds.push(profile.id);
         }
       } catch (err: any) {
         results.push({
@@ -243,10 +272,25 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Mark per-candidate rejection_sent in the evaluations JSONB (#13)
+    if (sentIds.length > 0 && evalCandidates.length > 0) {
+      const sentSet = new Set(sentIds);
+      const updatedCandidates = evalCandidates.map((c: any) => ({
+        ...c,
+        rejection_sent: sentSet.has(c.profile_id ?? c.id) ? true : (c.rejection_sent ?? false),
+      }));
+      await supabase
+        .from("evaluations")
+        .update({ results: { candidates: updatedCandidates } })
+        .eq("job_id", jobId);
+    }
+
     // Mark job as rejection emails sent (column added via migration 003)
-    await (supabase.from("jobs") as any)
-      .update({ rejection_emails_sent: true })
-      .eq("job_id", jobId);
+    if (sentIds.length > 0) {
+      await (supabase.from("jobs") as any)
+        .update({ rejection_emails_sent: true })
+        .eq("job_id", jobId);
+    }
 
     const successCount = results.filter((r) => r.success).length;
 

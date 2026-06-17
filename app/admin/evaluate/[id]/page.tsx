@@ -29,6 +29,9 @@ type Candidate = {
   justification?: string;
   email?: string;
   phone?: string;
+  rejection_sent?: boolean;
+  needs_review?: boolean;
+  has_assignment?: boolean;
 };
 
 export default function AdminEvaluationPage() {
@@ -358,7 +361,7 @@ export default function AdminEvaluationPage() {
 
                     {/* Candidate Header */}
                     <div className="mb-3 space-y-1 pr-8">
-                      <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                      <h3 className="text-lg font-semibold flex items-center gap-2 flex-wrap text-gray-900 dark:text-gray-100">
                         <User className="size-4 text-primary" />
                         {c.full_name || "Unnamed Candidate"}
                         <span className="text-sm text-muted-foreground">
@@ -367,6 +370,21 @@ export default function AdminEvaluationPage() {
                         {isSelected && (
                           <Badge variant="destructive" className="text-xs ml-1">
                             Selected for rejection
+                          </Badge>
+                        )}
+                        {c.rejection_sent && (
+                          <Badge className="text-xs ml-1 bg-green-500/15 text-green-600 border border-green-500/30">
+                            Rejection sent
+                          </Badge>
+                        )}
+                        {c.needs_review && (
+                          <Badge variant="outline" className="text-xs ml-1 border-yellow-500/50 text-yellow-600">
+                            Needs review
+                          </Badge>
+                        )}
+                        {c.has_assignment && (
+                          <Badge variant="outline" className="text-xs ml-1">
+                            Assignment included
                           </Badge>
                         )}
                       </h3>
