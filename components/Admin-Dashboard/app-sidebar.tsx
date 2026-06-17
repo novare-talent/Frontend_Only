@@ -39,7 +39,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         setUser({
           name: session.user.user_metadata?.full_name || "Admin",
           email: session.user.email || "admin@gmail.com",
-          avatar: session.user.user_metadata?.avatar_url || "/avatars/shadcn.jpg",
+          avatar: session.user.user_metadata?.avatar_url || "/avatars/default.svg",
         });
       }
     };
