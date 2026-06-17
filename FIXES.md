@@ -34,8 +34,9 @@ Before these fixes go live, complete these manual steps:
 | 12 | Feedback #24 | Performance — Middleware makes up to 3 redundant profile DB queries | Medium | ✅ Fixed |
 | 13 | Feedback #13 | Correctness — No idempotency on rejection email batches | High | ✅ Fixed |
 | 14 | Feedback #14 | Cost — No cap on AI evaluation fan-out | High | ✅ Fixed |
-| 15 | Feedback #18 | Correctness — Assignment submissions ignored in AI evaluation | Medium | ✅ Fixed |
-| 16 | Bug | Correctness — Evaluation results data structure mismatch (page showed no candidates) | Bug | ✅ Fixed |
+| 15 | Bug | Correctness — Evaluation results data structure mismatch (page showed no candidates) | Bug | ✅ Fixed |
+| 16 | Bug | Auth — Evaluate-proxy called without Authorization header (401) | Bug | ✅ Fixed |
+| 17 | Bug | UX — `/avatars/default.jpg` 404 on dashboard load | Bug | ✅ Fixed |
 
 ---
 
@@ -601,28 +602,7 @@ Files changed:
 
 ---
 
-### Fix 15 — Assignment Submissions Ignored in AI Evaluation
-**Feedback issue:** #18 · **Severity:** Medium · **Commit:** TBD
-
-#### Technical Problem
-The `assignments` table stores coding/task submissions via `submission_file_url`, but `/api/evaluate` never queried this table. The AI evaluated candidates solely on form responses and resume PDFs, ignoring the most structured signal collected: a submitted code or work artifact.
-
-#### Fix Applied
-After fetching responses, the route now queries `assignments` for all candidates in the job (excluding the template row keyed by `00000000-...`). A `candidate_id → submission_file_url` map is built and merged into each candidate. During batch evaluation, the route attempts to fetch text-based submissions (`.py`, `.js`, `.ts`, `.java`, `.txt`, etc.) via `extractAssignmentText()` and injects the content into the Gemini prompt:
-
-```
-Assignment Submission:
-<candidate's submitted code / text, capped at 2000 chars>
-```
-
-Each stored candidate now also has `has_assignment: true/false`, surfaced in the evaluation page UI.
-
-Files changed:
-- `app/api/evaluate/route.ts`
-
----
-
-### Fix 16 — Evaluation Results Data Structure Mismatch
+### Fix 15 — Evaluation Results Data Structure Mismatch
 **Type:** Bug · **Severity:** High (evaluation pages showed zero candidates) · **Commit:** TBD
 
 #### Technical Problem
@@ -654,6 +634,36 @@ Files changed:
 - `app/api/send-rejection-emails/route.ts`
 - `app/admin/evaluate/[id]/page.tsx`
 - `app/client/evaluate/[id]/page.tsx`
+
+---
+
+### Fix 16 — Evaluate-Proxy Called Without Authorization Header
+**Type:** Bug · **Severity:** High (100% 401 rate on evaluation trigger) · **Commit:** TBD
+
+**Problem:**
+Both `components/Client-Dashboard/Job-Card.tsx` and `components/Admin-Dashboard/JobList.tsx` called `/api/evaluate-proxy/evaluate/...` with `fetch(url, { method: "POST" })` — no `Authorization` header. Fix 5 added JWT verification to all proxy routes, so every evaluation trigger returned 401.
+
+**Fix:**
+Both files already had `session` in scope (retrieved a few lines earlier for `consume-evaluation`). Added `headers: { Authorization: \`Bearer ${session.access_token}\` }` to the evaluate-proxy fetch call in each.
+
+Files changed:
+- `components/Client-Dashboard/Job-Card.tsx`
+- `components/Admin-Dashboard/JobList.tsx`
+
+---
+
+### Fix 17 — `/avatars/default.jpg` 404 on Dashboard Load
+**Type:** Bug · **Severity:** Low (console error, broken avatar image) · **Commit:** TBD
+
+**Problem:**
+`components/Candidate-Dashboard/app-sidebar.tsx` used `/avatars/default.jpg` as the fallback avatar URL in two places (session metadata fallback and loading state). The `public/avatars/` directory did not exist, causing a 404 on every dashboard load.
+
+**Fix:**
+Created `public/avatars/default.svg` — a minimal SVG person icon. Updated both references in `app-sidebar.tsx` from `/avatars/default.jpg` to `/avatars/default.svg`.
+
+Files changed:
+- `public/avatars/default.svg` (new)
+- `components/Candidate-Dashboard/app-sidebar.tsx`
 
 ---
 
