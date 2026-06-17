@@ -216,22 +216,6 @@ export default function JobList() {
         return;
       }
 
-      // Fetch the job's form_id
-      const { data: job, error: jobError } = await supabase
-        .from("jobs")
-        .select("form_id")
-        .eq("job_id", jobId)
-        .single();
-
-      if (jobError || !job?.form_id) {
-        showNotification(
-          "error",
-          "Evaluation failed",
-          "Form ID not found for this job."
-        );
-        return;
-      }
-
       // Start progress animation
       let progressValue = 10;
       setProgress(prev => ({ ...prev, [jobId]: progressValue }));
@@ -241,12 +225,11 @@ export default function JobList() {
         setProgress(prev => ({ ...prev, [jobId]: progressValue }));
       }, 500);
 
-      // Call the evaluate-proxy endpoint (same as client)
-      const formId = job.form_id;
-      const url = `/api/evaluate-proxy/evaluate/${jobId}/${formId}`;
-      const res = await fetch(url, {
+      // Call the internal evaluate route directly (evaluate.novaretalent.com is EC2-only)
+      const res = await fetch("/api/evaluate", {
         method: "POST",
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ job_id: jobId }),
       });
       const body = await res.text();
 
