@@ -97,7 +97,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           setUser({
             name: session.user.user_metadata?.full_name || "User",
             email: session.user.email,
-            avatar: session.user.user_metadata?.avatar_url || "/avatars/default.jpg",
+            avatar: session.user.user_metadata?.avatar_url || "/avatars/default.svg",
           });
         }
       }
@@ -143,7 +143,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             user || {
               name: "Loading...",
               email: "",
-              avatar: "/avatars/default.jpg",
+              avatar: "/avatars/default.svg",
             }
           }
         />

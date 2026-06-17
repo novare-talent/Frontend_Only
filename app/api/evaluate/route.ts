@@ -112,17 +112,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    /* ----------------------- 7c️⃣ Fetch Assignments (#18) ----------------------- */
-    const { data: assignmentRows } = await supabase
-      .from("assignments")
-      .select("candidate_id, submission_file_url")
-      .eq("job_id", job_id)
-      .neq("candidate_id", "00000000-0000-0000-0000-000000000000")
-
-    const assignmentMap: Record<string, string> = {}
-    for (const a of assignmentRows ?? []) {
-      if (a.submission_file_url) assignmentMap[a.candidate_id] = a.submission_file_url
-    }
 
     /* ----------------------- 8️⃣ Fetch Profiles with resume_url ----------------------- */
     const profileIds = responses.map((r) => r.profile_id).filter(Boolean)
@@ -161,7 +150,6 @@ export async function POST(request: NextRequest) {
         email: p.email || "Not provided",
         phone: p.phone || "Not provided",
         resume_url: resumeUrl,
-        assignment_url: assignmentMap[p.id] ?? null,
       }
     })
 
@@ -184,22 +172,14 @@ export async function POST(request: NextRequest) {
               console.warn(`  Failed to extract resume for ${candidate.name}:`, resumeErr)
             }
           }
-          let assignmentText: string | null = null
-          if (candidate.assignment_url) {
-            try {
-              assignmentText = await extractAssignmentText(candidate.assignment_url)
-            } catch (err) {
-              console.warn(`  Failed to extract assignment for ${candidate.name}:`, err)
-            }
-          }
-          const evalResult = await evaluateCandidateWithRetry(candidate, jobDescription, resumeText, assignmentText)
-          return { candidate, evalResult, resumeText, assignmentText }
+          const evalResult = await evaluateCandidateWithRetry(candidate, jobDescription, resumeText)
+          return { candidate, evalResult, resumeText }
         })
       )
 
       for (const result of batchResults) {
         if (result.status === "fulfilled" && result.value.evalResult) {
-          const { candidate, evalResult, resumeText, assignmentText } = result.value
+          const { candidate, evalResult, resumeText } = result.value
           const e = evalResult
           evaluated.push({
             profile_id: candidate.id,
@@ -208,7 +188,6 @@ export async function POST(request: NextRequest) {
             phone: candidate.phone,
             resume_url: candidate.resume_url,
             has_resume: !!resumeText,
-            has_assignment: !!assignmentText,
             // Numeric scores (flat, for sorting and display)
             skills_match: e.skills_score ?? 0,
             experience_relevance: e.experience_score ?? 0,
@@ -287,7 +266,6 @@ export async function POST(request: NextRequest) {
         failed: candidates.length - evaluated.length,
         with_resume: evaluated.filter(e => e.has_resume).length,
         without_resume: evaluated.filter(e => !e.has_resume).length,
-        with_assignment: evaluated.filter(e => e.has_assignment).length,
       }
     })
   } catch (error: any) {
@@ -345,29 +323,11 @@ async function extractResumeText(resumeUrl: string): Promise<string | null> {
   }
 }
 
-/* ----------------------- Helper: Extract Assignment Text (#18) ----------------------- */
-async function extractAssignmentText(url: string): Promise<string | null> {
-  try {
-    validateStorageUrl(url)
-    const response = await fetch(url, { signal: AbortSignal.timeout(10_000) })
-    if (!response.ok) return null
-    const contentType = response.headers.get("content-type") ?? ""
-    if (contentType.includes("text") || /\.(py|js|ts|txt|java|cpp|c|go|rb|rs|php|swift|kt|cs|r)$/i.test(url)) {
-      const text = await response.text()
-      return text.substring(0, 3000)
-    }
-    return null
-  } catch {
-    return null
-  }
-}
-
 /* ----------------------- Helper: Evaluate with Retry ----------------------- */
 async function evaluateCandidateWithRetry(
   candidate: any,
   jobDescription: string,
   resumeText: string | null,
-  assignmentText: string | null = null,
   maxRetries: number = 3
 ) {
   let lastError: any = null
@@ -375,7 +335,7 @@ async function evaluateCandidateWithRetry(
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       console.log(`    Attempt ${attempt}/${maxRetries}`)
-      const result = await evaluateCandidate(candidate, jobDescription, resumeText, assignmentText)
+      const result = await evaluateCandidate(candidate, jobDescription, resumeText)
       return result
     } catch (error: any) {
       lastError = error
@@ -438,8 +398,7 @@ function computeFinalScore(obj: any): number {
 async function evaluateCandidate(
   candidate: any,
   jobDescription: string,
-  resumeText: string | null,
-  assignmentText: string | null = null
+  resumeText: string | null
 ) {
   try {
     const model = genAI.getGenerativeModel({
@@ -456,7 +415,6 @@ async function evaluateCandidate(
     const prompt = `
 You are an AI recruiter. Evaluate this candidate for the given job description.
 ${resumeText ? 'A resume has been provided.' : 'NOTE: No resume available - evaluate based on form responses only.'}
-${assignmentText ? 'A coding/assignment submission has been provided.' : ''}
 
 Return ONLY a valid JSON object with this exact structure (no markdown, no extra text).
 All score fields must be integers between 0 and 100.
@@ -480,7 +438,6 @@ Candidate Profile:
 ${JSON.stringify(candidateInfo, null, 2)}
 
 ${resumeText ? `\nResume Content:\n${resumeText.substring(0, 3000)}` : '\nNo resume provided - base evaluation on form responses and profile information.'}
-${assignmentText ? `\nAssignment Submission:\n${assignmentText.substring(0, 2000)}` : ''}
 `
 
     const result = await model.generateContent(prompt)

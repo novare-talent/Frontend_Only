@@ -261,7 +261,10 @@ export function JobCard({
 
       const formId = job.form_id;
       const url = `/api/evaluate-proxy/evaluate/${jobId}/${formId}`;
-      const res = await fetch(url, { method: "POST" });
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
       const body = await res.text();
 
       if (!res.ok) {

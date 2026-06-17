@@ -43,7 +43,6 @@ type Candidate = {
   phone?: string;
   rejection_sent?: boolean;
   needs_review?: boolean;
-  has_assignment?: boolean;
 };
 
 export default function EvaluationPage() {
@@ -353,11 +352,6 @@ export default function EvaluationPage() {
                         {c.needs_review && (
                           <Badge variant="outline" className="text-xs ml-1 border-yellow-500/50 text-yellow-600">
                             Needs review
-                          </Badge>
-                        )}
-                        {c.has_assignment && (
-                          <Badge variant="outline" className="text-xs ml-1">
-                            Assignment included
                           </Badge>
                         )}
                       </h3>

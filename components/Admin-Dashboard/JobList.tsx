@@ -244,7 +244,10 @@ export default function JobList() {
       // Call the evaluate-proxy endpoint (same as client)
       const formId = job.form_id;
       const url = `/api/evaluate-proxy/evaluate/${jobId}/${formId}`;
-      const res = await fetch(url, { method: "POST" });
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
       const body = await res.text();
 
       clearInterval(progressInterval);
