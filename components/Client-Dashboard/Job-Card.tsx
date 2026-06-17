@@ -244,10 +244,20 @@ export function JobCard({
         return;
       }
 
-      const res = await fetch("/api/evaluate", {
+      const { data: job, error } = await supabase
+        .from("jobs")
+        .select("form_id")
+        .eq("job_id", jobId)
+        .single();
+
+      if (error || !job?.form_id) {
+        showNotification("error", "Evaluation failed", "Form ID not found for this job.");
+        return;
+      }
+
+      const res = await fetch(`/api/evaluate-proxy/evaluate/${jobId}/${job.form_id}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ job_id: jobId }),
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
       const body = await res.text();
 

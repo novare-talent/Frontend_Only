@@ -225,11 +225,22 @@ export default function JobList() {
         setProgress(prev => ({ ...prev, [jobId]: progressValue }));
       }, 500);
 
-      // Call the internal evaluate route directly (evaluate.novaretalent.com is EC2-only)
-      const res = await fetch("/api/evaluate", {
+      // Fetch form_id for evaluate-proxy URL
+      const { data: job, error: jobError } = await supabase
+        .from("jobs")
+        .select("form_id")
+        .eq("job_id", jobId)
+        .single();
+
+      if (jobError || !job?.form_id) {
+        clearInterval(progressInterval);
+        showNotification("error", "Evaluation failed", "Form ID not found for this job.");
+        return;
+      }
+
+      const res = await fetch(`/api/evaluate-proxy/evaluate/${jobId}/${job.form_id}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ job_id: jobId }),
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
       const body = await res.text();
 
