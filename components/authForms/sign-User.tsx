@@ -113,6 +113,16 @@ export function SignUpForm({
       return;
     }
 
+    if (!resumeFile) {
+      toast.error("Resume Required", {
+        description: "Please upload your resume (PDF, max 2MB) to continue.",
+        duration: 5000,
+        position: "top-right",
+      });
+      setIsLoading(false);
+      return;
+    }
+
     if (!validateUserUrls()) {
       toast.error("Invalid URL", {
         description: "Please fix the URL errors before submitting.",
@@ -472,7 +482,8 @@ export function SignUpForm({
       userFormData.phone &&
       userFormData.linkedinLink &&
       userFormData.password &&
-      userFormData.password.length >= 6
+      userFormData.password.length >= 6 &&
+      !!resumeFile
     );
   };
 
@@ -665,7 +676,7 @@ export function SignUpForm({
                 </div>
 
                 <div className="grid gap-2 mt-3">
-                  <Label className="text-foreground">Resume (Optional)</Label>
+                  <Label className="text-foreground">Resume <span className="text-red-500">*</span></Label>
                   {resumeFile ? (
                     <div className="flex items-center gap-2 p-3 border rounded-lg bg-muted/50">
                       <Upload className="h-4 w-4 text-muted-foreground" />
@@ -724,10 +735,10 @@ export function SignUpForm({
                     >
                       <Upload className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
                       <p className="text-sm font-medium">Click to upload or drag & drop</p>
-                      <p className="text-xs text-muted-foreground mt-1">PDF (up to 2MB)</p>
+                      <p className="text-xs text-muted-foreground mt-1">PDF only · max 2 MB · required</p>
                     </div>
                   )}
-                  <p className="text-xs text-muted-foreground">You can update your resume later in the profile section</p>
+                  <p className="text-xs text-muted-foreground">You can replace your resume any time from the profile section</p>
                 </div>
 
                 <Button
