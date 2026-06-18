@@ -28,7 +28,8 @@ Core technology components:
   Browser                React 19, Framer Motion, GSAP, Three.js
   Edge / SSR             Next.js 15.0.5 (App Router), Vercel
   Database + Auth        Supabase Postgres + Auth (hosted, Mumbai ap-south-1)
-  File Storage           Supabase Storage (buckets: jd, assignments, resumes)
+  File Storage           Supabase Storage (buckets: jd, assignments, resumes,
+                         profile-images, avatars)
   AI — Form Generation   OpenAI gpt-4o
   AI — Rejection Emails  OpenAI gpt-4o
   AI — Evaluation        OpenAI gpt-5.1 (EC2 evaluation service, §3.5.3)
@@ -51,7 +52,9 @@ The platform is organised into five distinct layers:
                                                   responses, evaluations, credits
   Storage          Supabase Storage               JD PDFs (jd bucket), assignment
                                                   files (assignments bucket),
-                                                  candidate resumes
+                                                  candidate resumes (resumes bucket),
+                                                  profile pictures (profile-images,
+                                                  avatars buckets)
   AI / External    OpenAI API,                    Form generation, evaluation,
   Services         Resend, EC2 Python APIs        emails, payments, rankings
 
@@ -129,7 +132,8 @@ middleware.ts
 utils/supabase/middleware.ts — Role-Based Routing
   Step 1: Pass public paths without auth check:
           /, /sign-in, /sign-up, /error, /forgot-password,
-          /auth/update-password, /auth/callback, /iit-placements
+          /auth/update-password, /auth/callback, /iit-placements,
+          /submission (public candidate application form — no auth required)
   Step 2: Create Supabase SSR client with cookie getter/setter.
   Step 3: Call supabase.auth.getUser() — if no user → redirect /sign-in.
   Step 4: For /Dashboard routes — query profiles.role, enforce role="user";
@@ -203,7 +207,13 @@ Database Tables (confirmed from API route code)
     last_name       TEXT
     email           TEXT
     phone           TEXT
-    resume_url      TEXT | JSON array of resume URLs
+    github_link     TEXT  — candidate only (optional)
+    linkedin_link   TEXT  — candidate only (required at sign-up)
+    profile_image   TEXT  — Supabase Storage public URL (bucket: profile-images)
+    company_name    TEXT  — client only
+    resume_url      TEXT[]  — array of Supabase Storage public URLs (bucket: resumes);
+                              first element used by evaluation service;
+                              required at candidate sign-up (mandatory upload)
 
   subscriptions
     id              UUID  (PK)
@@ -243,15 +253,24 @@ Database Tables (confirmed from API route code)
 
   evaluations
     job_id          UUID  (PK / upsert conflict key — see §3.5.3)
-    results         JSONB — evaluation envelope written by the EC2 service:
+    results         JSONB — evaluation envelope written by the EC2 service and
+                     enriched by the Next.js layer before final upsert:
                      { job_id, form_id, job_summary (text),
                        evaluated_at (UTC ISO timestamp),
                        total_candidates (int),
                        candidates: [
-                         { profile_id, full_name, resume_url,
+                         { profile_id, full_name, email, phone,
+                           resume_url, has_resume (bool),
                            skills_match (0–100), experience_relevance (0–100),
-                           communication_clarity (0–100),
-                           final_score (0–100), justification (≤100 words) }
+                           communication_clarity (0–100), overall_fit (0–100),
+                           final_score (0–100),
+                           skills_assessment (text), experience_assessment (text),
+                           communication_assessment (text), fit_assessment (text),
+                           justification (≤100 words),
+                           needs_review (bool), review_reason (text|null),
+                           rejection_sent (bool) — per-candidate idempotency flag;
+                                                   prevents duplicate rejection emails
+                         }
                        ] }
 
   assignments
@@ -268,12 +287,18 @@ Database Tables (confirmed from API route code)
     email           TEXT
 
 Storage Buckets
-  jd          — client-uploaded Job Description PDFs
-                path pattern: {userId}/{timestamp}-{filename}
-  assignments — candidate assignment submissions (.zip / .py only, 50 MB cap)
-                path pattern: {jobId}/{candidateId}/{timestamp}{ext}
-  resumes     — candidate resume PDFs (referenced from profiles.resume_url
-                and responses.resume_url)
+  jd             — client-uploaded Job Description PDFs
+                   path pattern: {userId}/{timestamp}-{filename}
+  assignments    — candidate assignment submissions (.zip / .py only, 50 MB cap)
+                   path pattern: {jobId}/{candidateId}/{timestamp}{ext}
+  resumes        — candidate resume PDFs; populated at sign-up (mandatory) and
+                   at form submission; referenced from profiles.resume_url (TEXT[])
+                   and responses.resume_url
+                   path pattern: {userId}/{timestamp}_{filename}
+  profile-images — candidate profile pictures uploaded during sign-up (optional)
+                   path pattern: {userId}/{filename}
+  avatars        — profile pictures updated from the dashboard Account page
+                   path pattern: {userId}/{timestamp}_{filename}
 
 ────────────────────────────────────────────────────────────────────────────────
 3.4  AI SERVICES
@@ -551,9 +576,13 @@ Endpoints
       job_id  — UUID matching jobs.job_id in Supabase
       form_id — UUID matching responses.form_id in Supabase
 
-    Auth: None. CORS restricted to https://novaretalent.com and
-    https://www.novaretalent.com. No JWT or shared-secret validation at
-    the EC2 layer. (See §6.2 for the gap and recommended mitigation.)
+    Auth: JWT verified at the Next.js proxy layer (§7) before the request
+    reaches EC2. The proxy extracts the Bearer token from the Authorization
+    header, calls supabaseAdmin.auth.getUser(token), and returns 401 if the
+    token is invalid or missing. The verified token is forwarded to EC2 in
+    the Authorization header. CORS on EC2 is restricted to novaretalent.com
+    and www.novaretalent.com. No additional JWT validation on the EC2 layer
+    itself — the proxy is the auth boundary.
 
     Flow:
       1. Read JD_pdf URL from Supabase jobs table by job_id.
@@ -612,10 +641,14 @@ Endpoints
                   { "detail": "Failed to extract JD text" }
                   { "detail": "<unhandled exception message>" }
 
-    Note: This service performs no rate limiting, no credit deduction, and
-    no auth validation. Credit consumption (/api/consume-evaluation — §4.5)
-    remains the Next.js layer's responsibility and must be called by the
-    client after a successful evaluation response.
+    Candidate cap: MAX_CANDIDATES = 500. If a job has more than 500 responses,
+    only the first 500 are evaluated. This cap prevents runaway OpenAI API spend
+    on unexpectedly large applicant pools.
+
+    Note: This service performs no rate limiting and no credit deduction.
+    Auth is enforced at the Next.js proxy layer (see Auth above). Credit
+    consumption (/api/consume-evaluation — §4.5) remains the Next.js layer's
+    responsibility and must be called by the client before triggering evaluation.
 
 Database
   Connects directly to Supabase (SUPABASE_URL + SUPABASE_KEY env vars).
@@ -627,12 +660,15 @@ Database
   evaluations upsert (consistent with §3.3 and §6.2).
 
 Authentication Model
-  No JWT validation. CORS restricts browser-origin calls to novaretalent.com
-  but is not a substitute for server-to-server authentication. The Next.js
-  proxy (§7) does not forward the user's auth header to EC2. A shared-secret
-  header (X-Internal-Secret) validated on this service is the recommended
-  mitigation — consistent with the gap documented in §6.2 for the payment
-  service.
+  JWT verification is performed at the Next.js proxy layer (§7) before any
+  request reaches EC2:
+    1. Proxy reads Authorization: Bearer <token> from the incoming request.
+    2. Calls supabaseAdmin.auth.getUser(token) — returns 401 if invalid or missing.
+    3. Forwards the verified Authorization header to EC2.
+  EC2 itself performs no JWT validation; it trusts the proxy as the auth
+  boundary. CORS on EC2 restricts browser-origin calls to novaretalent.com.
+  A shared-secret header (X-Internal-Secret) for an additional server-to-server
+  layer remains a recommended hardening step but is not yet implemented.
 
 External Dependencies
   OpenAI API (gpt-5.1, AsyncOpenAI SDK). Two call types per evaluation run:
@@ -722,11 +758,14 @@ Note: The public /submission route uses anon Supabase client; profiles are
 Step   Detail
 ─────  ──────────────────────────────────────────────────────────────────────
 1      Client or admin POSTs to /api/evaluate-proxy/evaluate/{job_id}/{form_id}
-       from /client/evaluate/[id] or /admin/evaluate/[id].
-       Access is gated by Next.js middleware (§3.2) which enforces role
-       "client" or "admin" before the request reaches the proxy route.
-2      Next.js proxy forwards to EC2 at https://evaluate.novaretalent.com
-       (§3.5.3, §7). No auth header is added by the proxy (see §6.2 gap).
+       with Authorization: Bearer <access_token>, from /client/evaluate/[id]
+       or /admin/evaluate/[id]. Access is also gated by Next.js middleware
+       (§3.2) which enforces role "client" or "admin".
+2      Next.js proxy (§3.5.3, §7) validates the Bearer token via
+       supabaseAdmin.auth.getUser() — returns 401 if invalid. On success,
+       forwards the request to EC2 at https://evaluate.novaretalent.com with
+       the Authorization header included. Proxy timeout: 290 s; Vercel
+       maxDuration: 300 s (Vercel Pro required).
 3      EC2: reads JD_pdf URL from Supabase jobs table by job_id.
        Downloads JD PDF; extracts text with pdfplumber (OCR fallback via
        pytesseract if pdfplumber yields empty text). Result cached to
@@ -764,10 +803,11 @@ Step   Detail
 
 Latency estimate: 1 GPT call (JD summarization) + N parallel GPT calls
 (candidates, up to 15 concurrent). For 10 candidates ≈ 5–15 s. Evaluation
-runs on a persistent EC2 instance (no serverless timeout on the EC2 side),
-but the Next.js Vercel proxy function has a default 60 s timeout for its
-outbound HTTP request. Pools of 20+ candidates approaching that window
-should move to an async-job pattern with result polling.
+runs on a persistent EC2 instance (no serverless timeout on the EC2 side).
+The Next.js Vercel proxy function timeout is 290 s (maxDuration = 300 s,
+requires Vercel Pro). Pools of 100+ candidates may still approach this window;
+an async-job pattern with result polling is recommended for very large batches.
+Candidate cap of 500 prevents unbounded evaluation runs (§3.5.3).
 
 ────────────────────────────────────────────────────────────────────────────────
 4.4  BULK REJECTION EMAIL SEND (/api/send-rejection-emails)
@@ -777,10 +817,13 @@ Step   Detail
 ─────  ──────────────────────────────────────────────────────────────────────
 1      Client POSTs { jobId, candidateIds[] } with Bearer token.
 2      Token validated via supabase admin client auth.getUser(token).
-3      Fetch job: Job_Name, Job_Description.
+3      Fetch job: Job_Name, Job_Description, rejection_emails_sent.
+       Guard: if job.rejection_emails_sent === true → return 409 (already sent).
 4      Fetch evaluation row for jobId → results.candidates array;
        build Map<profile_id, evalData> (scores + justification + resume_url).
-5      Fetch profiles for candidateIds: id, first_name, last_name, email.
+       Filter out candidates where evalData.rejection_sent === true
+       (per-candidate idempotency — prevents duplicate sends on retry).
+5      Fetch profiles for remaining candidateIds: id, first_name, last_name, email.
 6      For each candidate (sequential):
          a. Extract resume text from evalData.resume_url via pdf-parse
             (capped at 8000 chars).
@@ -788,9 +831,12 @@ Step   Detail
          c. Call gpt-4o (json_object mode, temp 0.4, max 1400 tokens).
          d. Parse { subject, body } — fallback to generic template on error.
          e. Send via resend.emails.send() from zenhyre@novaretalent.com.
-         f. Record per-candidate success/failure.
-7      Update jobs table: rejection_emails_sent = true.
-8      Return { success, message: "N/M rejection emails sent", results[] }.
+         f. Record per-candidate success/failure; collect sent profile_ids.
+7      Update evaluations JSONB: set rejection_sent = true for each successfully
+       sent candidate (prevents re-send if the endpoint is called again).
+8      If at least one email was sent: update jobs table:
+       rejection_emails_sent = true (job-level idempotency flag).
+9      Return { success, message: "N/M rejection emails sent", results[] }.
 
 Latency: sequential per candidate — each iteration = 1 PDF fetch + parse +
 1 OpenAI call + 1 Resend call. For 20 candidates ≈ 40–80 s. High
@@ -865,13 +911,17 @@ The following bottlenecks are confirmed from the codebase, ordered by severity.
                                Promise.allSettled(); consider async queue + webhook.
 
   2   Large candidate pool     /api/evaluate-proxy/         EC2 runs all candidates concurrently (semaphore=15)
-      evaluation latency       evaluate/{job_id}/{form_id}  but each GPT-5.1 call takes 2–5 s. For 20+
-                               — Vercel proxy timeout       candidates the EC2 response may exceed the 60 s
-                                                            Vercel proxy function timeout, causing a gateway
-                                                            error even though EC2 finishes correctly.
+      evaluation latency       evaluate/{job_id}/{form_id}  but each GPT-5.1 call takes 2–5 s. Proxy timeout
+                               — Vercel proxy timeout       raised to 290 s (maxDuration=300 s, Vercel Pro).
+                                                            For 100+ candidates the EC2 response may still
+                                                            exceed this window; MAX_CANDIDATES=500 cap limits
+                                                            worst-case exposure. EC2 Docker container must
+                                                            have --restart=unless-stopped to avoid silent
+                                                            outages that masquerade as proxy timeouts.
                                Mitigation: return 202 immediately from EC2,
                                process asynchronously, push result via Supabase
-                               Realtime or a polling endpoint.
+                               Realtime or a polling endpoint (recommended for
+                               batches > 50 candidates).
 
   3   No rate limiting on      /api/evaluate-proxy/         The EC2 evaluation service has no rate limiting and
       evaluate service         evaluate/{job_id}/{form_id}  no auth validation. Each request triggers 1+N
@@ -945,9 +995,16 @@ Service-role key       Used server-side only in   Never expose in client bundle.
 Admin client           Inline createClient()       Consider singleton pattern already
 instantiated per       in multiple route files     in place for credits route; apply
 request                                            consistently across all admin routes.
+Evaluate proxy         ✓ RESOLVED — proxy now      JWT verified at Next.js proxy layer
+auth                   validates Bearer JWT        (supabaseAdmin.auth.getUser) before
+                       before forwarding           forwarding; 401 returned on failure.
 Payment proxy          No auth forwarding from     Add a shared secret header
 forwards to EC2        Next.js to backend          (e.g., X-Internal-Secret) validated
 without auth           (headers stripped)          on EC2 to prevent direct bypass.
+                                                   Additionally: proxy should inject
+                                                   profile_id from the verified token
+                                                   rather than trusting caller-supplied
+                                                   profile_id in the request body.
 
 ────────────────────────────────────────────────────────────────────────────────
 6.3  RATE LIMITING (CURRENT STATE)
@@ -965,8 +1022,10 @@ Recommended limits to implement:
   ─────────────────────────────────  ──────────────────────────  ─────────────────────────────
   /api/generate-form                 3 req / min per user        Token bucket in middleware
   /api/evaluate-proxy/evaluate/…    2 req / 5 min per user      Supabase or Upstash Redis
-  /api/send-rejection-emails         1 req / job (idempotent     Check rejection_emails_sent
-                                     via DB flag)                flag before processing
+  /api/send-rejection-emails         ✓ RESOLVED — idempotent     Job-level flag (rejection_emails_sent)
+                                     at job level + per-         + per-candidate JSONB flag
+                                     candidate JSONB flag        (rejection_sent) both checked;
+                                                                 returns 409 if already fully sent
   /api/consume-job, consume-eval     10 req / min per user       Prevent credit drain attacks
   /api/submission/upload             5 req / min per candidate   Prevent storage flooding
   /sign-in, /sign-up, /auth/*        5 attempts / 15 min per IP  Brute-force prevention
@@ -986,6 +1045,11 @@ Recommended limits to implement:
                                                          unbounded loops
   /api/submission/upload  file type (.zip/.py) and       Already enforced — good
                           size (50 MB) validated
+  /sign-up (candidate)    Resume upload: PDF only,        ✓ ENFORCED — field is required;
+                          max 2 MB, required              submit button disabled without file;
+                                                          server-side guard returns 400 if
+                                                          resumeFile missing; stored in resumes
+                                                          bucket; URL saved to profiles.resume_url
   /api/consume-job/eval   Bearer token validation        Good — admin client used
   /api/credits            Bearer token validation        Good
   Client-side forms       react-hook-form + zod v4       Good — schema validation
@@ -1032,9 +1096,11 @@ Proxy implementation pattern (identical across all five proxies):
   Proxy Route                     Backend                    Notes
   ──────────────────────────────  ─────────────────────────  ──────────────────────────────
   /api/assignment-proxy/[…path]   http://3.111.81.83:8000    Plain HTTP — no TLS in transit
-  /api/payment-proxy/[…path]      https://payments.novare…   HTTPS — managed service
+  /api/payment-proxy/[…path]      https://payments.novare…   HTTPS — no auth validation (gap, §6.2)
   /api/form-proxy/[…path]         https://form.novare…       HTTPS — managed service
-  /api/evaluate-proxy/[…path]     https://evaluate.novare…   HTTPS — managed service
+  /api/evaluate-proxy/[…path]     https://evaluate.novare…   HTTPS — JWT verified at proxy before
+                                                              forwarding (supabaseAdmin.auth.getUser);
+                                                              timeout: 290 s; maxDuration: 300 s
   /api/ranking-proxy/[…path]      https://rankings.novare…   HTTPS — managed service
 
 The assignment backend (Python on EC2 3.111.81.83:8000) is also accessed
@@ -1042,7 +1108,7 @@ indirectly via /api/assignment/create/[jobId] which calls the proxy internally
 (server-to-server: Next.js origin → proxy → EC2).
 
 ================================================================================
-8. CONFIRMED INFRASTRUCTURE (as of 2026-05)
+8. CONFIRMED INFRASTRUCTURE (as of 2026-06)
 ================================================================================
 
   Component          Spec                          Implication
@@ -1059,7 +1125,8 @@ indirectly via /api/assignment/create/[jobId] which calls the proxy internally
                      Python FastAPI services;      and form (§3.5.2) documented;
                      Docker containers             assignment and ranking TBD
   Supabase Storage   Buckets: jd, assignments,     Public URLs; no signed URL auth currently
-                     resumes                       for resume/JD access from AI routes
+                     resumes, profile-images,      for resume/JD access from AI routes
+                     avatars
 
 ================================================================================
 9. QUICK WINS (cheapest operational improvements)
