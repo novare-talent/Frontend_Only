@@ -159,7 +159,11 @@ export default function EvaluationPage() {
   const handleSendRejections = async () => {
     if (selectedIds.size === 0) return;
 
+    const pendingIds = new Set(selectedIds);
     setSending(true);
+    setRejectionSent(true);
+    setSelectedIds(new Set());
+
     try {
       const {
         data: { session },
@@ -167,6 +171,8 @@ export default function EvaluationPage() {
 
       if (!session?.access_token) {
         toast.error("Authentication error. Please log in again.");
+        setRejectionSent(false);
+        setSelectedIds(pendingIds);
         return;
       }
 
@@ -178,13 +184,16 @@ export default function EvaluationPage() {
         },
         body: JSON.stringify({
           jobId: id,
-          candidateIds: Array.from(selectedIds),
+          candidateIds: Array.from(pendingIds),
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
+        if (data?.alreadySent) return;
+        setRejectionSent(false);
+        setSelectedIds(pendingIds);
         toast.error(data.error || "Failed to send rejection emails");
         return;
       }
@@ -195,9 +204,9 @@ export default function EvaluationPage() {
 
       toast.success(`${successCount}/${total} rejection emails sent`);
 
-      if (successCount > 0) {
-        setRejectionSent(true);
-        setSelectedIds(new Set());
+      if (successCount === 0) {
+        setRejectionSent(false);
+        setSelectedIds(pendingIds);
       }
 
       data.results
@@ -206,6 +215,8 @@ export default function EvaluationPage() {
           toast.error(`Failed for ${r.name} (${r.email}): ${r.error}`);
         });
     } catch (err: any) {
+      setRejectionSent(false);
+      setSelectedIds(pendingIds);
       toast.error(err?.message || "Unexpected error sending emails");
     } finally {
       setSending(false);

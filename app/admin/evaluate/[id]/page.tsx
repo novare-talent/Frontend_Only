@@ -140,7 +140,11 @@ export default function AdminEvaluationPage() {
   const handleSendRejections = async () => {
     if (selectedIds.size === 0) return;
 
+    const pendingIds = new Set(selectedIds);
     setSending(true);
+    setRejectionSent(true);
+    setSelectedIds(new Set());
+
     try {
       const {
         data: { session },
@@ -148,6 +152,8 @@ export default function AdminEvaluationPage() {
 
       if (!session?.access_token) {
         toast.error("Authentication error. Please log in again.");
+        setRejectionSent(false);
+        setSelectedIds(pendingIds);
         return;
       }
 
@@ -159,13 +165,16 @@ export default function AdminEvaluationPage() {
         },
         body: JSON.stringify({
           jobId: id,
-          candidateIds: Array.from(selectedIds),
+          candidateIds: Array.from(pendingIds),
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
+        if (data?.alreadySent) return;
+        setRejectionSent(false);
+        setSelectedIds(pendingIds);
         toast.error(data.error || "Failed to send rejection emails");
         return;
       }
@@ -177,9 +186,9 @@ export default function AdminEvaluationPage() {
         `${successCount}/${total} rejection emails sent successfully`
       );
 
-      if (successCount > 0) {
-        setRejectionSent(true);
-        setSelectedIds(new Set());
+      if (successCount === 0) {
+        setRejectionSent(false);
+        setSelectedIds(pendingIds);
       }
 
       // Show per-candidate failures if any
@@ -189,6 +198,8 @@ export default function AdminEvaluationPage() {
           toast.error(`Failed for ${r.name} (${r.email}): ${r.error}`);
         });
     } catch (err: any) {
+      setRejectionSent(false);
+      setSelectedIds(pendingIds);
       toast.error(err?.message || "Unexpected error sending emails");
     } finally {
       setSending(false);
