@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { applyRateLimit, limiters } from "@/utils/rateLimit";
 
 export const maxDuration = 300; // Vercel Pro: up to 300s for long-running evaluations
 
@@ -6,12 +7,12 @@ const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABAS
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 const PROXY_TIMEOUT_MS = 290_000; // 290s — just under maxDuration
 
-async function verifyToken(authHeader: string | null): Promise<string | null> {
+async function verifyToken(authHeader: string | null): Promise<{ token: string; userId: string } | null> {
   if (!authHeader?.startsWith("Bearer ")) return null;
   const token = authHeader.slice(7);
   const { data, error } = await createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY).auth.getUser(token);
   if (error || !data.user) return null;
-  return token;
+  return { token, userId: data.user.id };
 }
 
 async function proxyRequest(
@@ -63,13 +64,16 @@ async function handleRequest(
   method: string,
   params: Promise<{ path: string[] }>
 ): Promise<Response> {
-  const token = await verifyToken(request.headers.get("authorization"));
-  if (!token) {
+  const verified = await verifyToken(request.headers.get("authorization"));
+  if (!verified) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/json" },
     });
   }
+  const { token, userId } = verified;
+  const limited = await applyRateLimit(limiters.evaluateProxy, `eval-proxy:${userId}`);
+  if (limited) return limited;
   const { path } = await params;
   const { search } = new URL(request.url);
   const backendUrl = `https://evaluate.novaretalent.com/${path.join('/')}${search}`;

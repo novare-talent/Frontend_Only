@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server'
 import OpenAI from 'openai'
 import { v4 as uuidv4 } from 'uuid'
 import { validateStorageUrl } from '@/utils/validateStorageUrl'
+import { applyRateLimit, limiters } from '@/utils/rateLimit'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!
@@ -33,6 +34,9 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       )
     }
+
+    const rateLimited = await applyRateLimit(limiters.generateForm, `gen-form:${user.id}`);
+    if (rateLimited) return rateLimited;
 
     const body = await request.json()
     const { jdUrl, jobId } = body
