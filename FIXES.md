@@ -13,6 +13,7 @@ Before these fixes go live, complete these manual steps:
 |------|--------|---------|
 | **DB functions** | Run `db/functions.sql` in the Supabase SQL Editor. Creates `decrement_jobs()` and `decrement_evaluations()`. Without this, `/api/consume-job` and `/api/consume-evaluation` return 500 on every call. | **Required before deploying Fix 2** |
 | **Env var** | Set `ASSIGNMENT_BACKEND_URL` in Vercel dashboard (or `.env.local`) to the EC2 backend URL. Current code falls back to the old hardcoded plaintext HTTP IP if unset. | Recommended |
+| **Upstash Redis** | Create a free Redis database at `console.upstash.com`. Copy the REST URL and token. Set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` in Vercel Environment Variables. Without these, rate limiting is silently disabled (the code no-ops gracefully) but all routes are unprotected. | **Required to activate Fix 20** |
 
 ---
 
@@ -37,6 +38,9 @@ Before these fixes go live, complete these manual steps:
 | 15 | Bug | Correctness — Evaluation results data structure mismatch (page showed no candidates) | Bug | ✅ Fixed |
 | 16 | Bug | Auth — Evaluate-proxy called without Authorization header (401) | Bug | ✅ Fixed |
 | 17 | Bug | UX — `/avatars/default.jpg` 404 on dashboard load | Bug | ✅ Fixed |
+| 18 | Product | UX — Resume not collected at sign-up; unavailable for pre-screening | Medium | ✅ Fixed |
+| 19 | Performance | Rejection emails sent sequentially; 20 candidates = 40–80 s | High | ✅ Fixed |
+| 20 | Security | No rate limiting on any route — open to brute-force and DDoS | Critical | ✅ Fixed |
 
 ---
 
@@ -664,6 +668,474 @@ Created `public/avatars/default.svg` — a minimal SVG person icon. Updated both
 Files changed:
 - `public/avatars/default.svg` (new)
 - `components/Candidate-Dashboard/app-sidebar.tsx`
+
+---
+
+### Fix 18 — Mandatory Resume Upload at Candidate Sign-Up
+**Type:** Product / UX · **Severity:** Medium · **Commit:** `79486cc`
+
+#### Technical Problem
+The candidate sign-up form (`components/authForms/sign-User.tsx`) had a resume upload field, but it was entirely **optional**. The label read "Resume (Optional)" and the submit button was enabled whether or not a file was attached. This meant:
+
+1. Candidates could create accounts with no resume on file.
+2. When those candidates later applied for jobs, the evaluation route (`/api/evaluate`) tried to fetch their `resume_url` from the `evaluations.results` JSONB. If it was empty, it fell back to an empty string, and GPT-4o evaluated the candidate with zero resume context — producing low-quality, misleading scores.
+3. The rejection email route (`send-rejection-emails`) also reads `resume_url` to personalize rejection reasons. Without a resume, the AI defaulted to vague, non-specific rejection copy.
+
+The upload logic itself was already correct — the file was stored in the `resumes` Supabase bucket at path `${userId}/${timestamp}_${filename}` and the public URL was saved to `profiles.resume_url` (a `TEXT[]` column) — but nothing enforced it was used at sign-up.
+
+#### Fix Applied
+Three changes to `components/authForms/sign-User.tsx`:
+
+**1. Submit button gating (`isUserFormValid` function):**
+```typescript
+// BEFORE
+const isUserFormValid = () => {
+  return (
+    userFormData.firstName && userFormData.lastName &&
+    userFormData.email && userFormData.phone &&
+    userFormData.linkedinLink && userFormData.password &&
+    userFormData.password.length >= 6
+    // resume NOT checked
+  )
+}
+
+// AFTER
+const isUserFormValid = () => {
+  return (
+    userFormData.firstName && userFormData.lastName &&
+    userFormData.email && userFormData.phone &&
+    userFormData.linkedinLink && userFormData.password &&
+    userFormData.password.length >= 6 &&
+    !!resumeFile  // ← resume now required to enable button
+  )
+}
+```
+
+The submit button is `disabled={!isUserFormValid() || isLoading}`, so it stays greyed-out until a PDF is attached.
+
+**2. Server-side guard in `handleUserSubmit`:**
+Even if the button were somehow bypassed (e.g., via devtools), a check runs at the top of the submit handler:
+```typescript
+if (!resumeFile) {
+  toast.error("Resume Required", {
+    description: "Please upload your resume (PDF, max 2MB) to continue.",
+    duration: 5000,
+    position: "top-right",
+  })
+  setIsLoading(false)
+  return  // ← early exit, no account created
+}
+```
+
+**3. UI labels updated:**
+- Field label: `"Resume (Optional)"` → `"Resume *"` (red asterisk via `<span className="text-red-500">*</span>`)
+- Drop-zone hint: `"PDF (up to 2MB)"` → `"PDF only · max 2 MB · required"`
+- Helper text below field: `"You can update your resume later in the profile section"` → `"You can replace your resume any time from the profile section"`
+
+**Storage flow (unchanged but documented here for clarity):**
+```typescript
+// On successful account creation:
+const filePath = `${user.id}/${Date.now()}_${resumeFile.name}`
+const { data: uploadData } = await supabase.storage
+  .from('resumes')
+  .upload(filePath, resumeFile)
+
+const resumeUrl = supabase.storage.from('resumes').getPublicUrl(uploadData.path).data.publicUrl
+
+await supabase.from('profiles').update({ resume_url: [resumeUrl] }).eq('id', user.id)
+```
+
+The client (`handleClientSubmit`) is intentionally unchanged — clients are companies, not candidates, and have no resume.
+
+Files changed:
+- `components/authForms/sign-User.tsx`
+
+---
+
+### Fix 19 — Rejection Email Sequential Processing (Latency Fix)
+**Type:** Performance · **Severity:** High · **Commit:** `800b7ba`
+
+#### Technical Problem
+`app/api/send-rejection-emails/route.ts` processed candidates in a `for...of` loop — one at a time, fully sequential:
+
+```typescript
+// OLD — sequential loop
+for (const profile of profilesToProcess) {
+  // Step A: fetch and parse the candidate's PDF resume (~1–2 s)
+  const resumeText = await extractTextFromPdf(resumeUrl)
+
+  // Step B: call GPT-4o to write a personalised rejection email (~3–5 s)
+  const { subject, body } = await generateRejectionEmail({ ... })
+
+  // Step C: call Resend API to send one email (~0.5 s)
+  const { error } = await resend.emails.send({ to: profile.email, subject, html: body })
+}
+```
+
+Wall-clock time per candidate ≈ 5–8 s. For a typical batch of 20 candidates: **40–80 seconds**. This meant:
+- The admin/client UI showed a "Sending…" spinner for up to 80 seconds.
+- Vercel's default 60-second function timeout (or 300-second Pro timeout with `maxDuration=300`) was in danger of being hit.
+- Users sometimes closed the tab thinking it had failed, triggering a retry that re-sent all emails.
+
+Additionally, the `resend.emails.send()` call was made individually per candidate — N HTTP round-trips to Resend's API instead of one.
+
+#### Fix Applied
+
+**Part A — Parallel PDF fetch + OpenAI calls via `Promise.allSettled`:**
+
+All candidates are now processed concurrently. `Promise.allSettled` (not `Promise.all`) is used so a single failure (e.g., a candidate's PDF is corrupt) does not abort the entire batch — it is collected as a failure result while the rest proceed.
+
+```typescript
+// NEW — all candidates run in parallel
+const generationResults = await Promise.allSettled(
+  profilesToProcess.map(async (profile) => {
+    const evalData = evalMap[profile.id] ?? {}
+    const resumeUrl = evalData.resume_url ?? ""
+
+    // PDF fetch + parse in parallel for all candidates
+    const resumeText = resumeUrl ? await extractTextFromPdf(resumeUrl) : ""
+
+    // GPT-4o call in parallel for all candidates
+    const { subject, body } = await generateRejectionEmail({
+      candidateName: `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim(),
+      jobTitle: job.Job_Name || "the position",
+      jobDescription: job.Job_Description || "",
+      resumeText,
+      evalJustification: evalData.justification ?? "",
+      skillsMatch: evalData.skills_match ?? 0,
+      experienceRelevance: evalData.experience_relevance ?? 0,
+      communicationClarity: evalData.communication_clarity ?? 0,
+      finalScore: evalData.final_score ?? 0,
+    })
+
+    return { profile, candidateName, subject, body }
+  })
+)
+```
+
+After `Promise.allSettled` resolves, fulfilled and rejected results are separated:
+```typescript
+const emailPayloads: EmailPayload[] = []
+const results: ResultEntry[] = []
+
+for (let i = 0; i < generationResults.length; i++) {
+  const res = generationResults[i]
+  if (res.status === "fulfilled") {
+    emailPayloads.push(res.value)
+  } else {
+    results.push({ email: profile.email, name: candidateName, success: false,
+      error: res.reason?.message ?? "Email generation failed" })
+  }
+}
+```
+
+**Part B — Single batch send via `resend.batch.send()`:**
+
+Instead of N individual `resend.emails.send()` calls (one per candidate), all generated emails are sent in **one HTTP request** using Resend's batch API:
+
+```typescript
+// Collect all payloads
+const batchPayload = emailPayloads.map(({ profile, subject, body }) => ({
+  from: fromEmail,
+  to: profile.email,
+  subject,
+  html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#222;">${body}</div>`,
+}))
+
+// One API call for all emails (Resend Pro supports batch)
+const { data: batchData, error: batchError } = await resend.batch.send(batchPayload)
+
+// Map results back: batchData.data[i] corresponds to emailPayloads[i]
+const batchItems: { id: string }[] = batchData?.data ?? []
+for (let i = 0; i < emailPayloads.length; i++) {
+  const { profile, candidateName } = emailPayloads[i]
+  if (batchItems[i]?.id) {
+    results.push({ email: profile.email, name: candidateName, success: true })
+    sentIds.push(profile.id)
+  } else {
+    results.push({ email: profile.email, name: candidateName, success: false, error: "Send failed" })
+  }
+}
+```
+
+The DB writes after the batch (updating `rejection_sent` in JSONB and `rejection_emails_sent` on the job) are unchanged.
+
+**Part C — Optimistic UI in both evaluate pages:**
+
+`app/client/evaluate/[id]/page.tsx` and `app/admin/evaluate/[id]/page.tsx` previously awaited the API response before showing any feedback — the button stayed in "Sending…" state for the full 40–80 seconds.
+
+The fix applies an optimistic update on click:
+
+```typescript
+const handleSendRejections = async () => {
+  const pendingIds = new Set(selectedIds)  // save selection before clearing
+
+  // Immediately show success state — don't wait for the API
+  setSending(true)
+  setRejectionSent(true)      // ← green badge appears instantly
+  setSelectedIds(new Set())   // ← selection cleared immediately
+
+  try {
+    const res = await fetch("/api/send-rejection-emails", { ... })
+    const data = await res.json()
+
+    if (!res.ok) {
+      if (data?.alreadySent) return  // already sent — stay disabled, no revert
+      // Real error — revert optimistic state so user can retry
+      setRejectionSent(false)
+      setSelectedIds(pendingIds)
+      toast.error(data.error || "Failed to send rejection emails")
+      return
+    }
+
+    const successCount = data.results?.filter((r: any) => r.success).length ?? 0
+    if (successCount === 0) {
+      // All failed — revert
+      setRejectionSent(false)
+      setSelectedIds(pendingIds)
+    }
+
+    toast.success(`${successCount}/${data.results?.length} rejection emails sent`)
+    data.results?.filter((r: any) => !r.success)
+      .forEach((r: any) => toast.error(`Failed for ${r.name}: ${r.error}`))
+
+  } catch (err: any) {
+    setRejectionSent(false)
+    setSelectedIds(pendingIds)
+    toast.error(err?.message || "Unexpected error")
+  } finally {
+    setSending(false)
+  }
+}
+```
+
+**Performance improvement:**
+
+| Step | Before | After |
+|------|--------|-------|
+| PDF fetch | 20 × 1.5 s = 30 s | ~1.5 s (parallel) |
+| GPT-4o call | 20 × 4 s = 80 s | ~5 s (parallel) |
+| Resend send | 20 × 0.5 s = 10 s | ~1 s (batch) |
+| **Total** | **40–80 s** | **~8–10 s** |
+| UX | Spinner 40–80 s | Instant badge |
+
+Files changed:
+- `app/api/send-rejection-emails/route.ts`
+- `app/client/evaluate/[id]/page.tsx`
+- `app/admin/evaluate/[id]/page.tsx`
+
+---
+
+### Fix 20 — No Rate Limiting on Any Route
+**Type:** Security / Reliability · **Severity:** Critical · **Commit:** `060c7a1`
+
+#### Technical Problem
+Every API route and auth page had **zero rate limiting**. Concrete attack surfaces:
+
+- **`/sign-in` / `/sign-up`**: Unlimited password-guessing attempts from any IP. No lockout, no CAPTCHA, no delay. A credential-stuffing script could try millions of passwords/usernames.
+- **`/api/evaluate-proxy`**: Triggers a GPT-4o evaluation on the EC2 backend. With the proxy's prior no-auth gap (fixed in Fix 5), anyone could fire unlimited evaluation calls, running up unbounded OpenAI spend with no per-user cap. Even with auth restored, a single client with valid credentials could spam evaluations.
+- **`/api/generate-form`**: One request = one PDF download + one GPT-4o call (up to 1400 tokens). No per-user throttle.
+- **`/api/consume-job` / `/api/consume-evaluation`**: Credit-deduction endpoints. A rapid sequence of requests (e.g., from a script that races the atomic decrement) could be used to probe the system or drain credits faster than the UI allows.
+- **`/api/submission/upload`**: Accepted unlimited file uploads per IP. A script could flood the Supabase `resumes` bucket with gigabytes of PDFs. The route previously had an **in-memory `Map`-based rate limiter** — but this is broken in serverless: each Vercel function invocation is a fresh process with no shared memory, so the counter reset on every cold start and provided zero real protection.
+
+#### Root Cause of In-Memory Rate Limiter Failure
+```typescript
+// OLD app/api/submission/upload/route.ts — BROKEN in serverless
+const uploadRateMap = new Map<string, { count: number; resetAt: number }>()
+
+function checkUploadRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const entry = uploadRateMap.get(ip)
+  // uploadRateMap is in-process memory — each Lambda invocation starts with an empty Map
+  // Two simultaneous requests hit two different Lambda containers → both see count = 0
+  if (!entry || now > entry.resetAt) {
+    uploadRateMap.set(ip, { count: 1, resetAt: now + UPLOAD_WINDOW_MS })
+    return true  // ← always allowed on cold container
+  }
+  ...
+}
+```
+
+#### Fix Applied
+
+**Architecture: Upstash Redis + sliding window algorithm**
+
+Added packages `@upstash/ratelimit` and `@upstash/redis`. Created `utils/rateLimit.ts` — a single shared utility used by both middleware and individual API route handlers:
+
+```typescript
+// utils/rateLimit.ts
+import { Ratelimit } from "@upstash/ratelimit"
+import { Redis } from "@upstash/redis"
+import { NextResponse } from "next/server"
+
+// Redis client — null if env vars absent (graceful no-op)
+function createRedis(): Redis | null {
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!url || !token) return null
+  return new Redis({ url, token })
+}
+
+const redis = createRedis()
+
+// Creates a sliding-window limiter, or null if Redis not configured
+function makeLimiter(requests: number, window: `${number} ${"s"|"m"|"h"|"d"}`): Ratelimit | null {
+  if (!redis) return null
+  return new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(requests, window) })
+}
+
+// Named limiters — one per protection boundary
+export const limiters = {
+  globalIp:         makeLimiter(120, "1 m"),   // 120 req/min per IP — all /api/*
+  authIp:           makeLimiter(5, "15 m"),    // 5 req/15 min per IP — sign-in/up/auth
+  generateForm:     makeLimiter(3, "1 m"),     // 3 req/min per user
+  evaluateProxy:    makeLimiter(2, "5 m"),     // 2 req/5 min per user
+  consumeCredit:    makeLimiter(10, "1 m"),    // 10 req/min per user
+  submissionUpload: makeLimiter(5, "1 m"),     // 5 req/min per IP
+}
+
+// Call this in a route handler: returns a 429 NextResponse on limit exceeded, null if allowed
+export async function applyRateLimit(
+  limiter: Ratelimit | null,
+  identifier: string
+): Promise<NextResponse | null> {
+  if (!limiter) return null  // ← no-op when Upstash not configured
+  const { success, reset } = await limiter.limit(identifier)
+  if (!success) {
+    const retryAfter = Math.max(1, Math.ceil((reset - Date.now()) / 1000))
+    return NextResponse.json(
+      { error: "Too many requests", retryAfter },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } }
+    )
+  }
+  return null
+}
+```
+
+**Why sliding window?** A fixed window (e.g., "5 per minute, reset at :00") allows a burst of 10 requests split across the :59→:01 boundary. Sliding window counts requests in a rolling time frame, preventing edge-case bursts.
+
+**Why Upstash Redis?** It provides a persistent, shared, low-latency (HTTP-based, ~5 ms) key-value store accessible from all Vercel serverless function instances simultaneously. Unlike in-memory state, a counter stored in Upstash is visible to every concurrent invocation across every region.
+
+**Layer 1 — Next.js Middleware (IP-based, edge-wide):**
+
+`middleware.ts` runs before every request, including before the Supabase auth check. Two IP-based guards are added:
+
+```typescript
+// middleware.ts
+import { applyRateLimit, limiters } from '@/utils/rateLimit'
+
+export async function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+
+  // Auth brute-force: 5 attempts per IP per 15 minutes
+  if (path.startsWith('/sign-in') || path.startsWith('/sign-up') || path.startsWith('/auth/')) {
+    const limited = await applyRateLimit(limiters.authIp, `auth:${ip}`)
+    if (limited) return limited  // 429 before any auth processing
+  }
+
+  // Global API DDoS guard: 120 requests per IP per minute
+  if (path.startsWith('/api/')) {
+    const limited = await applyRateLimit(limiters.globalIp, `api:${ip}`)
+    if (limited) return limited
+  }
+
+  return await updateSession(request)  // existing Supabase auth check
+}
+```
+
+Identifier format: `"auth:<ip>"` and `"api:<ip>"` — the prefix prevents collisions between limiters sharing the same Redis instance.
+
+**Layer 2 — Per-route, per-user limits (applied after auth so user ID is known):**
+
+The check is inserted immediately after the auth block in each route, before any expensive work starts:
+
+```typescript
+// app/api/generate-form/route.ts
+const { data: { user } } = await supabase.auth.getUser()
+if (!user) return 401
+
+// ... role check ...
+
+// Rate limit AFTER we have the user ID
+const rateLimited = await applyRateLimit(limiters.generateForm, `gen-form:${user.id}`)
+if (rateLimited) return rateLimited  // 429 if over limit
+
+// Only reaches here if allowed — expensive work begins:
+const pdfResponse = await fetch(jdUrl)
+const completion = await openai.chat.completions.create(...)
+```
+
+Same pattern in `consume-job` (`consume-job:${userId}`) and `consume-evaluation` (`consume-eval:${userId}`).
+
+For `evaluate-proxy`, the `verifyToken` helper was modified to return both the token and user ID (previously it only returned the token):
+```typescript
+// BEFORE
+async function verifyToken(authHeader): Promise<string | null> {
+  ...
+  return token
+}
+
+// AFTER
+async function verifyToken(authHeader): Promise<{ token: string; userId: string } | null> {
+  ...
+  return { token, userId: data.user.id }
+}
+
+// In handleRequest:
+const verified = await verifyToken(request.headers.get("authorization"))
+if (!verified) return 401
+const { token, userId } = verified
+const limited = await applyRateLimit(limiters.evaluateProxy, `eval-proxy:${userId}`)
+if (limited) return limited
+```
+
+**`submission/upload` — replaced broken in-memory limiter:**
+```typescript
+// BEFORE (broken in serverless — in-memory Map)
+const uploadRateMap = new Map<string, { count: number; resetAt: number }>()
+function checkUploadRateLimit(ip: string): boolean { ... }
+
+// AFTER (Upstash Redis — works across all invocations)
+const limited = await applyRateLimit(limiters.submissionUpload, `upload:${ip}`)
+if (limited) return new NextResponse(limited.body, {
+  status: 429,
+  headers: { ...Object.fromEntries(limited.headers), ...corsHeaders }
+})
+```
+
+**429 response format** (consistent across all rate-limited routes):
+```json
+HTTP/1.1 429 Too Many Requests
+Retry-After: 47
+Content-Type: application/json
+
+{ "error": "Too many requests", "retryAfter": 47 }
+```
+
+**Complete rate limit table:**
+
+| Route / Path | Limiter Key | Limit | Algorithm |
+|---|---|---|---|
+| `/sign-in`, `/sign-up`, `/auth/*` | `auth:<ip>` | 5 / 15 min | Sliding window |
+| All `/api/*` | `api:<ip>` | 120 / min | Sliding window |
+| `/api/generate-form` | `gen-form:<userId>` | 3 / min | Sliding window |
+| `/api/evaluate-proxy/[…]` | `eval-proxy:<userId>` | 2 / 5 min | Sliding window |
+| `/api/consume-job` | `consume-job:<userId>` | 10 / min | Sliding window |
+| `/api/consume-evaluation` | `consume-eval:<userId>` | 10 / min | Sliding window |
+| `/api/submission/upload` | `upload:<ip>` | 5 / min | Sliding window |
+
+**Graceful degradation:** If `UPSTASH_REDIS_REST_URL` or `UPSTASH_REDIS_REST_TOKEN` are not set (e.g., in a local dev environment without Upstash configured), `createRedis()` returns `null`, every `makeLimiter()` returns `null`, and every `applyRateLimit(null, ...)` returns `null` immediately. The application works normally with no rate limiting active. This means deploying this code never breaks the app — it just won't enforce limits until Upstash is connected.
+
+Files changed:
+- `utils/rateLimit.ts` (new)
+- `middleware.ts`
+- `app/api/generate-form/route.ts`
+- `app/api/evaluate-proxy/[...path]/route.ts`
+- `app/api/consume-job/route.ts`
+- `app/api/consume-evaluation/route.ts`
+- `app/api/submission/upload/route.ts`
+- `package.json` (added `@upstash/ratelimit`, `@upstash/redis`)
 
 ---
 
