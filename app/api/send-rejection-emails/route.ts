@@ -214,24 +214,16 @@ export async function POST(req: NextRequest) {
 
     const fromEmail =
       process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
-    const results: { email: string; name: string; success: boolean; error?: string }[] = [];
-    const sentIds: string[] = [];
 
-    for (const profile of profilesToProcess) {
-      const candidateName =
-        `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() ||
-        "Candidate";
-
-      // resume_url lives in evaluation results, not the profiles table
-      const resumeUrl = evalMap[profile.id]?.resume_url ?? "";
-
-      try {
-        const resumeText = resumeUrl
-          ? await extractTextFromPdf(resumeUrl)
-          : "";
-
+    // Parallel: fetch PDFs and generate emails for all candidates simultaneously
+    const generationResults = await Promise.allSettled(
+      profilesToProcess.map(async (profile) => {
+        const candidateName =
+          `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() ||
+          "Candidate";
         const evalData = evalMap[profile.id] ?? {};
-
+        const resumeUrl = evalData.resume_url ?? "";
+        const resumeText = resumeUrl ? await extractTextFromPdf(resumeUrl) : "";
         const { subject, body } = await generateRejectionEmail({
           candidateName,
           jobTitle: job.Job_Name || "the position",
@@ -243,32 +235,60 @@ export async function POST(req: NextRequest) {
           communicationClarity: evalData.communication_clarity ?? 0,
           finalScore: evalData.final_score ?? 0,
         });
+        return { profile, candidateName, subject, body };
+      })
+    );
 
-        const { error: sendError } = await resend.emails.send({
-          from: fromEmail,
-          to: profile.email,
-          subject,
-          html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#222;">${body}</div>`,
-        });
+    // Split into successful generations and failures
+    type EmailPayload = { profile: (typeof profilesToProcess)[0]; candidateName: string; subject: string; body: string };
+    const emailPayloads: EmailPayload[] = [];
+    const results: { email: string; name: string; success: boolean; error?: string }[] = [];
+    const sentIds: string[] = [];
 
-        if (sendError) {
-          results.push({
-            email: profile.email,
-            name: candidateName,
-            success: false,
-            error: sendError.message,
-          });
-        } else {
-          results.push({ email: profile.email, name: candidateName, success: true });
-          sentIds.push(profile.id);
-        }
-      } catch (err: any) {
+    for (let i = 0; i < generationResults.length; i++) {
+      const res = generationResults[i];
+      const profile = profilesToProcess[i];
+      const candidateName =
+        `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() ||
+        "Candidate";
+      if (res.status === "fulfilled") {
+        emailPayloads.push(res.value);
+      } else {
         results.push({
           email: profile.email,
           name: candidateName,
           success: false,
-          error: err?.message ?? "Unknown error",
+          error: (res.reason as any)?.message ?? "Email generation failed",
         });
+      }
+    }
+
+    // Batch send all generated emails in one Resend API call
+    if (emailPayloads.length > 0) {
+      const batchPayload = emailPayloads.map(({ profile, subject, body }) => ({
+        from: fromEmail,
+        to: profile.email,
+        subject,
+        html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#222;">${body}</div>`,
+      }));
+
+      const { data: batchData, error: batchError } = await resend.batch.send(batchPayload);
+
+      if (batchError) {
+        for (const { profile, candidateName } of emailPayloads) {
+          results.push({ email: profile.email, name: candidateName, success: false, error: (batchError as any).message });
+        }
+      } else {
+        const batchItems: { id: string }[] = (batchData as any)?.data ?? [];
+        for (let i = 0; i < emailPayloads.length; i++) {
+          const { profile, candidateName } = emailPayloads[i];
+          if (batchItems[i]?.id) {
+            results.push({ email: profile.email, name: candidateName, success: true });
+            sentIds.push(profile.id);
+          } else {
+            results.push({ email: profile.email, name: candidateName, success: false, error: "Send failed" });
+          }
+        }
       }
     }
 
