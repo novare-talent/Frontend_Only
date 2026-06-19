@@ -133,6 +133,7 @@ utils/supabase/middleware.ts — Role-Based Routing
   Step 1: Pass public paths without auth check:
           /, /sign-in, /sign-up, /error, /forgot-password,
           /auth/update-password, /auth/callback, /iit-placements,
+          /career-blogs,
           /submission (public candidate application form — no auth required)
   Step 2: Create Supabase SSR client with cookie getter/setter.
   Step 3: Call supabase.auth.getUser() — if no user → redirect /sign-in.
@@ -694,7 +695,10 @@ Provider  : Resend (resend.com)
 Sender    : zenhyre@novaretalent.com (env: RESEND_FROM_EMAIL)
 SDK       : resend v6 (server-side only)
 Usage     : rejection email bulk send (/api/send-rejection-emails)
-            — one API call per candidate; no batching at Resend layer
+            — PDF fetch + GPT-4o generation run in parallel via
+            Promise.allSettled(); all generated emails sent in a single
+            resend.batch.send([]) call (one Resend API call per job, not
+            per candidate)
 Failure   : per-recipient success/failure tracked in results array;
             partial failures do not abort the batch
 
@@ -824,23 +828,26 @@ Step   Detail
        Filter out candidates where evalData.rejection_sent === true
        (per-candidate idempotency — prevents duplicate sends on retry).
 5      Fetch profiles for remaining candidateIds: id, first_name, last_name, email.
-6      For each candidate (sequential):
+6      Parallel generation via Promise.allSettled() over all remaining candidates:
          a. Extract resume text from evalData.resume_url via pdf-parse
             (capped at 8000 chars).
          b. Build OpenAI prompt with job info, eval scores, resume text.
          c. Call gpt-4o (json_object mode, temp 0.4, max 1400 tokens).
          d. Parse { subject, body } — fallback to generic template on error.
-         e. Send via resend.emails.send() from zenhyre@novaretalent.com.
-         f. Record per-candidate success/failure; collect sent profile_ids.
-7      Update evaluations JSONB: set rejection_sent = true for each successfully
+         Generation failures per candidate are recorded without blocking others.
+7      Single batch send: resend.batch.send([]) with all successfully generated
+       emails — one Resend API call regardless of candidate count.
+       Record per-candidate success/failure from batch response; collect sent
+       profile_ids.
+8      Update evaluations JSONB: set rejection_sent = true for each successfully
        sent candidate (prevents re-send if the endpoint is called again).
-8      If at least one email was sent: update jobs table:
+9      If at least one email was sent: update jobs table:
        rejection_emails_sent = true (job-level idempotency flag).
-9      Return { success, message: "N/M rejection emails sent", results[] }.
+10     Return { success, message: "N/M rejection emails sent", results[] }.
 
-Latency: sequential per candidate — each iteration = 1 PDF fetch + parse +
-1 OpenAI call + 1 Resend call. For 20 candidates ≈ 40–80 s. High
-serverless timeout risk (see §5).
+Latency: parallel PDF fetch + GPT-4o generation across all candidates, then
+one batch Resend call. For 20 candidates ≈ 8–10 s (down from 40–80 s
+sequential). Vercel serverless timeout risk is substantially reduced.
 
 ────────────────────────────────────────────────────────────────────────────────
 4.5  CREDIT MANAGEMENT FLOWS
@@ -869,8 +876,9 @@ POST /api/consume-evaluation
 Payment flow:
   All payment operations proxied to https://payments.novaretalent.com
   via /api/payment-proxy/[...path]. Frontend sends full HTTP method +
-  body; proxy strips auth headers (currently — see §6.2) and forwards.
-  [Backend payment system described in §3.5 placeholder]
+  body; proxy validates JWT, injects profile_id from token into JSON
+  body, and forwards Authorization header + X-Profile-Id header to EC2.
+  [Backend payment system described in §3.5.1]
 
 ────────────────────────────────────────────────────────────────────────────────
 4.6  ASSIGNMENT SUBMISSION FLOW (/api/submission/upload)
@@ -904,11 +912,14 @@ The following bottlenecks are confirmed from the codebase, ordered by severity.
 
   #   Bottleneck               Where                        Why It Hurts
   ─   ──────────────────────   ─────────────────────────    ─────────────────────────────────────────────────────
-  1   Sequential rejection     /api/send-rejection-emails   Each candidate = PDF parse + OpenAI call + Resend call,
-      email processing         — per-candidate loop         fully sequential. 20 candidates ≈ 40–80 s. Vercel
-                                                            function default timeout is 60 s. Any burst will fail.
-                               Mitigation: batch Resend; parallelise per-candidate in
-                               Promise.allSettled(); consider async queue + webhook.
+  1   Rejection email          /api/send-rejection-emails   ✓ RESOLVED — PDF fetch + GPT-4o generation now run in
+      processing latency       — previously per-candidate   parallel via Promise.allSettled(); all emails sent in a
+                               sequential loop              single resend.batch.send() call. 20 candidates ≈ 8–10 s
+                                                            (down from 40–80 s). Optimistic UI on both evaluate
+                                                            pages: badge updates instantly on click, reverts on
+                                                            API error. Remaining risk: very large batches (100+)
+                                                            could still approach Vercel timeout; async queue with
+                                                            polling remains recommended for such cases.
 
   2   Large candidate pool     /api/evaluate-proxy/         EC2 runs all candidates concurrently (semaphore=15)
       evaluation latency       evaluate/{job_id}/{form_id}  but each GPT-5.1 call takes 2–5 s. Proxy timeout
@@ -923,14 +934,13 @@ The following bottlenecks are confirmed from the codebase, ordered by severity.
                                Realtime or a polling endpoint (recommended for
                                batches > 50 candidates).
 
-  3   No rate limiting on      /api/evaluate-proxy/         The EC2 evaluation service has no rate limiting and
-      evaluate service         evaluate/{job_id}/{form_id}  no auth validation. Each request triggers 1+N
-                                                            OpenAI gpt-5.1 calls. Unrestricted access exposes
-                                                            unbounded AI spend.
-                               Mitigation: add rate limiting at the Next.js
-                               proxy route (Upstash Redis or Vercel Edge) and
-                               add a shared-secret header check on the EC2
-                               service (§6.2).
+  3   Rate limiting on         /api/evaluate-proxy/         ✓ RESOLVED — Upstash sliding-window rate limit now
+      evaluate service         evaluate/{job_id}/{form_id}  applied at the Next.js proxy: 2 req / 5 min per user
+                                                            (limiters.evaluateProxy). Global API guard of 120
+                                                            req / min per IP also applies via middleware.
+                                                            Remaining gap: no shared-secret header (X-Internal-
+                                                            Secret) on EC2 itself — direct bypass from outside
+                                                            Vercel is still possible (§6.2).
 
   4   Assignment proxy to      /api/assignment-proxy        EC2 raw IP over HTTP (not HTTPS). No auth forwarded
       EC2 over plain HTTP      → http://3.111.81.83:8000    from Next.js proxy. Single EC2 instance = SPOF.
@@ -938,10 +948,13 @@ The following bottlenecks are confirmed from the codebase, ordered by severity.
                                secret header validation on Python backend; document
                                failover plan.
 
-  5   No global /api rate      All /api/* routes            No rate limiting on form generation, credit checks,
-      limiting                 — no middleware limit         profile lookups, or submission upload. Open to abuse.
-                               Mitigation: add Vercel Edge rate limit middleware or
-                               Upstash Redis rate limiter for all API routes.
+  5   No global /api rate      All /api/* routes            ✓ RESOLVED — middleware now applies 120 req / min per
+      limiting                 — previously no limit         IP to all /api/* paths (limiters.globalIp) and 5 req /
+                                                            15 min per IP to /sign-in, /sign-up, /auth/* paths
+                                                            (limiters.authIp). Per-route limits also applied:
+                                                            generate-form 3/min, evaluate-proxy 2/5min,
+                                                            consume-job/eval 10/min, submission/upload 5/min.
+                                                            Graceful no-op if Upstash env vars are absent.
 
   6   PDF parsing latency      /api/send-rejection-emails   pdf-parse (rejection emails) runs synchronously in
                                — per-candidate loop;        the Vercel serverless handler. For the EC2 evaluate
@@ -998,38 +1011,41 @@ request                                            consistently across all admin
 Evaluate proxy         ✓ RESOLVED — proxy now      JWT verified at Next.js proxy layer
 auth                   validates Bearer JWT        (supabaseAdmin.auth.getUser) before
                        before forwarding           forwarding; 401 returned on failure.
-Payment proxy          No auth forwarding from     Add a shared secret header
-forwards to EC2        Next.js to backend          (e.g., X-Internal-Secret) validated
-without auth           (headers stripped)          on EC2 to prevent direct bypass.
-                                                   Additionally: proxy should inject
-                                                   profile_id from the verified token
-                                                   rather than trusting caller-supplied
-                                                   profile_id in the request body.
+Payment proxy          ✓ RESOLVED — proxy now       JWT verified at Next.js proxy layer
+auth                   validates Bearer JWT and    (supabaseAdmin.auth.getUser) before
+                       injects profile_id          forwarding; verified userId overwrites
+                                                   caller-supplied profile_id in JSON body;
+                                                   Authorization header + X-Profile-Id
+                                                   header forwarded to EC2.
+                                                   Remaining gap: add a shared-secret
+                                                   header (X-Internal-Secret) on the EC2
+                                                   service to prevent direct bypass from
+                                                   outside Vercel.
 
 ────────────────────────────────────────────────────────────────────────────────
 6.3  RATE LIMITING (CURRENT STATE)
 ────────────────────────────────────────────────────────────────────────────────
 
-Route                          Current Limit           Gap
-───────────────────────────    ─────────────────────   ───────────────────────────────
-/api/evaluate-proxy/[…path]    None                    No rate limiting at proxy or EC2
-                                                       layer — unbounded GPT-5.1 spend
-All other /api/* routes        None                    Critical gap
+Implementation: @upstash/ratelimit + @upstash/redis (utils/rateLimit.ts).
+Algorithm: sliding window for all limiters.
+Env vars required: UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN.
+Graceful no-op: if env vars are absent all limiters return null (no-op) —
+rate limiting is disabled rather than blocking requests.
+Response on limit: 429 with Retry-After header and { error, retryAfter } body.
 
-Recommended limits to implement:
-
-  Route                              Recommended Limit           Implementation
-  ─────────────────────────────────  ──────────────────────────  ─────────────────────────────
-  /api/generate-form                 3 req / min per user        Token bucket in middleware
-  /api/evaluate-proxy/evaluate/…    2 req / 5 min per user      Supabase or Upstash Redis
-  /api/send-rejection-emails         ✓ RESOLVED — idempotent     Job-level flag (rejection_emails_sent)
-                                     at job level + per-         + per-candidate JSONB flag
-                                     candidate JSONB flag        (rejection_sent) both checked;
-                                                                 returns 409 if already fully sent
-  /api/consume-job, consume-eval     10 req / min per user       Prevent credit drain attacks
-  /api/submission/upload             5 req / min per candidate   Prevent storage flooding
-  /sign-in, /sign-up, /auth/*        5 attempts / 15 min per IP  Brute-force prevention
-  All /api/* (global)                120 req / min per IP        DDoS / scraping at edge
+Route                              Limit (implemented)         Where applied
+───────────────────────────────    ──────────────────────────  ─────────────────────────────
+/sign-in, /sign-up, /auth/*        5 req / 15 min per IP       middleware.ts (limiters.authIp)
+All /api/* (global)                120 req / min per IP         middleware.ts (limiters.globalIp)
+/api/generate-form                 3 req / min per user         route handler (limiters.generateForm)
+/api/evaluate-proxy/[…path]        2 req / 5 min per user       route handler (limiters.evaluateProxy)
+/api/consume-job                   10 req / min per user        route handler (limiters.consumeCredit)
+/api/consume-evaluation            10 req / min per user        route handler (limiters.consumeCredit)
+/api/submission/upload             5 req / min per IP           route handler (limiters.submissionUpload)
+/api/send-rejection-emails         ✓ RESOLVED — idempotent      Job-level flag (rejection_emails_sent)
+                                   at job level + per-          + per-candidate JSONB flag
+                                   candidate JSONB flag         (rejection_sent) both checked;
+                                                                returns 409 if already fully sent
 
 ────────────────────────────────────────────────────────────────────────────────
 6.4  INPUT VALIDATION
@@ -1037,8 +1053,9 @@ Recommended limits to implement:
 
   Location                Current State                  Gap / Action
   ──────────────────────  ─────────────────────────────  ──────────────────────────────
-  /api/generate-form      jdUrl required check only      Add URL format validation;
-                                                         confirm hostname is Supabase CDN
+  /api/generate-form      jdUrl required; validateStorageUrl()  ✓ hostname validated against
+                          restricts to Supabase CDN     Supabase CDN via validateStorageUrl()
+                          origins                        utility; rate limited 3 req/min
   /api/evaluate           job_id required check only     Validate UUID format
   /api/send-rejection-    jobId + candidateIds[] check   Validate UUID formats; cap
     emails                                               candidateIds.length to prevent
@@ -1096,12 +1113,22 @@ Proxy implementation pattern (identical across all five proxies):
   Proxy Route                     Backend                    Notes
   ──────────────────────────────  ─────────────────────────  ──────────────────────────────
   /api/assignment-proxy/[…path]   http://3.111.81.83:8000    Plain HTTP — no TLS in transit
-  /api/payment-proxy/[…path]      https://payments.novare…   HTTPS — no auth validation (gap, §6.2)
-  /api/form-proxy/[…path]         https://form.novare…       HTTPS — managed service
-  /api/evaluate-proxy/[…path]     https://evaluate.novare…   HTTPS — JWT verified at proxy before
+  /api/payment-proxy/[…path]      https://payments.novare…   HTTPS — ✓ JWT verified at proxy
+                                                              (supabaseAdmin.auth.getUser); verified
+                                                              userId injected into JSON body as
+                                                              profile_id (overrides caller-supplied
+                                                              value); JWT forwarded in Authorization
+                                                              header; X-Profile-Id header also sent
+  /api/form-proxy/[…path]         https://form.novare…       HTTPS — ✓ JWT verified at proxy;
+                                                              verified token forwarded to EC2;
+                                                              timeout: 30 s
+  /api/evaluate-proxy/[…path]     https://evaluate.novare…   HTTPS — ✓ JWT verified at proxy before
                                                               forwarding (supabaseAdmin.auth.getUser);
+                                                              rate limit: 2 req / 5 min per user;
                                                               timeout: 290 s; maxDuration: 300 s
-  /api/ranking-proxy/[…path]      https://rankings.novare…   HTTPS — managed service
+  /api/ranking-proxy/[…path]      https://rankings.novare…   HTTPS — ✓ JWT verified at proxy;
+                                                              verified token forwarded to EC2;
+                                                              timeout: 30 s
 
 The assignment backend (Python on EC2 3.111.81.83:8000) is also accessed
 indirectly via /api/assignment/create/[jobId] which calls the proxy internally
@@ -1119,8 +1146,13 @@ indirectly via /api/assignment/create/[jobId] which calls the proxy internally
                      (ap-south-1)                  per plan tier
   OpenAI             gpt-4o, server-side key       External cost + latency; 2 distinct use
                      only                          cases (forms + emails)
-  Resend             Email delivery, server-side   Transactional only; sequential per-
-                     key only                      candidate send (no batching)
+  Resend             Email delivery, server-side   Transactional bulk send; batch API used
+                     key only                      (resend.batch.send) — one call per job
+                                                   regardless of candidate count
+  Upstash Redis      @upstash/ratelimit +          Sliding-window rate limiting across all
+                     @upstash/redis; env vars:     API routes and auth endpoints; graceful
+                     UPSTASH_REDIS_REST_URL,       no-op when env vars absent
+                     UPSTASH_REDIS_REST_TOKEN
   EC2 Backend        AWS Mumbai (ap-south-1);       Evaluate (§3.5.3), payment (§3.5.1),
                      Python FastAPI services;      and form (§3.5.2) documented;
                      Docker containers             assignment and ranking TBD
@@ -1141,13 +1173,15 @@ indirectly via /api/assignment/create/[jobId] which calls the proxy internally
 3. Add HTTPS to assignment EC2 (http://3.111.81.83:8000 → HTTPS) — eliminates
    plaintext data in transit for assignment submissions (security, bottleneck #4).
 
-4. Add rate limiting to /api/evaluate-proxy/ at the Next.js edge (Upstash
-   Redis) — the EC2 evaluation service has no rate limiting, creating
-   unbounded GPT-5.1 cost exposure on every unauthenticated call (bottleneck #3).
+4. ✓ DONE — Rate limiting added via Upstash Redis (@upstash/ratelimit):
+   sliding-window limits on all /api/* routes (middleware), evaluate-proxy
+   (2 req/5 min per user), generate-form (3 req/min), consume-job/eval
+   (10 req/min), submission/upload (5 req/min), and auth routes (5 req/15 min)
+   (bottleneck #3, #5).
 
-5. Parallelise /api/send-rejection-emails per-candidate loop with
-   Promise.allSettled() — cuts wall time from O(n) sequential to near-O(1)
-   for typical batch sizes (bottleneck #1).
+5. ✓ DONE — /api/send-rejection-emails parallelised with Promise.allSettled()
+   + single resend.batch.send() call — cuts wall time from 40–80 s to ~8–10 s
+   for 20 candidates; optimistic UI on both evaluate pages (bottleneck #1).
 
 6. Pre-extract and store resume text at upload time — eliminates repeated
    PDF parsing on every evaluation + rejection email run (bottleneck #6).
