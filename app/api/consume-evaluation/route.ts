@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { applyRateLimit, limiters } from "@/utils/rateLimit";
 
 const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? null;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? null;
@@ -40,6 +41,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid token or user not found", details: getUserResp?.error ?? null }, { status: 401 });
     }
     const userId = user.id;
+
+    const rateLimited = await applyRateLimit(limiters.consumeCredit, `consume-eval:${userId}`);
+    if (rateLimited) return rateLimited;
 
     // Find most recent subscription row id for this profile
     const { data: subs, error: subsError } = await supabaseAdmin

@@ -1,7 +1,23 @@
-import { type NextRequest } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
+import { applyRateLimit, limiters } from '@/utils/rateLimit'
 
 export async function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+
+  // Auth-route brute-force: 5 req / 15 min per IP
+  if (path.startsWith('/sign-in') || path.startsWith('/sign-up') || path.startsWith('/auth/')) {
+    const limited = await applyRateLimit(limiters.authIp, `auth:${ip}`);
+    if (limited) return limited;
+  }
+
+  // Global API guard: 120 req / min per IP
+  if (path.startsWith('/api/')) {
+    const limited = await applyRateLimit(limiters.globalIp, `api:${ip}`);
+    if (limited) return limited;
+  }
+
   return await updateSession(request)
 }
 
