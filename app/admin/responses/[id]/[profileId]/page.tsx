@@ -78,7 +78,7 @@ export default function AdminCandidateResponsePage() {
             .maybeSingle(),
           supabase
             .from("responses")
-            .select("id, profile_id, answers, created_at, job_id, full_name, email, phone, resume_url")
+            .select("id, profile_id, answers, created_at, job_id, full_name, email, phone")
             .eq("job_id", id)
             .eq("profile_id", profileId)
             .maybeSingle(),
@@ -102,12 +102,26 @@ export default function AdminCandidateResponsePage() {
           return;
         }
 
+        // Extract the resume URL the candidate actually submitted with.
+        // Preference order: answers.selected_resume (set at submit time) →
+        // first URL in profile.resume_url array → string resume_url on profile.
+        const parsedAnswers = responseData.answers
+          ? typeof responseData.answers === "string"
+            ? (() => { try { return JSON.parse(responseData.answers); } catch { return {}; } })()
+            : responseData.answers
+          : {};
+        const selectedResume: string | null = parsedAnswers?.selected_resume ?? null;
+        const profileResumeRaw = profile?.resume_url;
+        const profileResume: string | null = Array.isArray(profileResumeRaw)
+          ? (profileResumeRaw[0] ?? null)
+          : (profileResumeRaw ?? null);
+
         setResponse({
           ...responseData,
           full_name: profile?.full_name || responseData.full_name,
           email: profile?.email || responseData.email,
           phone: profile?.phone || responseData.phone,
-          resume_url: profile?.resume_url || responseData.resume_url,
+          resume_url: selectedResume || profileResume || responseData.resume_url,
         });
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -159,7 +173,9 @@ export default function AdminCandidateResponsePage() {
     );
   }
 
-  const answers = parseAnswers(response.answers);
+  const answers = Object.fromEntries(
+    Object.entries(parseAnswers(response.answers)).filter(([k]) => k !== "selected_resume")
+  );
 
   return (
     <div className="min-h-screen p-6">
