@@ -21,11 +21,17 @@ const Layout = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("role")
           .eq("id", user.id)
           .single();
+
+        if (profileError) {
+          console.error("Profile fetch error:", profileError);
+          router.push("/sign-in");
+          return;
+        }
 
         // Only allow 'user' role on this dashboard
         if (profile?.role !== "user") {
@@ -34,12 +40,12 @@ const Layout = ({ children }: { children: ReactNode }) => {
           } else if (profile?.role === "client") {
             router.push("/client");
           } else {
-            router.push("/");
+            router.push("/sign-in");
           }
         }
       } catch (error) {
         console.error("Role check error:", error);
-        router.push("/");
+        router.push("/sign-in");
       }
     };
 

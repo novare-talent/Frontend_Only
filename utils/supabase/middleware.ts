@@ -15,6 +15,7 @@ export async function updateSession(request: NextRequest) {
     "/forgot-password",
     "/auth/update-password",
     "/auth/callback",
+    "/auth/confirm",
     "/iit-placements",
     "/career-blogs",
     "/submission",

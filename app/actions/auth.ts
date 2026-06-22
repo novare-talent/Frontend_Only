@@ -7,7 +7,7 @@ export async function resetPassword(formData: FormData) {
   const email = formData.get('email') as string
   const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
-  const { error } = await AuthService.sendPasswordResetEmail(email, `${origin}/auth/update-password`)
+  const { error } = await AuthService.sendPasswordResetEmail(email, `${origin}/auth/callback?next=/auth/update-password`)
 
   if (error) {
     console.error('Reset password error:', error)
