@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { form_id, job_id, answers, resume_url } = body
+    const { form_id, job_id, answers } = body
 
     if (!form_id || !answers || typeof answers !== "object") {
       return NextResponse.json({ error: "form_id and answers are required" }, { status: 400 })
@@ -58,7 +58,6 @@ export async function POST(req: NextRequest) {
         profile_id: user.id,
         job_id: job_id ?? null,
         answers,
-        resume_url: resume_url ?? null,
       },
     ])
 
