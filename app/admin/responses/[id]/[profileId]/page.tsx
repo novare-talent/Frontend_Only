@@ -78,7 +78,7 @@ export default function AdminCandidateResponsePage() {
             .maybeSingle(),
           supabase
             .from("responses")
-            .select("id, profile_id, answers, created_at, job_id")
+            .select("id, profile_id, answers, created_at, job_id, full_name, email, phone, resume_url")
             .eq("job_id", id)
             .eq("profile_id", profileId)
             .maybeSingle(),
