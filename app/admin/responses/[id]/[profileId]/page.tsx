@@ -121,7 +121,7 @@ export default function AdminCandidateResponsePage() {
           full_name: profile?.full_name || responseData.full_name,
           email: profile?.email || responseData.email,
           phone: profile?.phone || responseData.phone,
-          resume_url: selectedResume || profileResume || responseData.resume_url,
+          resume_url: selectedResume || profileResume || null,
         });
       } catch (error) {
         console.error("Error fetching data:", error);
