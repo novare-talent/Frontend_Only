@@ -148,6 +148,7 @@ export function SignUpForm({
         email: userFormData.email,
         password: userFormData.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth/confirm?next=/Dashboard`,
           data: {
             first_name: userFormData.firstName,
             last_name: userFormData.lastName,
@@ -206,27 +207,20 @@ export function SignUpForm({
       let profileImageUrl: string | null = null;
       if (profileImage) {
         try {
-          const { data: uploadData, error: uploadError } =
-            await supabase.storage
-              .from("profile-images")
-              .upload(`${user.id}/${profileImage.name}`, profileImage, {
-                cacheControl: "3600",
-                upsert: false,
-              });
-
-          if (uploadError) {
+          const imgForm = new FormData();
+          imgForm.append('file', profileImage);
+          imgForm.append('user_id', user.id);
+          imgForm.append('bucket', 'profile-images');
+          const imgRes = await fetch('/api/upload-resume', { method: 'POST', body: imgForm });
+          const imgJson = await imgRes.json();
+          if (imgJson.url) {
+            profileImageUrl = imgJson.url;
+          } else {
             toast.error("Profile Image Failed to Upload", {
-              description:
-                "Your account was created but we couldn't upload your profile image. You can update it later.",
+              description: "Your account was created but we couldn't upload your profile image. You can update it later.",
               duration: 5000,
               position: "top-right",
             });
-          } else if (uploadData) {
-            const { data: publicUrlData } = supabase.storage
-              .from("profile-images")
-              .getPublicUrl(uploadData.path);
-
-            profileImageUrl = publicUrlData.publicUrl;
           }
         } catch {
           // Silent failure for non-critical image upload errors
@@ -236,27 +230,20 @@ export function SignUpForm({
       let resumeUrl: string | null = null;
       if (resumeFile) {
         try {
-          const { data: uploadData, error: uploadError } =
-            await supabase.storage
-              .from("resumes")
-              .upload(`${user.id}/${Date.now()}_${resumeFile.name}`, resumeFile, {
-                cacheControl: "3600",
-                upsert: false,
-              });
-
-          if (uploadError) {
+          const resumeForm = new FormData();
+          resumeForm.append('file', resumeFile);
+          resumeForm.append('user_id', user.id);
+          resumeForm.append('bucket', 'resumes');
+          const resumeRes = await fetch('/api/upload-resume', { method: 'POST', body: resumeForm });
+          const resumeJson = await resumeRes.json();
+          if (resumeJson.url) {
+            resumeUrl = resumeJson.url;
+          } else {
             toast.error("Resume Upload Failed", {
-              description:
-                "Your account was created but we couldn't upload your resume. You can update it later in your profile.",
+              description: "Your account was created but we couldn't upload your resume. You can update it later in your profile.",
               duration: 5000,
               position: "top-right",
             });
-          } else if (uploadData) {
-            const { data: publicUrlData } = supabase.storage
-              .from("resumes")
-              .getPublicUrl(uploadData.path);
-
-            resumeUrl = publicUrlData.publicUrl;
           }
         } catch {
           // Silent failure for non-critical resume upload errors
@@ -291,8 +278,11 @@ export function SignUpForm({
         return;
       }
 
+      const needsEmailConfirmation = !data?.session;
       toast.success("Account Created Successfully!", {
-        description: "Please check your entered email to confirm your account and proceed to login.",
+        description: needsEmailConfirmation
+          ? "Please check your email to confirm your account before logging in. (Check spam if not received.)"
+          : "Your account is ready. You can now sign in.",
         duration: 10000,
         position: "top-right",
       });
