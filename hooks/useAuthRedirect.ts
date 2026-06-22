@@ -12,15 +12,11 @@ export function useAuthRedirect() {
   useEffect(() => {
     const checkAuth = async () => {
       const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { user } } = await supabase.auth.getUser();
 
-      if (session) {
+      if (user) {
         const redirect = searchParams.get("redirect");
-        if (redirect) {
-          router.push(redirect);
-        } else {
-          router.push("/Dashboard");
-        }
+        router.push(redirect ?? "/Dashboard");
       } else {
         setIsChecking(false);
       }
