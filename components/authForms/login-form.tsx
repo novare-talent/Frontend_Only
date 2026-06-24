@@ -170,7 +170,10 @@ export function LoginForm({
 
           <div className="text-center text-sm text-muted-foreground">
             Forgot Your Password?{" "}
-            <Link href="/forgot-password" className="underline underline-offset-4 text-foreground hover:text-primary">
+            <Link
+              href={`/forgot-password${userInput.email ? `?email=${encodeURIComponent(userInput.email)}` : ""}`}
+              className="underline underline-offset-4 text-foreground hover:text-primary"
+            >
               Reset
             </Link>
           </div>

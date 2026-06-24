@@ -11,10 +11,11 @@ import { useState, use } from 'react'
 export default function ForgotPasswordPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; success?: string }>
+  searchParams: Promise<{ error?: string; success?: string; email?: string }>
 }) {
   const [emailError, setEmailError] = useState('')
   const params = use(searchParams)
+  const prefillEmail = params.email ? decodeURIComponent(params.email) : ''
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
@@ -75,7 +76,17 @@ export default function ForgotPasswordPage({
 
               {params.error && (
                 <Alert variant="destructive" className="mt-4">
-                  <AlertDescription className="break-words">{decodeURIComponent(params.error)}</AlertDescription>
+                  <AlertDescription className="break-words">
+                    {decodeURIComponent(params.error)}
+                    {decodeURIComponent(params.error).includes('sign up') && (
+                      <span>
+                        {' '}
+                        <Link href="/sign-up" className="underline font-medium">
+                          Sign up here
+                        </Link>
+                      </span>
+                    )}
+                  </AlertDescription>
                 </Alert>
               )}
 
@@ -96,6 +107,7 @@ export default function ForgotPasswordPage({
                     name="email"
                     id="email"
                     placeholder="roll_number@iit.ac.in or work@company.com"
+                    defaultValue={prefillEmail}
                     onChange={(e) => {
                       if (emailError && validateEmail(e.target.value)) {
                         setEmailError('')

@@ -2,12 +2,28 @@
 
 import { AuthService } from './services/auth.service'
 import { redirect } from 'next/navigation'
+import { createClient } from '@supabase/supabase-js'
 
 export async function resetPassword(formData: FormData) {
-  const email = formData.get('email') as string
+  const email = (formData.get('email') as string).trim().toLowerCase()
   const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
-  const { error } = await AuthService.sendPasswordResetEmail(email, `${origin}/auth/callback?next=/auth/update-password`)
+  // Validate email exists in profiles before sending reset link
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('email')
+    .eq('email', email)
+    .maybeSingle()
+
+  if (!profile) {
+    redirect(`/forgot-password?error=${encodeURIComponent('No account found with this email. Please sign up first.')}`)
+  }
+
+  const { error } = await AuthService.sendPasswordResetEmail(profile.email, `${origin}/auth/callback?next=/auth/update-password`)
 
   if (error) {
     console.error('Reset password error:', error)
