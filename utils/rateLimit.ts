@@ -21,7 +21,7 @@ function makeLimiter(
 
 export const limiters = {
   globalIp:         makeLimiter(120, "1 m"),  // 120 req/min per IP — all /api/*
-  authIp:           makeLimiter(5, "15 m"),   // 5 req/15 min per IP — sign-in/sign-up/auth
+  authIp:           makeLimiter(20, "15 m"),  // 20 req/15 min per IP — sign-in/sign-up/auth
   generateForm:     makeLimiter(3, "1 m"),    // 3 req/min per user
   evaluateProxy:    makeLimiter(2, "5 m"),    // 2 req/5 min per user
   consumeCredit:    makeLimiter(10, "1 m"),   // 10 req/min per user
