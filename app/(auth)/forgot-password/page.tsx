@@ -6,7 +6,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { resetPassword } from '@/app/actions/auth'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { useState, use } from 'react'
+import { useState, use, useEffect } from 'react'
 
 export default function ForgotPasswordPage({
   searchParams,
@@ -14,8 +14,20 @@ export default function ForgotPasswordPage({
   searchParams: Promise<{ error?: string; success?: string; email?: string }>
 }) {
   const [emailError, setEmailError] = useState('')
+  const [autoSending, setAutoSending] = useState(false)
   const params = use(searchParams)
   const prefillEmail = params.email ? decodeURIComponent(params.email) : ''
+
+  // If email arrived from sign-in page, auto-send without asking the user again
+  useEffect(() => {
+    if (prefillEmail && !params.error && !params.success) {
+      setAutoSending(true)
+      const formData = new FormData()
+      formData.set('email', prefillEmail)
+      resetPassword(formData).catch(() => setAutoSending(false))
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
@@ -49,7 +61,13 @@ export default function ForgotPasswordPage({
       {/* Scrollable Content */}
       <div className="flex min-h-screen items-center justify-center px-4 py-10">
         <div className="w-full max-w-sm">
-          <form
+          {autoSending && (
+            <div className="bg-card rounded-[calc(var(--radius)+.125rem)] border p-8 text-center shadow-md">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-sm text-muted-foreground">Sending reset link to <span className="font-medium text-foreground">{prefillEmail}</span>…</p>
+            </div>
+          )}
+          {!autoSending && <form
             action={handleSubmit}
             className="bg-muted overflow-hidden rounded-[calc(var(--radius)+.125rem)] border shadow-md shadow-zinc-950/5 dark:[--color-muted:var(--color-zinc-900)]">
             <div className="bg-card -m-px rounded-[calc(var(--radius)+.125rem)] border p-8 pb-6">
@@ -137,7 +155,7 @@ export default function ForgotPasswordPage({
                 </Button>
               </p>
             </div>
-          </form>
+          </form>}
         </div>
       </div>
     </div>
