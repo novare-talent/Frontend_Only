@@ -1,0 +1,267 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+import { Resend } from 'resend'
+import PDFDocument from 'pdfkit'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
+
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
+
+function formatDate(d: Date) {
+  return d.toLocaleString('en-IN', {
+    day: '2-digit', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: true,
+  })
+}
+
+async function generatePDF(
+  jobTitle: string,
+  candidates: any[]
+): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ size: 'A4', margin: 50, autoFirstPage: true })
+    const chunks: Buffer[] = []
+    doc.on('data', (c: Buffer) => chunks.push(c))
+    doc.on('end', () => resolve(Buffer.concat(chunks)))
+    doc.on('error', reject)
+
+    const W = doc.page.width - 100 // usable width
+    const BLUE = '#6366f1'
+    const GRAY = '#6b7280'
+    const DARK = '#111827'
+    const LIGHT_GRAY = '#f3f4f6'
+
+    // ── Header ──────────────────────────────────────────────
+    doc.rect(0, 0, doc.page.width, 90).fill(BLUE)
+    doc.fillColor('#ffffff').fontSize(22).font('Helvetica-Bold')
+       .text('ZENHYRE', 50, 22)
+    doc.fontSize(10).font('Helvetica')
+       .text('Candidate Evaluation Report', 50, 50)
+    doc.fontSize(9)
+       .text(`Generated: ${formatDate(new Date())}`, 50, 65)
+
+    // right-align candidate count
+    doc.text(`Total candidates: ${candidates.length}`, 50, 65, { align: 'right', width: W })
+
+    doc.moveDown(0)
+    doc.y = 110
+
+    // ── Job title ────────────────────────────────────────────
+    doc.fillColor(DARK).fontSize(14).font('Helvetica-Bold')
+       .text(`Job: ${jobTitle}`, 50, doc.y)
+    doc.moveDown(0.4)
+    doc.moveTo(50, doc.y).lineTo(50 + W, doc.y).strokeColor('#e5e7eb').lineWidth(1).stroke()
+    doc.moveDown(0.6)
+
+    // ── Candidates ───────────────────────────────────────────
+    candidates.forEach((c, i) => {
+      // Page break guard — leave at least 160pt for a card
+      if (doc.y > doc.page.height - 200) {
+        doc.addPage()
+        doc.y = 50
+      }
+
+      const cardTop = doc.y
+
+      // Card background
+      doc.roundedRect(48, cardTop - 4, W + 4, 1, 2).fillColor(LIGHT_GRAY).fill()
+      doc.y = cardTop
+
+      // Rank + Name + Final Score
+      doc.fillColor(BLUE).fontSize(11).font('Helvetica-Bold')
+         .text(`#${i + 1}  ${c.full_name || 'Unknown Candidate'}`, 54, doc.y, { continued: true, width: W - 100 })
+      doc.fillColor(DARK).font('Helvetica')
+         .text(`Score: ${c.final_score ?? '—'}/100`, { align: 'right', width: W - 4 })
+      doc.moveDown(0.25)
+
+      // Contact row
+      const contactY = doc.y
+      doc.fillColor(GRAY).fontSize(8.5).font('Helvetica')
+      const contactParts: string[] = []
+      if (c.email) contactParts.push(`✉  ${c.email}`)
+      if (c.phone) contactParts.push(`✆  ${c.phone}`)
+      if (contactParts.length) {
+        doc.text(contactParts.join('   '), 54, contactY)
+        doc.moveDown(0.3)
+      }
+
+      // Resume link
+      if (c.resume_url) {
+        const linkY = doc.y
+        doc.fillColor(BLUE).fontSize(8.5)
+           .text('View Resume →', 54, linkY, { link: c.resume_url, underline: true })
+        doc.moveDown(0.35)
+      }
+
+      // Scores row
+      doc.fillColor(DARK).fontSize(9).font('Helvetica-Bold').text('Scores:', 54, doc.y)
+      doc.moveDown(0.2)
+      doc.font('Helvetica').fillColor(GRAY)
+      const scoreStr = [
+        `Skills Match: ${c.skills_match ?? '—'}`,
+        `Experience: ${c.experience_relevance ?? '—'}`,
+        `Communication: ${c.communication_clarity ?? '—'}`,
+      ].join('    ')
+      doc.text(scoreStr, 54, doc.y)
+      doc.moveDown(0.4)
+
+      // Status badges (text)
+      const badges: string[] = []
+      if (c.needs_review) badges.push('[Needs Review]')
+      if (c.rejection_sent) badges.push('[Rejection Sent]')
+      if (badges.length) {
+        doc.fillColor('#b45309').fontSize(8).text(badges.join('  '), 54, doc.y)
+        doc.moveDown(0.3)
+      }
+
+      // Justification
+      if (c.justification) {
+        doc.fillColor(DARK).fontSize(9).font('Helvetica-Bold').text('Assessment:', 54, doc.y)
+        doc.moveDown(0.2)
+        doc.font('Helvetica').fillColor(GRAY).fontSize(8.5)
+           .text(c.justification, 54, doc.y, { width: W - 8 })
+        doc.moveDown(0.5)
+      }
+
+      // Bottom divider
+      doc.moveDown(0.3)
+      doc.moveTo(50, doc.y).lineTo(50 + W, doc.y).strokeColor('#e5e7eb').lineWidth(0.5).stroke()
+      doc.moveDown(0.7)
+    })
+
+    // ── Footer on every page ─────────────────────────────────
+    const range = doc.bufferedPageRange()
+    for (let p = range.start; p < range.start + range.count; p++) {
+      doc.switchToPage(p)
+      doc.fillColor(GRAY).fontSize(8).font('Helvetica')
+         .text(
+           `Generated by Zenhyre • Novare Talent • Page ${p + 1} of ${range.count}`,
+           50, doc.page.height - 35,
+           { align: 'center', width: W }
+         )
+    }
+
+    doc.end()
+  })
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    // ── Auth ──────────────────────────────────────────────────
+    const token = req.headers.get('Authorization')?.split('Bearer ')[1]
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const supabaseAdmin = getSupabaseAdmin()
+    const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token)
+    if (authErr || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    // ── Input ─────────────────────────────────────────────────
+    const { job_id, to_email } = await req.json()
+    if (!job_id || !to_email) {
+      return NextResponse.json({ error: 'job_id and to_email are required' }, { status: 400 })
+    }
+
+    // ── Fetch data ────────────────────────────────────────────
+    const [{ data: evalRow }, { data: job }] = await Promise.all([
+      supabaseAdmin.from('evaluations').select('results').eq('job_id', job_id).maybeSingle(),
+      supabaseAdmin.from('jobs').select('Job_Name, Job_Description').eq('job_id', job_id).maybeSingle(),
+    ])
+
+    if (!evalRow) return NextResponse.json({ error: 'No evaluation found for this job' }, { status: 404 })
+
+    const baseCandidates: any[] = evalRow.results?.candidates ?? []
+    const jobTitle: string = job?.Job_Name || job?.Job_Description || 'Untitled Job'
+
+    // Enrich candidates with profile data (email, phone)
+    const profileIds = baseCandidates.filter(c => c.profile_id).map(c => c.profile_id as string)
+    const { data: profileRows } = profileIds.length > 0
+      ? await supabaseAdmin.from('profiles').select('id, email, phone').in('id', profileIds)
+      : { data: [] }
+
+    const profileMap = Object.fromEntries((profileRows ?? []).map((p: any) => [p.id, p]))
+    const candidates = baseCandidates
+      .map(c => ({
+        ...c,
+        email: c.email || (c.profile_id ? profileMap[c.profile_id]?.email : undefined),
+        phone: c.phone || (c.profile_id ? profileMap[c.profile_id]?.phone : undefined),
+      }))
+      .sort((a, b) => (b.final_score ?? 0) - (a.final_score ?? 0))
+
+    // ── Generate PDF ──────────────────────────────────────────
+    const pdfBuffer = await generatePDF(jobTitle, candidates)
+
+    // ── Build email ───────────────────────────────────────────
+    const topCandidate = candidates[0]
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
+    const dateStr = formatDate(new Date())
+
+    const htmlBody = `
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #111827;">
+  <div style="background: #6366f1; padding: 28px 32px; border-radius: 8px 8px 0 0;">
+    <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 700;">ZENHYRE</h1>
+    <p style="color: #c7d2fe; margin: 6px 0 0; font-size: 13px;">Candidate Evaluation Report</p>
+  </div>
+
+  <div style="background: #f9fafb; padding: 28px 32px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+    <p style="margin: 0 0 16px; font-size: 15px;">Dear Hiring Team,</p>
+
+    <p style="margin: 0 0 16px; font-size: 14px; line-height: 1.6; color: #374151;">
+      Please find attached the AI-generated evaluation report for <strong>${jobTitle}</strong>,
+      prepared on ${dateStr}.
+    </p>
+
+    <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px 20px; margin: 20px 0;">
+      <p style="margin: 0 0 8px; font-size: 13px; font-weight: 600; color: #6366f1; text-transform: uppercase; letter-spacing: 0.05em;">Report Highlights</p>
+      <ul style="margin: 0; padding-left: 18px; font-size: 14px; color: #374151; line-height: 1.8;">
+        <li><strong>${candidates.length}</strong> candidate${candidates.length !== 1 ? 's' : ''} evaluated</li>
+        ${topCandidate ? `<li>Top candidate: <strong>${topCandidate.full_name || 'Unknown'}</strong> — ${topCandidate.final_score ?? '—'}/100</li>` : ''}
+        <li>Detailed scores: Skills, Experience &amp; Communication</li>
+        <li>AI-generated assessment summaries</li>
+        <li>Direct links to each candidate's resume (in PDF)</li>
+      </ul>
+    </div>
+
+    <p style="margin: 0 0 16px; font-size: 14px; color: #374151; line-height: 1.6;">
+      The attached PDF contains the full ranked list with clickable resume links for each candidate.
+    </p>
+
+    <p style="margin: 24px 0 0; font-size: 14px; color: #374151;">Best regards,<br>
+      <strong>The Zenhyre Team</strong><br>
+      <span style="color: #6b7280; font-size: 13px;">Novare Talent</span>
+    </p>
+  </div>
+
+  <p style="text-align: center; font-size: 11px; color: #9ca3af; margin: 16px 0 0;">
+    This report was generated automatically by Zenhyre.
+  </p>
+</div>`
+
+    const { error: sendError } = await resend.emails.send({
+      from: fromEmail,
+      to: to_email,
+      subject: `Candidate Evaluation Report — ${jobTitle}`,
+      html: htmlBody,
+      attachments: [
+        {
+          filename: `evaluation-report-${jobTitle.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.pdf`,
+          content: pdfBuffer,
+        },
+      ],
+    })
+
+    if (sendError) {
+      console.error('Resend error:', sendError)
+      return NextResponse.json({ error: 'Failed to send email' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (err: any) {
+    console.error('send-evaluation-report error:', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

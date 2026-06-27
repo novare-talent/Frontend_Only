@@ -14,6 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
 import {
   User,
   FileText,
@@ -57,6 +58,9 @@ export default function EvaluationPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sending, setSending] = useState(false);
   const [rejectionSent, setRejectionSent] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [reportEmail, setReportEmail] = useState("");
+  const [sendingReport, setSendingReport] = useState(false);
 
   useEffect(() => {
     const fetchEvaluation = async () => {
@@ -117,6 +121,17 @@ export default function EvaluationPage() {
         }));
 
         setCandidates(enriched);
+
+        // Pre-fill report email with the logged-in user's email
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: myProfile } = await supabase
+            .from("profiles")
+            .select("email")
+            .eq("id", user.id)
+            .maybeSingle();
+          if (myProfile?.email) setReportEmail(myProfile.email);
+        }
       } finally {
         setLoading(false);
       }
@@ -227,6 +242,37 @@ export default function EvaluationPage() {
     router.push(`/client/responses/${id}/${profileId}`);
   };
 
+  const handleSendReport = async () => {
+    if (!reportEmail) return;
+    setSendingReport(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error("Authentication error. Please log in again.");
+        return;
+      }
+      const res = await fetch("/api/send-evaluation-report", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ job_id: id, to_email: reportEmail }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error || "Failed to send report");
+        return;
+      }
+      toast.success(`Evaluation report sent to ${reportEmail}`);
+      setShowEmailForm(false);
+    } catch (err: any) {
+      toast.error(err?.message || "Unexpected error sending report");
+    } finally {
+      setSendingReport(false);
+    }
+  };
+
   if (loading)
     return <p className="text-center mt-10">Loading evaluation...</p>;
 
@@ -264,38 +310,83 @@ export default function EvaluationPage() {
             </div>
 
             {sortedCandidates.length > 0 && (
-              <div className="flex items-center gap-3 pt-2 flex-wrap">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleAll}
-                  className="gap-2"
-                >
-                  {allSelected ? (
-                    <CheckSquare className="size-4" />
-                  ) : (
-                    <Square className="size-4" />
-                  )}
-                  {allSelected ? "Deselect All" : "Select All"}
-                </Button>
-
-                {selectedIds.size > 0 && (
+              <div className="flex flex-col gap-2 pt-2">
+                <div className="flex items-center gap-3 flex-wrap">
                   <Button
+                    variant="outline"
                     size="sm"
-                    variant="destructive"
-                    onClick={handleSendRejections}
-                    disabled={sending}
+                    onClick={toggleAll}
                     className="gap-2"
                   >
-                    {sending ? (
-                      <Loader2 className="size-4 animate-spin" />
+                    {allSelected ? (
+                      <CheckSquare className="size-4" />
                     ) : (
-                      <Send className="size-4" />
+                      <Square className="size-4" />
                     )}
-                    {sending
-                      ? "Sending..."
-                      : `Send Rejection Email${selectedIds.size > 1 ? "s" : ""} (${selectedIds.size})`}
+                    {allSelected ? "Deselect All" : "Select All"}
                   </Button>
+
+                  {selectedIds.size > 0 && (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={handleSendRejections}
+                      disabled={sending}
+                      className="gap-2"
+                    >
+                      {sending ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Send className="size-4" />
+                      )}
+                      {sending
+                        ? "Sending..."
+                        : `Send Rejection Email${selectedIds.size > 1 ? "s" : ""} (${selectedIds.size})`}
+                    </Button>
+                  )}
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowEmailForm((v) => !v)}
+                    className="gap-2"
+                  >
+                    <Mail className="size-4" />
+                    Email Results
+                  </Button>
+                </div>
+
+                {showEmailForm && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Input
+                      type="email"
+                      value={reportEmail}
+                      onChange={(e) => setReportEmail(e.target.value)}
+                      placeholder="you@company.com"
+                      className="max-w-xs h-8 text-sm"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={handleSendReport}
+                      disabled={sendingReport || !reportEmail}
+                      className="gap-2 h-8"
+                    >
+                      {sendingReport ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Send className="size-4" />
+                      )}
+                      {sendingReport ? "Sending…" : "Send Report"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setShowEmailForm(false)}
+                      className="h-8 text-muted-foreground"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
                 )}
               </div>
             )}

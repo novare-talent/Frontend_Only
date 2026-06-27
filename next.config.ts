@@ -26,6 +26,9 @@ const nextConfig: NextConfig = {
     } : false,
   },
   
+  // Keep Node.js-only packages out of the client bundle
+  serverExternalPackages: ['pdfkit'],
+
   // Enable experimental optimizations
   experimental: {
     optimizePackageImports: [
