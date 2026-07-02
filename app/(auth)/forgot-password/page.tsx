@@ -61,13 +61,24 @@ export default function ForgotPasswordPage({
       {/* Scrollable Content */}
       <div className="flex min-h-screen items-center justify-center px-4 py-10">
         <div className="w-full max-w-sm">
-          {autoSending && (
+          {(autoSending || params.success) && (
             <div className="bg-card rounded-[calc(var(--radius)+.125rem)] border p-8 text-center shadow-md">
-              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-sm text-muted-foreground">Sending reset link to <span className="font-medium text-foreground">{prefillEmail}</span>…</p>
+              {autoSending && (
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              )}
+              <p className="text-sm text-muted-foreground">
+                {params.success
+                  ? params.success
+                  : <>Sending reset link to <span className="font-medium text-foreground">{prefillEmail}</span>…</>}
+              </p>
+              {params.success && (
+                <p className="mt-4 text-sm">
+                  <Link href="/sign-in" className="text-primary underline underline-offset-4">Back to sign in</Link>
+                </p>
+              )}
             </div>
           )}
-          {!autoSending && <form
+          {!autoSending && !params.success && <form
             action={handleSubmit}
             className="bg-muted overflow-hidden rounded-[calc(var(--radius)+.125rem)] border shadow-md shadow-zinc-950/5 dark:[--color-muted:var(--color-zinc-900)]">
             <div className="bg-card -m-px rounded-[calc(var(--radius)+.125rem)] border p-8 pb-6">

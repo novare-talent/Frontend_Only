@@ -26,7 +26,7 @@ export async function resetPassword(formData: FormData) {
   // Use the plain supabase-js client (implicit flow, no PKCE) so the reset link
   // works on any device/browser — not tied to a code_verifier cookie.
   const { error } = await supabaseAdmin.auth.resetPasswordForEmail(profile.email, {
-    redirectTo: `${origin}/auth/callback?next=/auth/update-password`,
+    redirectTo: `${origin}/auth/update-password`,
   })
 
   if (error) {

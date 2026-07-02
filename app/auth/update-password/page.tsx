@@ -9,11 +9,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useState, use, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
+import type { EmailOtpType } from '@supabase/supabase-js'
 
 export default function UpdatePasswordPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>
+  searchParams: Promise<{ error?: string; token_hash?: string; type?: string }>
 }) {
   const params = use(searchParams)
   const [passwordError, setPasswordError] = useState('')
@@ -23,32 +24,45 @@ export default function UpdatePasswordPage({
   const router = useRouter()
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const init = async () => {
       try {
-        const { data: { user }, error } = await supabase.auth.getUser()
-        
-        if (error || !user) {
-          router.push('/sign-in?error=Session expired. Please request a new password reset link.')
+        // token_hash + type arrive when Supabase redirects here directly from the
+        // reset email. Verify them client-side so the session is established in the
+        // browser without depending on server-side cookie passing.
+        if (params.token_hash && params.type) {
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: params.token_hash,
+            type: params.type as EmailOtpType,
+          })
+          if (error) {
+            router.push('/forgot-password?error=' + encodeURIComponent('Reset link is invalid or has expired. Please request a new one.'))
+            return
+          }
+          setIsAuthenticated(true)
           return
         }
-        
+
+        // No token in URL — check if the user already has a session
+        // (e.g., arrived via /auth/callback on a same-browser flow)
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          router.push('/forgot-password?error=' + encodeURIComponent('Reset link is invalid or has expired. Please request a new one.'))
+          return
+        }
         setIsAuthenticated(true)
-      } catch (error) {
-        console.error('Auth check error:', error)
-        router.push('/sign-in?error=Authentication failed. Please try again.')
       } finally {
         setIsLoading(false)
       }
     }
 
-    checkAuth()
-  }, [supabase, router])
+    init()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.token_hash, params.type])
 
   const handleSubmit = async (formData: FormData) => {
     const password = formData.get('password') as string
     const confirmPassword = formData.get('confirm-password') as string
 
-    // Client-side validation
     if (password !== confirmPassword) {
       setPasswordError('Passwords do not match')
       return
@@ -57,54 +71,36 @@ export default function UpdatePasswordPage({
       setPasswordError('Password must be at least 6 characters')
       return
     }
-    
+
     setPasswordError('')
     await updatePassword(formData)
   }
 
-  // Show loading while checking authentication
+  const bg = (
+    <div className="fixed inset-0 -z-10">
+      <Image src="/BackgroundAuth.jpg" alt="Background" fill className="object-cover" priority />
+    </div>
+  )
+
   if (isLoading) {
     return (
       <div className="relative min-h-screen w-full">
-        <div className="fixed inset-0 -z-10">
-          <Image
-            src="/BackgroundAuth.jpg"
-            alt="Background"
-            fill
-            className="object-cover"
-            priority
-          />
-        </div>
+        {bg}
         <div className="flex min-h-screen items-center justify-center px-4 py-10">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-sm text-muted-foreground">Verifying session...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
+            <p className="text-sm text-muted-foreground">Verifying reset link…</p>
           </div>
         </div>
       </div>
     )
   }
 
-  // Don't render the form if not authenticated (will redirect)
-  if (!isAuthenticated) {
-    return null
-  }
+  if (!isAuthenticated) return null
 
   return (
     <div className="relative min-h-screen w-full">
-      
-      {/* Fixed Background */}
-      <div className="fixed inset-0 -z-10">
-        <Image
-          src="/BackgroundAuth.jpg"
-          alt="Background"
-          fill
-          className="object-cover"
-          priority
-        />
-      </div>
-
-      {/* Scrollable Content */}
+      {bg}
       <div className="flex min-h-screen items-center justify-center px-4 py-10">
         <div className="w-full max-w-sm">
           <form
@@ -113,20 +109,8 @@ export default function UpdatePasswordPage({
             <div className="bg-card -m-px rounded-[calc(var(--radius)+.125rem)] border p-8 pb-6">
               <div>
                 <Link href="/" aria-label="go home">
-                  <Image
-                    src="/logoDark.svg"
-                    alt="Logo"
-                    width={160}
-                    height={40}
-                    className="block dark:hidden"
-                  />
-                  <Image
-                    src="/logo.svg"
-                    alt="Logo Dark"
-                    width={160}
-                    height={40}
-                    className="hidden dark:block"
-                  />
+                  <Image src="/logoDark.svg" alt="Logo" width={160} height={40} className="block dark:hidden" />
+                  <Image src="/logo.svg" alt="Logo Dark" width={160} height={40} className="hidden dark:block" />
                 </Link>
                 <h1 className="mb-1 mt-4 text-xl font-semibold text-foreground">Reset Password</h1>
                 <p className="text-sm text-muted-foreground">Enter your new password below</p>
@@ -142,17 +126,13 @@ export default function UpdatePasswordPage({
 
               {passwordError && (
                 <Alert variant="destructive" className="mt-4">
-                  <AlertDescription className="text-sm">
-                    {passwordError}
-                  </AlertDescription>
+                  <AlertDescription className="text-sm">{passwordError}</AlertDescription>
                 </Alert>
               )}
 
               <div className="mt-6 space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="block text-sm text-foreground">
-                    New Password
-                  </Label>
+                  <Label htmlFor="password" className="block text-sm text-foreground">New Password</Label>
                   <Input
                     type="password"
                     required
@@ -165,9 +145,7 @@ export default function UpdatePasswordPage({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password" className="block text-sm text-foreground">
-                    Confirm Password
-                  </Label>
+                  <Label htmlFor="confirm-password" className="block text-sm text-foreground">Confirm Password</Label>
                   <Input
                     type="password"
                     required
@@ -191,7 +169,7 @@ export default function UpdatePasswordPage({
 
             <div className="p-3">
               <p className="text-accent-foreground text-center text-sm">
-                Need a new reset link?{" "}
+                Need a new reset link?{' '}
                 <Button asChild variant="link" className="px-2">
                   <Link href="/forgot-password">Request Reset</Link>
                 </Button>
