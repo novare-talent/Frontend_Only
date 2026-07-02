@@ -23,7 +23,11 @@ export async function resetPassword(formData: FormData) {
     redirect(`/forgot-password?error=${encodeURIComponent('No account found with this email. Please sign up first.')}`)
   }
 
-  const { error } = await AuthService.sendPasswordResetEmail(profile.email, `${origin}/auth/callback?next=/auth/update-password`)
+  // Use the plain supabase-js client (implicit flow, no PKCE) so the reset link
+  // works on any device/browser — not tied to a code_verifier cookie.
+  const { error } = await supabaseAdmin.auth.resetPasswordForEmail(profile.email, {
+    redirectTo: `${origin}/auth/callback?next=/auth/update-password`,
+  })
 
   if (error) {
     console.error('Reset password error:', error)
