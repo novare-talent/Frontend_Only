@@ -45,6 +45,17 @@ html {
   text-rendering: optimizeLegibility;
 }
 
+/* The standalone build puts the canvas color on <body> with the .ambient
+   gradients on a child div. Here both classes share the root div, and
+   .ambient's `background:` shorthand resets background-color — so restore
+   the canvas both behind (body) and on the combined element. */
+body:has(.nvl-root) {
+  background-color: var(--color-canvas);
+}
+.nvl-root.ambient {
+  background-color: var(--color-canvas);
+}
+
 /* globals.css styles the page scrollbar dark for the app — keep it light on
    pages built from this design (landing, /hermit) */
 html:has(.nvl-root)::-webkit-scrollbar-track,
