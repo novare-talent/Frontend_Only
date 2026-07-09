@@ -1,28 +1,33 @@
-import dynamic from "next/dynamic";
-import Navbar from "@/components/landing/layout/Navbar";
-import Hero from "@/components/landing/sections/Hero";
-import Footer from "@/components/landing/layout/Footer";
-import BelowFoldSections from "@/components/landing/sections/BelowFoldSections";
-import { ProgressiveBlur } from "@/components/landing/ui/progressive-blur";
+import type { Metadata } from "next";
+import { Poppins, Inter } from "next/font/google";
+import NovareLanding from "@/components/landing-v2/NovareLanding";
 
-// SSR'd (just below fold, important for immediate scroll)
-const Zenhyre = dynamic(() => import("@/components/landing/sections/Zenhyre"));
-const WhyTheOnePercent = dynamic(() => import("@/components/landing/sections/WhyTheOnePercent"));
+// Fonts are declared here (not in the root layout) so they only load on the
+// landing page — dashboards keep Satoshi without preloading these.
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-poppins",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "Novare Talent — Hire Better. Hire Smarter. Hire Novare.",
+  description:
+    "Novare Talent helps startups and enterprises hire top talent through AI-powered recruitment, intelligent candidate evaluation, and India's most trusted elite talent network.",
+};
 
 export default function Home() {
-  return (<>
-    <main className="relative z-[1]">
-      <Navbar />
-      <Hero />
-      {/* <SocialProofBar /> */}
-      <Zenhyre />
-      <WhyTheOnePercent />
-      <BelowFoldSections />
-      <Footer />
-    </main>
-      <div className="fixed bottom-0 inset-x-0 h-16 pointer-events-none z-50">
-        <ProgressiveBlur height="100%" position="bottom"/>
-      </div>
-  </>
+  return (
+    <div className={`${poppins.variable} ${inter.variable}`}>
+      <NovareLanding />
+    </div>
   );
 }

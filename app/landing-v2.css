@@ -1,0 +1,892 @@
+/* Landing page ("One Intelligence" revamp) — scoped styles + design tokens.
+   Imported from globals.css so it shares the single Tailwind v4 pipeline.
+   Page-level rules are scoped under .nvl-root so the light landing theme
+   never leaks into the dark dashboard/auth pages. */
+
+@theme {
+  --color-canvas: #FBFBFC;
+  --color-ink: #17171C;
+  --color-ink-2: #55555F;
+  --color-ink-3: #8A8A96;
+  --color-hairline: #E9E9EF;
+  --color-lav: #CFC7F8;
+  --color-lav-deep: #6E5BD8;
+  --color-blush: #F5C8D6;
+  --color-verified: #3D7A5F;
+
+  --font-display: var(--font-poppins), "Poppins", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-inter), "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+.nvl-root {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---- Ambient canvas ---------------------------------------------------- */
+
+.ambient {
+  background:
+    radial-gradient(1100px 700px at 82% -10%, rgba(201, 192, 250, 0.15), transparent 65%),
+    radial-gradient(900px 620px at -8% 38%, rgba(247, 201, 216, 0.15), transparent 62%),
+    radial-gradient(760px 560px at 68% 108%, rgba(201, 192, 250, 0.15), transparent 60%);
+}
+
+/* ---- Glass ------------------------------------------------------------- */
+
+/* Live glass: budget of TWO at any moment (nav + front panel).
+   Named nvl-glass because globals.css already owns .glass for the app. */
+.nvl-glass {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px) saturate(120%);
+  -webkit-backdrop-filter: blur(20px) saturate(120%);
+  border: 1px solid rgba(229, 229, 235, 0.5);
+  box-shadow: 0 12px 32px rgba(17, 17, 18, 0.03);
+}
+
+/* navbar only: slightly more transparent than product glass */
+.glass-nav {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+/* Receded / background layers: flat fill, no live filter. */
+.glass-flat {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(229, 229, 235, 0.5);
+  box-shadow: 0 12px 32px rgba(17, 17, 18, 0.03);
+}
+
+/* ---- Type utilities ---------------------------------------------------- */
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.microlabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+
+.token {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+
+/* ---- CTAs -------------------------------------------------------------- */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding: 0 28px;
+  border-radius: 9999px;
+  background-color: var(--color-lav);
+  color: #26203e;
+  font-weight: 500;
+  font-size: 15px;
+  transition: background-color 0.5s var(--ease-expo), transform 0.5s var(--ease-expo);
+}
+
+.pill:hover {
+  background-color: var(--color-blush);
+}
+
+.pill:active {
+  transform: scale(0.98);
+}
+
+.pill-sm {
+  height: 40px;
+  padding: 0 20px;
+  font-size: 14px;
+}
+
+.textlink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--color-ink-2);
+  border-bottom: 1px solid var(--color-hairline);
+  padding-bottom: 2px;
+  transition: color 0.4s var(--ease-expo), border-color 0.4s var(--ease-expo);
+}
+
+.textlink:hover {
+  color: var(--color-ink);
+  border-color: var(--color-ink-3);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-lav-deep);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.pill:focus-visible {
+  border-radius: 9999px;
+}
+
+/* ---- Volumetric glass spheres ------------------------------------------ */
+
+.sphere-btn {
+  position: relative;
+  display: block;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  background: radial-gradient(
+    circle at 32% 28%,
+    rgba(255, 255, 255, 0.95),
+    rgba(244, 242, 250, 0.55) 45%,
+    rgba(228, 225, 240, 0.35) 100%
+  );
+  box-shadow:
+    0 18px 40px rgba(120, 110, 180, 0.1),
+    inset 0 -12px 24px rgba(180, 170, 220, 0.12);
+  transition: transform 0.5s var(--ease-expo);
+  cursor: pointer;
+  /* opt back in: the hero field container is pointer-events:none so its z=0
+     plane can't occlude depth-shifted spheres, and pointer-events inherits */
+  pointer-events: auto;
+}
+
+.sphere-btn:hover {
+  transform: scale(1.12);
+}
+
+.sphere-btn:focus-visible {
+  outline: 2px solid var(--color-lav-deep);
+  outline-offset: 4px;
+  border-radius: 50%;
+}
+
+/* faint per-product identity tint, kept well under 8% */
+.sphere-tint {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 62% 68%, var(--sphere-tint), transparent 72%);
+  pointer-events: none;
+}
+
+/* specular hit, upper-left */
+.sphere-spec {
+  position: absolute;
+  left: 17%;
+  top: 12%;
+  width: 36%;
+  height: 26%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 70%);
+  opacity: 0.7;
+  transition: opacity 0.4s var(--ease-expo);
+  pointer-events: none;
+}
+
+.sphere-btn:hover .sphere-spec {
+  opacity: 1;
+}
+
+/* 1px rim light fading toward the bottom */
+.sphere-rim {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent 78%);
+  mask-image: linear-gradient(to bottom, black 30%, transparent 78%);
+  pointer-events: none;
+}
+
+.sphere-label {
+  position: absolute;
+  white-space: nowrap;
+  transform-origin: left center;
+  transition: color 0.4s var(--ease-expo), transform 0.4s var(--ease-expo);
+}
+
+.sphere-label.text-right {
+  transform-origin: right center;
+}
+
+.sphere-label.text-center {
+  transform-origin: center top;
+}
+
+/* Hovering a product node brings it fully forward: the sphere enlarges, its
+   glow blooms, and the label steps out of the background — bold, ink, larger. */
+.sphere-anchor:hover .sphere-label {
+  transform: scale(1.12);
+}
+
+.sphere-anchor:hover .sphere-label .sphere-label-name {
+  color: var(--color-ink);
+  font-weight: 700;
+}
+
+.sphere-anchor:hover .sphere-label .sphere-label-sub {
+  color: var(--color-ink-2);
+}
+
+.sphere-anchor:hover .node-glow {
+  opacity: 0.85;
+  animation: none;
+}
+
+/* ---- Arc wiring ---------------------------------------------------------- */
+
+.arc-base {
+  stroke: rgba(150, 140, 220, 0.35);
+  transition: stroke 0.4s var(--ease-expo);
+}
+
+.arc-pulse {
+  stroke: rgba(110, 91, 216, 0.55);
+  stroke-dasharray: 10 90;
+  animation: arc-pulse 4s linear infinite;
+  transition: stroke 0.4s var(--ease-expo);
+}
+
+@keyframes arc-pulse {
+  from { stroke-dashoffset: 110; }
+  to { stroke-dashoffset: -10; }
+}
+
+g.arc-hot .arc-base { stroke: rgba(110, 91, 216, 0.7); }
+g.arc-hot .arc-pulse { stroke: rgba(110, 91, 216, 0.95); }
+
+.stage-paused .arc-pulse { animation-play-state: paused; }
+.stage-paused .hero-net .flow-particle { animation-play-state: paused; }
+
+@keyframes axis-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.axis-dot { animation: axis-pulse 4s ease-in-out infinite; }
+
+/* ---- Trust marquees (CSS-only, transform-only, independent of rAF) ------ */
+
+.marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 7%, black 93%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 7%, black 93%, transparent);
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+}
+
+.marquee-track.to-left {
+  animation: marquee-left var(--marquee-dur, 35s) linear infinite;
+}
+
+.marquee-track.to-right {
+  animation: marquee-right var(--marquee-dur, 42s) linear infinite;
+}
+
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-left {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes marquee-right {
+  from { transform: translate3d(-50%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+
+.marquee-half {
+  display: flex;
+  align-items: center;
+}
+
+/* Lane 2 placement chips: flat fill, hairline border — no backdrop-filter */
+.talent-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid #E5E5EB;
+  border-radius: 9999px;
+}
+
+/* ---- Pipeline entrance (class-toggled transitions, not per-frame JS) ---- */
+
+.pipe-node {
+  opacity: 0;
+  transform: translate3d(0, 16px, 0);
+  transition: opacity 0.8s var(--ease-expo), transform 0.8s var(--ease-expo);
+}
+
+.pipe-on .pipe-node {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.pipe-path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 0.7s var(--ease-expo);
+}
+
+.pipe-on .pipe-path {
+  stroke-dashoffset: 0;
+}
+
+.pipe-tip,
+.pipe-pulse {
+  opacity: 0;
+  transition: opacity 0.6s var(--ease-expo);
+}
+
+.pipe-on .pipe-tip,
+.pipe-on .pipe-pulse {
+  opacity: 1;
+}
+
+/* ---- Living system: breathing, glow, particles --------------------------- */
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.015); }
+}
+
+.breathe-a { animation: breathe 6s ease-in-out infinite; }
+.breathe-b { animation: breathe 6.8s ease-in-out infinite 1.7s; }
+.breathe-c { animation: breathe 7.6s ease-in-out infinite 3.1s; }
+
+/* soft radial identity glow behind each sphere, pulsing with its breath
+   (intensity kept ~30% under the original — the graphic supports, never
+   dominates) */
+.node-glow {
+  position: absolute;
+  inset: -26%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--sphere-tint), transparent 70%);
+  opacity: 0.38;
+  transition: opacity 0.9s var(--ease-expo);
+  pointer-events: none;
+  animation: glow-pulse 6s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.52; }
+}
+
+.node-active .node-glow {
+  opacity: 0.7;
+  animation: none;
+}
+
+.node-active .sphere-label .sphere-label-name {
+  color: var(--color-ink);
+}
+
+/* formation reorganization when a node activates */
+.shift-wrap {
+  transition: transform 1.4s var(--ease-expo);
+}
+
+/* particles traveling along precomputed paths (CSS motion path, no rAF) */
+.flow-particle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: #B0A4F2;
+  box-shadow: 0 0 6px 1px rgba(176, 164, 242, 0.55);
+  offset-rotate: 0deg;
+  animation: travel-path var(--pt-dur, 8s) linear infinite;
+  animation-delay: var(--pt-delay, 0s);
+}
+
+@keyframes travel-path {
+  from { offset-distance: 0%; }
+  to { offset-distance: 100%; }
+}
+
+/* processing shimmer: transform-only sweep */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.85) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: shimmer-sweep 2.2s var(--ease-expo) infinite;
+}
+
+@keyframes shimmer-sweep {
+  to { transform: translateX(100%); }
+}
+
+/* verification badge pulse (ZenHyre living network) */
+@keyframes badge-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.12); }
+}
+
+.badge-pulse { animation: badge-pulse 3.6s ease-in-out infinite; }
+
+/* relationship lines in the living network */
+.net-line {
+  stroke: rgba(150, 140, 220, 0.16);
+  transition: stroke 0.5s var(--ease-expo);
+}
+
+.net-line.net-hot {
+  stroke: rgba(110, 91, 216, 0.6);
+}
+
+/* ---- Premium icon family + pipeline stage cards ---------------------------- */
+
+.icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #E9E9EF;
+  color: #55555F;
+  transition: color 0.5s var(--ease-expo), border-color 0.5s var(--ease-expo), box-shadow 0.5s var(--ease-expo);
+}
+
+.icon-badge-sm {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+
+/* soft glow when a stage goes live or an icon is hovered */
+.chip-live .icon-badge,
+.icon-live {
+  color: #6E5BD8;
+  border-color: rgba(110, 91, 216, 0.35);
+  box-shadow: 0 0 18px rgba(176, 164, 242, 0.4);
+}
+
+.spine-glow {
+  opacity: 0;
+  transition: opacity 0.9s var(--ease-expo);
+}
+
+.chip-live .spine-glow {
+  opacity: 1;
+}
+
+.spine-title {
+  color: var(--color-ink-2);
+  transition: color 0.6s var(--ease-expo);
+}
+
+.chip-live .spine-title {
+  color: var(--color-ink);
+}
+
+/* card hover lift (testimonials, static pipeline cards) */
+.lift-card {
+  transition: transform 0.5s var(--ease-expo), box-shadow 0.5s var(--ease-expo);
+}
+
+.lift-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px rgba(17, 17, 18, 0.07);
+}
+
+/* pipeline node dots: perfectly centered on the path, glow when live */
+.spine-dot {
+  position: absolute;
+  left: -5px;
+  top: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 1px solid #C9C4DC;
+  transition: background-color 0.6s var(--ease-expo), border-color 0.6s var(--ease-expo), box-shadow 0.6s var(--ease-expo);
+}
+
+.chip-live .spine-dot {
+  background: #CFC7F8;
+  border-color: #6E5BD8;
+  box-shadow: 0 0 12px rgba(110, 91, 216, 0.5);
+}
+
+/* shadow-only hover for tilt cards (transform belongs to the tilt spring) */
+.hover-shadow {
+  transition: box-shadow 0.5s var(--ease-expo);
+}
+
+.hover-shadow:hover {
+  box-shadow: 0 18px 40px rgba(17, 17, 18, 0.07);
+}
+
+/* the pipeline line continuing as the conversation thread inside Hermit */
+.chat-thread {
+  position: absolute;
+  left: 10px;
+  top: 4px;
+  bottom: 10px;
+  width: 1px;
+  background: linear-gradient(to bottom, rgba(150, 140, 220, 0.4), rgba(150, 140, 220, 0.06));
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lift-card, .icon-badge, .spine-glow, .spine-title { transition: none; }
+  .lift-card:hover { transform: none; }
+}
+
+/* ---- Mobile journey: living orbit + vertical timeline ----------------------- */
+
+/* gentle continuous orbit sway for the mobile hero formation */
+@keyframes slow-orbit {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+.slow-orbit {
+  animation: slow-orbit 26s ease-in-out infinite;
+}
+
+/* vertical timeline nodes */
+.mnode {
+  position: absolute;
+  left: -15px;
+  top: -15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 1px solid #E5E5EB;
+  color: #8A8A96;
+  transition: border-color 0.6s var(--ease-expo), color 0.6s var(--ease-expo), box-shadow 0.6s var(--ease-expo), background-color 0.6s var(--ease-expo), transform 0.6s var(--ease-expo);
+}
+
+.mnode-done .mnode {
+  background: rgba(207, 199, 248, 0.35);
+  border-color: rgba(110, 91, 216, 0.4);
+  color: #6E5BD8;
+}
+
+.mnode-active .mnode {
+  border-color: #6E5BD8;
+  color: #6E5BD8;
+  transform: scale(1.18);
+  box-shadow: 0 0 18px rgba(176, 164, 242, 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slow-orbit { animation: none; }
+  .mnode { transition: none; }
+}
+
+/* ---- Orbital navigation: a rotating object, not a menu ---------------------- */
+
+.orb-shell {
+  position: relative;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(229, 229, 235, 0.6);
+  box-shadow: 0 10px 30px rgba(17, 17, 18, 0.05);
+  perspective: 620px;
+  overflow: hidden;
+}
+
+/* faint elliptical orbit hint */
+.orb-ring {
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  width: 82%;
+  height: 26px;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(150, 140, 220, 0.14);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.orb-item {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+
+.orb-item:focus-visible {
+  outline: 2px solid var(--color-lav-deep);
+  outline-offset: 3px;
+  border-radius: 9999px;
+}
+
+.orb-glass {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  color: var(--color-ink-3);
+  transition: color 0.5s var(--ease-expo), border-color 0.5s var(--ease-expo), background-color 0.5s var(--ease-expo), box-shadow 0.5s var(--ease-expo);
+}
+
+.orb-item:hover .orb-glass {
+  color: var(--color-ink-2);
+  box-shadow: 0 0 16px rgba(176, 164, 242, 0.28);
+}
+
+/* the floating glass sphere around the active stop */
+.orb-active .orb-glass {
+  color: var(--color-ink);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(247, 245, 253, 0.8));
+  border-color: rgba(110, 91, 216, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -6px 14px rgba(201, 192, 250, 0.22),
+    0 0 22px rgba(176, 164, 242, 0.45),
+    0 4px 14px rgba(17, 17, 18, 0.05);
+}
+
+.orb-active .orb-breathe {
+  animation: breathe 5s ease-in-out infinite;
+}
+
+.orb-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.orb-blur-1 { filter: blur(0.7px); }
+.orb-blur-2 { filter: blur(1.6px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .orb-active .orb-breathe { animation: none; }
+  .orb-glass { transition: none; }
+}
+
+/* ---- Progress rail -------------------------------------------------------- */
+
+.rail-dot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.rail-dot .rail-pip {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  border: 1px solid #C9C4DC;
+  background: transparent;
+  transition: background-color 0.5s var(--ease-expo), border-color 0.5s var(--ease-expo), transform 0.5s var(--ease-expo);
+}
+
+.rail-dot.rail-past .rail-pip {
+  background: #CFC7F8;
+  border-color: #CFC7F8;
+}
+
+.rail-dot.rail-active .rail-pip {
+  background: #6E5BD8;
+  border-color: #6E5BD8;
+  transform: scale(1.25);
+}
+
+.rail-dot .rail-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.4s var(--ease-expo), transform 0.4s var(--ease-expo), color 0.4s var(--ease-expo);
+  white-space: nowrap;
+}
+
+.rail-dot:hover .rail-label,
+.rail-dot:focus-visible .rail-label,
+.rail-dot.rail-active .rail-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.rail-dot.rail-active .rail-label {
+  color: var(--color-ink);
+}
+
+/* ---- Animated underline links --------------------------------------------- */
+
+.underline-link {
+  position: relative;
+}
+
+.underline-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s var(--ease-expo);
+}
+
+.underline-link:hover::after,
+.underline-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* ---- Motion ------------------------------------------------------------ */
+
+/* Idle drift for spheres: independent slow sine loops, transform-only. */
+@keyframes drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -6px, 0); }
+}
+@keyframes drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(5px, 4px, 0); }
+}
+@keyframes drift-c {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(-5px, 4px, 0); }
+}
+
+.drift-a { animation: drift-a 9s ease-in-out infinite; }
+.drift-b { animation: drift-b 7.5s ease-in-out infinite; }
+.drift-c { animation: drift-c 11s ease-in-out infinite; }
+
+/* Chat message entrance: runs once on mount, transform + opacity only. */
+@keyframes msg-in {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+.msg-in {
+  animation: msg-in 0.6s var(--ease-expo) both;
+}
+
+/* Typing indicator */
+@keyframes typing-dot {
+  0%, 60%, 100% { opacity: 0.25; transform: translate3d(0, 0, 0); }
+  30% { opacity: 1; transform: translate3d(0, -3px, 0); }
+}
+
+.typing-dot {
+  animation: typing-dot 1.1s ease-in-out infinite;
+}
+
+/* Scroll-into-view fade-up for the static (<1024px / reduced-motion) path. */
+.io-fade {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+  transition: opacity 0.9s var(--ease-expo), transform 0.9s var(--ease-expo);
+}
+
+.io-fade.is-in {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drift-a, .drift-b, .drift-c, .typing-dot, .axis-dot { animation: none; }
+  .breathe-a, .breathe-b, .breathe-c, .node-glow, .badge-pulse { animation: none; }
+  .flow-particle { display: none; }
+  .shimmer::after { animation: none; transform: translateX(100%); }
+  .shift-wrap, .rail-dot .rail-pip, .rail-dot .rail-label, .underline-link::after { transition: none; }
+  /* a frozen pulse dash reads as a stray mark — hide it entirely */
+  .arc-pulse { animation: none; display: none; }
+  .msg-in { animation: none; }
+  .io-fade { opacity: 1; transform: none; transition: none; }
+  .pill, .textlink, .sphere-btn, .sphere-spec { transition: none; }
+  .sphere-btn:hover { transform: none; }
+  .sphere-anchor:hover .sphere-label { transform: none; }
+  .sphere-label { transition: color 0.4s var(--ease-expo); }
+  /* marquees: static, first entries visible, no drift */
+  .marquee-track { animation: none !important; }
+  /* pipeline: fully composed */
+  .pipe-node { opacity: 1; transform: none; transition: none; }
+  .pipe-path { stroke-dashoffset: 0; transition: none; }
+  .pipe-tip { opacity: 1; transition: none; }
+  .pipe-pulse { opacity: 0; }
+}
+
+/* Radar draw-in: class-toggled transition, not per-frame animation. */
+.radar-path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 1.4s var(--ease-expo) 0.15s;
+}
+
+.radar-fill {
+  opacity: 0;
+  transition: opacity 1s var(--ease-expo) 0.6s;
+}
+
+.radar-live .radar-path { stroke-dashoffset: 0; }
+.radar-live .radar-fill { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .radar-path { stroke-dashoffset: 0; transition: none; }
+  .radar-fill { opacity: 1; transition: none; }
+}
