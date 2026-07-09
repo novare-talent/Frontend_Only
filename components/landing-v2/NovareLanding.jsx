@@ -718,7 +718,7 @@ function Editorial({ block, heroTag }) {
         <p className="microlabel mb-7">{block.label}</p>
       ) : null}
       <H
-        className="display text-ink"
+        className={`display text-ink ${block.hero ? 'hero-display' : ''}`}
         style={{
           fontSize: block.hero ? 'clamp(44px, 5vw, 72px)' : 'clamp(32px, 3.6vw, 50px)',
           lineHeight: block.hero ? 1.04 : 1.08,
@@ -733,7 +733,7 @@ function Editorial({ block, heroTag }) {
           : block.heading}
       </H>
       <p
-        className={`text-ink-2 ${block.hero ? 'mt-8 text-[20px]' : 'mt-5 text-[18px]'}`}
+        className={`text-ink-2 ${block.hero ? 'hero-tight mt-8 text-[20px]' : 'mt-5 text-[18px]'}`}
         style={{ maxWidth: block.hero ? '58ch' : '48ch', lineHeight: 1.6 }}
       >
         {block.body}
@@ -745,7 +745,7 @@ function Editorial({ block, heroTag }) {
       )}
       {block.hero && (
         <>
-          <TrustedByLine className="my-8" />
+          <TrustedByLine className="hero-tight-y my-8" />
           <Ctas />
         </>
       )}
@@ -1507,7 +1507,7 @@ const stagesPassed = (t) => SPINE6.reduce((n, s) => n + (t >= s.at ? 1 : 0), 0)
 function OrbitalNav({ reg, active, onGo, onHover, compact }) {
   return (
     <nav
-      className="pointer-events-none fixed inset-x-0 z-40 flex justify-center"
+      className="orb-nav pointer-events-none fixed inset-x-0 z-40 flex justify-center"
       style={{ top: compact ? 66 : 76 }}
       aria-label="Journey"
     >
@@ -1604,9 +1604,12 @@ function ScrollStage() {
       m.proofTop = proof ? proof.getBoundingClientRect().top + window.scrollY : Infinity
       m.ctaTop = cta ? cta.getBoundingClientRect().top + window.scrollY : Infinity
       m.vh = window.innerHeight
-      /* spine fit + right-canvas offset (viewport-centered space) */
+      /* spine fit + right-canvas offset (viewport-centered space).
+         k fits width AND height: stage cards hang ~412px below viewport
+         center at k=1 (node y 270 + card offset 18 + card ~124), so short
+         viewports scale the spine down instead of clipping the cards. */
       const g = geoRef.current
-      g.k = Math.min(1, (window.innerWidth / 2 - 96) / 510)
+      g.k = Math.min(1, (window.innerWidth / 2 - 96) / 510, (window.innerHeight / 2 - 28) / 412)
       if (stageRef.current) {
         const r = stageRef.current.getBoundingClientRect()
         g.off = r.left + r.width / 2 - window.innerWidth / 2
@@ -1745,7 +1748,7 @@ function ScrollStage() {
     <>
       <OrbitalNav reg={reg} active={railIdx} onGo={goTo} onHover={onOrbHover} />
       <section ref={trackRef} id="products" className="relative" style={{ height: '600vh' }}>
-        <div className="sticky top-0 flex h-screen items-center overflow-hidden">
+        <div className="stage-viewport sticky top-0 flex h-screen items-center overflow-hidden">
           <div className="mx-auto grid w-full max-w-[1360px] grid-cols-12 items-center gap-8 px-12">
             {/* Left editorial */}
             <div className="relative col-span-5" style={{ minHeight: 480 }}>
@@ -2626,10 +2629,17 @@ function LoopSection({ animate }) {
               ))}
               {LOOP_POINTS.map((label, i) => {
                 const a = (Math.PI / 180) * (-90 + i * 45)
-                const x = Math.cos(a) * (R + 34)
-                const y = Math.sin(a) * (R + 30)
+                const cos = Math.cos(a)
+                const sin = Math.sin(a)
+                const dx = cos * R
+                const dy = sin * R
+                /* anchor labels fully outside the ring, on the far side of
+                   their dot, so multi-line labels never overlap the dots */
+                const side = cos > 0.35 ? 'right' : cos < -0.35 ? 'left' : 'center'
+                const left = side === 'right' ? dx + 16 : side === 'left' ? dx - 16 - 130 : dx - 65
+                const align = side === 'right' ? 'text-left' : side === 'left' ? 'text-right' : 'text-center'
                 return (
-                  <p key={label} className="microlabel absolute w-[130px] text-center" style={{ left: x - 65, top: y - 8, color: '#6B6B76' }}>
+                  <p key={label} className={`microlabel absolute w-[130px] ${align}`} style={{ left, top: dy + sin * 26 - 8, color: '#6B6B76' }}>
                     {label}
                   </p>
                 )

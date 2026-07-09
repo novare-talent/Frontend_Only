@@ -71,6 +71,31 @@ html:has(.nvl-root) ::-webkit-scrollbar-thumb:hover {
   background: rgba(110, 91, 216, 0.45);
 }
 
+/* ---- Short desktop viewports (laptops / scaled displays) ----------------
+   The pinned journey is designed around ~900px of viewport height. Below
+   ~850px the vertically-centered hero collides with the fixed orbit nav, so
+   raise the orbit, shrink the hero type a notch and push the stage content
+   down. Tall screens are completely unaffected. */
+@media (min-width: 1024px) and (max-height: 850px) {
+  .orb-nav {
+    top: 56px !important;
+  }
+  .stage-viewport {
+    padding-top: 72px;
+  }
+  .hero-display {
+    font-size: clamp(40px, 4.4vw, 54px) !important;
+  }
+  .hero-tight {
+    margin-top: 1.25rem !important;
+    font-size: 18px !important;
+  }
+  .hero-tight-y {
+    margin-top: 1.25rem !important;
+    margin-bottom: 1.25rem !important;
+  }
+}
+
 /* ---- Ambient canvas ---------------------------------------------------- */
 
 .ambient {
