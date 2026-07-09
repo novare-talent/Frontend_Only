@@ -970,8 +970,8 @@ function Bubble({ from, children, shimmer }) {
   return (
     <div className={`flex ${from === 'you' ? 'justify-end' : 'justify-start'}`}>
       <div
-        className={`max-w-[86%] rounded-2xl px-4 py-2.5 text-[13px] leading-5 ${
-          from === 'you' ? 'rounded-br-md bg-lav/60 text-ink' : `rounded-bl-md border border-hairline bg-white/70 text-ink-2 ${shimmer ? 'shimmer' : ''}`
+        className={`max-w-[86%] rounded-[16px] px-4 py-2.5 text-[13px] leading-5 ${
+          from === 'you' ? 'rounded-br-[6px] bg-lav/60 text-ink' : `rounded-bl-[6px] border border-hairline bg-white/70 text-ink-2 ${shimmer ? 'shimmer' : ''}`
         }`}
       >
         {children}
@@ -994,7 +994,7 @@ function HermitChat({ reg, composed }) {
       <div className="relative h-10">
         <div style={hidden} ref={r('chat:typing')} className="absolute inset-0">
           <div className="flex justify-start">
-            <div className="rounded-2xl rounded-bl-md border border-hairline bg-white/70 px-4 py-3">
+            <div className="rounded-[16px] rounded-bl-[6px] border border-hairline bg-white/70 px-4 py-3">
               <span className="inline-flex items-center gap-1" aria-label="Hermit is typing">
                 {[0, 1, 2].map((i) => (
                   <span key={i} className="typing-dot h-1.5 w-1.5 rounded-full bg-ink-3" style={{ animationDelay: `${i * 0.18}s` }} />
@@ -2717,7 +2717,7 @@ function ProofSection({ animate }) {
           <p className="microlabel mb-10">What founders say</p>
           <div className="grid gap-6 md:grid-cols-3">
             {FOUNDER_QUOTES.map((f) => (
-              <Tilt key={f.company} className="glass-flat rounded-3xl p-7">
+              <Tilt key={f.company} className="glass-flat rounded-[24px] p-7">
                 <div className="flex items-center gap-4">
                   <PhotoPlaceholder label={f.company.slice(0, 2)} />
                   <div>
@@ -2740,7 +2740,7 @@ function ProofSection({ animate }) {
           <p className="microlabel mb-10">What candidates say</p>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {STUDENT_QUOTES.map((s) => (
-              <Tilt key={s.institute} className="glass-flat rounded-3xl p-6">
+              <Tilt key={s.institute} className="glass-flat rounded-[24px] p-6">
                 <div className="flex items-center gap-3">
                   <PhotoPlaceholder label={s.institute.split(' ')[1]?.slice(0, 2) || 'II'} />
                   <div>

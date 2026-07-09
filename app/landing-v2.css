@@ -36,8 +36,28 @@ html {
   background-color: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-body);
+  /* globals.css sets -0.025em on body; this page's type system expects normal */
+  letter-spacing: normal;
+  /* globals.css rescales Tailwind's spacing unit to 0.27rem app-wide; this
+     design's geometry was built on the 0.25rem default */
+  --spacing: 0.25rem;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* globals.css styles the page scrollbar dark for the app — keep it light on
+   pages built from this design (landing, /hermit) */
+html:has(.nvl-root)::-webkit-scrollbar-track,
+html:has(.nvl-root) ::-webkit-scrollbar-track {
+  background: var(--color-canvas);
+}
+html:has(.nvl-root)::-webkit-scrollbar-thumb,
+html:has(.nvl-root) ::-webkit-scrollbar-thumb {
+  background: rgba(110, 91, 216, 0.28);
+}
+html:has(.nvl-root)::-webkit-scrollbar-thumb:hover,
+html:has(.nvl-root) ::-webkit-scrollbar-thumb:hover {
+  background: rgba(110, 91, 216, 0.45);
 }
 
 /* ---- Ambient canvas ---------------------------------------------------- */

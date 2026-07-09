@@ -45,7 +45,7 @@
 // }
 
 import type { Metadata } from "next";
-import { Lora } from "next/font/google";
+import { Lora, Poppins, Inter } from "next/font/google";
 import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SessionProvider } from "@/context/SessionContext";
@@ -71,6 +71,23 @@ const lora = Lora({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-serif",
+  display: "swap",
+});
+
+/* Landing page fonts. Declared here (not in page.tsx) because the landing's
+   @theme tokens reference these vars at :root — defined anywhere lower, the
+   whole font chain resolves to the inherited Satoshi instead of Poppins/Inter. */
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-poppins",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -132,7 +149,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${satoshi.variable} ${lora.variable}`}
+      className={`${satoshi.variable} ${lora.variable} ${poppins.variable} ${inter.variable}`}
     >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
