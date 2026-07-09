@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:landing-math": "node tests/landing/journey-math-test.mjs && node tests/landing/orbit-math-test.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
