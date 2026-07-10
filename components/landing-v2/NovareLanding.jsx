@@ -1055,7 +1055,7 @@ function HermitPanel({ live, composed, reg, shellRef, contentRef }) {
         <div className="flex items-center gap-3 border-b border-hairline pb-4">
           <span className="icon-badge icon-badge-sm shrink-0">{ICONS.hermit}</span>
           <div>
-            <p className="text-[15px] font-semibold text-ink">Hermit</p>
+            <p className="display text-[15px] font-semibold text-ink">Hermit</p>
             <p className="mt-0.5 text-[12px] text-ink-3">AI hiring agent · WhatsApp</p>
           </div>
         </div>
@@ -1075,7 +1075,7 @@ function ZenNetworkPanel({ live, shellRef, contentRef, children }) {
           <div className="flex items-center gap-3">
             <span className="icon-badge icon-badge-sm shrink-0">{ICONS.zenhyre}</span>
             <div>
-              <p className="text-[15px] font-semibold text-ink">ZenHyre</p>
+              <p className="display text-[15px] font-semibold text-ink">ZenHyre</p>
               <p className="mt-0.5 text-[12px] text-ink-3">Living verified network · {fmtInt(STATS.profiles)} profiles</p>
             </div>
           </div>
@@ -1141,7 +1141,7 @@ function ArenaFrame({ live, shellRef, contentRef, reg, composed, children }) {
           <div className="flex items-center gap-3">
             <span className="icon-badge icon-badge-sm shrink-0">{ICONS.arenax}</span>
             <div>
-              <p className="text-[15px] font-semibold text-ink">Arena X</p>
+              <p className="display text-[15px] font-semibold text-ink">Arena X</p>
               <p className="mt-0.5 text-[12px] text-ink-3">Capability evaluation</p>
             </div>
           </div>
@@ -1504,10 +1504,10 @@ const stagesPassed = (t) => SPINE6.reduce((n, s) => n + (t >= s.at ? 1 : 0), 0)
    Orbital navigation — one rotating object shared by both engines
    ========================================================================== */
 
-function OrbitalNav({ reg, active, onGo, onHover, compact }) {
+function OrbitalNav({ reg, active, onGo, onHover, compact, hidden }) {
   return (
     <nav
-      className="orb-nav pointer-events-none fixed inset-x-0 z-40 flex justify-center"
+      className={`orb-nav pointer-events-none fixed inset-x-0 z-40 flex justify-center ${hidden ? 'orb-hidden' : ''}`}
       style={{ top: compact ? 66 : 76 }}
       aria-label="Journey"
     >
@@ -1746,7 +1746,7 @@ function ScrollStage() {
 
   return (
     <>
-      <OrbitalNav reg={reg} active={railIdx} onGo={goTo} onHover={onOrbHover} />
+      <OrbitalNav reg={reg} active={railIdx} onGo={goTo} onHover={onOrbHover} hidden={activePanel !== null} />
       <section ref={trackRef} id="products" className="relative" style={{ height: '600vh' }}>
         <div className="stage-viewport sticky top-0 flex h-screen items-center overflow-hidden">
           <div className="mx-auto grid w-full max-w-[1360px] grid-cols-12 items-center gap-8 px-12">
@@ -2463,7 +2463,7 @@ function MobileStage() {
                 <div className="flex items-center gap-3 border-b border-hairline pb-3">
                   <span className="icon-badge icon-badge-sm shrink-0">{ICONS.hermit}</span>
                   <div>
-                    <p className="text-[14px] font-semibold text-ink">Hermit</p>
+                    <p className="display text-[14px] font-semibold text-ink">Hermit</p>
                     <p className="mt-0.5 text-[11px] text-ink-3">AI hiring agent · WhatsApp</p>
                   </div>
                 </div>
@@ -2786,10 +2786,48 @@ function ProofSection({ animate }) {
   )
 }
 
+const DISCOVER_LINKS = [
+  ['SigHire', '/sig-hire'],
+  ['Career Blogs', '/career-blogs'],
+  ['IIT Placements', '/iit-placements'],
+  ['Career Navigator', 'https://www.careernavigator4u.com'],
+]
+
+const LEGAL_LINKS = [
+  ['Terms of Service', '/Terms&Conditions.pdf'],
+  ['Refund Policy', '/Refund&CreditPolicy.pdf'],
+]
+
+const SOCIALS = [
+  {
+    label: 'Instagram',
+    href: 'https://www.instagram.com/novare_talent?igsh=MWkyaGw0dmdiaWM5NA==',
+    icon: (
+      <Ic>
+        <rect {...ICP} x="4" y="4" width="16" height="16" rx="4.5" />
+        <circle {...ICP} cx="12" cy="12" r="3.6" />
+        <circle cx="16.6" cy="7.4" r="1.1" fill="#6E5BD8" stroke="none" />
+      </Ic>
+    ),
+  },
+  {
+    label: 'LinkedIn',
+    href: 'https://www.linkedin.com/company/novare-talent/',
+    icon: (
+      <Ic>
+        <rect {...ICP} x="4" y="4" width="16" height="16" rx="3" />
+        <path {...ICP} d="M8.2 10.6v6" />
+        <circle cx="8.2" cy="7.9" r="1.1" fill="#6E5BD8" stroke="none" />
+        <path {...ICP} d="M11.6 16.6v-3.4a2.4 2.4 0 0 1 4.8 0v3.4M11.6 10.6v1.2" />
+      </Ic>
+    ),
+  },
+]
+
 function Footer() {
   return (
     <footer className="border-t border-hairline">
-      <div className="mx-auto grid max-w-[1360px] gap-12 px-6 py-16 md:grid-cols-3 lg:px-12">
+      <div className="mx-auto grid max-w-[1360px] gap-12 px-6 py-16 sm:grid-cols-2 lg:grid-cols-4 lg:px-12">
         <div>
           <p className="display text-[20px] text-ink">Novare Talent</p>
           <address className="mt-4 text-[13px] not-italic leading-6 text-ink-3">
@@ -2799,6 +2837,7 @@ function Footer() {
             <br />
             Mumbai 400076
           </address>
+          <p className="mt-4 text-[12px] text-ink-3">Incubated at SINE, IIT Bombay</p>
         </div>
         <nav aria-label="Products">
           <p className="microlabel mb-4">Products</p>
@@ -2816,15 +2855,57 @@ function Footer() {
             ))}
           </ul>
         </nav>
+        <nav aria-label="Discover">
+          <p className="microlabel mb-4">Discover</p>
+          <ul className="space-y-2 text-[14px] text-ink-2">
+            {DISCOVER_LINKS.map(([p, href]) => (
+              <li key={p}>
+                <a href={href} {...extProps(href)} className="underline-link transition-colors hover:text-ink">
+                  {p}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
         <div>
-          <p className="microlabel mb-4">Contact</p>
-          <a href={CONTACT} className="underline-link text-[14px] text-ink-2 transition-colors hover:text-ink">
-            sahil@novaretalent.com
-          </a>
+          <p className="microlabel mb-4">Connect</p>
+          <ul className="space-y-2 text-[14px] text-ink-2">
+            <li>
+              <a href={CONTACT} className="underline-link transition-colors hover:text-ink">
+                sahil@novaretalent.com
+              </a>
+            </li>
+            <li>
+              <a href="tel:+918708260409" className="underline-link transition-colors hover:text-ink">
+                +91 87082 60409
+              </a>
+            </li>
+          </ul>
+          <div className="mt-5 flex items-center gap-4">
+            {SOCIALS.map((s) => (
+              <a
+                key={s.label}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={s.label}
+                className="text-ink-3 transition-colors hover:text-ink"
+              >
+                {s.icon}
+              </a>
+            ))}
+          </div>
         </div>
       </div>
-      <div className="mx-auto max-w-[1360px] border-t border-hairline px-6 py-6 lg:px-12">
+      <div className="mx-auto flex max-w-[1360px] flex-col items-start justify-between gap-3 border-t border-hairline px-6 py-6 sm:flex-row sm:items-center lg:px-12">
         <p className="text-[12px] text-ink-3">&copy; 2026 Novare Talent Private Limited. All rights reserved.</p>
+        <div className="flex items-center gap-6">
+          {LEGAL_LINKS.map(([p, href]) => (
+            <a key={p} href={href} target="_blank" rel="noopener noreferrer" className="underline-link text-[12px] text-ink-3 transition-colors hover:text-ink">
+              {p}
+            </a>
+          ))}
+        </div>
       </div>
     </footer>
   )
@@ -2863,7 +2944,7 @@ function DashboardLink({ className }) {
 
 function Nav() {
   return (
-    <header className="fixed inset-x-0 top-0 z-50 px-4 pt-4 lg:px-6">
+    <header className="nvl-header fixed inset-x-0 top-0 z-50 px-4 pt-4 lg:px-6">
       <nav className="nvl-glass glass-nav mx-auto flex h-14 max-w-[1312px] items-center justify-between rounded-full pl-6 pr-2" aria-label="Main">
         <a href="#top" className="display text-[17px] text-ink">
           Novare Talent
