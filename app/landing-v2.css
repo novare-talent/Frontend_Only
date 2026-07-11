@@ -43,6 +43,10 @@ html {
   --spacing: 0.25rem;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* guard against sub-pixel horizontal overflow on small screens. clip (not
+     hidden) so it never creates a scroll container that would break the
+     journey's position:sticky panes. */
+  overflow-x: clip;
 }
 
 /* The standalone build puts the canvas color on <body> with the .ambient

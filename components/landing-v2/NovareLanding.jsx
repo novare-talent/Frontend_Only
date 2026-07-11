@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { motion, useSpring } from 'framer-motion'
+import { motion, AnimatePresence, useSpring } from 'framer-motion'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 /* ============================================================================
    Novare Talent — "One Intelligence" (polish pass)
@@ -1964,6 +1965,10 @@ const MLINE = [-140, 170]
 const mNodeY = (i) => -130 + 56 * i
 const MSTEP_AT = [0.245, 0.297, 0.349, 0.401, 0.453, 0.505]
 
+/* tap-to-jump targets for the hero spheres → each product's chapter hold
+   (matches the MCHAPTERS productIdx in-windows below) */
+const MSPHERE_TM = { hermit: 0.585, zen: 0.73, arena: 0.845 }
+
 /* chapter text windows (top zone) */
 const MCHAPTERS = [
   { hero: true, in: [-1, -0.5], out: [0.048, 0.075] },
@@ -2069,12 +2074,21 @@ const mTagWin = (i) => [0.895 + 0.007 * i, 0.906 + 0.007 * i]
 const mActiveNode = (t) => (t >= 0.92 ? 5 : t >= 0.83 ? 4 : t >= 0.71 ? 3 : t >= 0.545 ? 1 : MSTEP_AT.reduce((n, a) => n + (t >= a ? 1 : 0), 0) - 1)
 const mPassed = (t) => MSTEP_AT.reduce((n, a) => n + (t >= a ? 1 : 0), 0)
 
+/* verified-network chips orbiting the traveling card. Kept within the
+   fit-scaled extents (chip x ∈ roughly [-152, 106]); the aura only appears
+   during the ZenHyre beat. */
 const MAURA = [
-  { x: -122, y: -62, id: 'IITD_CS_25' },
-  { x: 92, y: -84, id: 'IITK_CS_26' },
-  { x: -102, y: 122, id: 'IITB_CS_24' },
-  { x: 102, y: 112, id: 'IITH_CS_25' },
+  { x: -122, y: -66, id: 'IITD_CS_25' },
+  { x: 92, y: -88, id: 'IITK_CS_26' },
+  { x: -104, y: 120, id: 'IITB_CS_24' },
+  { x: 100, y: 110, id: 'IITH_CS_25' },
+  { x: -150, y: 30, id: 'IITM_EE_25' },
+  { x: 104, y: 20, id: 'IITR_CS_24' },
+  { x: -28, y: -122, id: 'BITS_CS_26' },
 ]
+/* faint relationship lines from each chip to the card zone (card centre sits
+   near (-22, 30) during the ZenHyre hold) */
+const MAURA_HUB = [-22, 30]
 
 function applyFrameM(t, M) {
   const get = (k) => M.get(k)
@@ -2090,6 +2104,18 @@ function applyFrameM(t, M) {
     w(el, 'transform', `translate3d(0, ${((1 - fi) * 18 - (1 - fo) * 18).toFixed(2)}px, 0)`)
     w(el, 'visibility', o < 0.02 ? 'hidden' : 'visible')
   })
+
+  /* closing beat: once the card docks, the finished composition lifts toward
+     the vertical center of the viewport while the end caption settles above
+     it — the mobile echo of the desktop closing lift. (Composes under the
+     fit-scale on mfit; this wrapper carries the lift only.) */
+  {
+    const el = get('mlift')
+    if (el) {
+      const lift = seg(t, 0.95, 0.99)
+      w(el, 'transform', `translate3d(${(-72 * lift).toFixed(2)}px, ${(-150 * lift).toFixed(2)}px, 0)`)
+    }
+  }
 
   /* formation rises from its hero parking spot as convergence begins */
   {
@@ -2318,7 +2344,7 @@ function MChapterText({ ch }) {
     )
   }
   return (
-    <div>
+    <div className="text-center">
       <h2 className="display text-ink" style={{ fontSize: 'clamp(32px, 9vw, 42px)', lineHeight: 1.1 }}>
         One system.
         <br />
@@ -2360,6 +2386,16 @@ function MobileStage() {
       m.proofTop = proof ? proof.getBoundingClientRect().top + window.scrollY : Infinity
       m.ctaTop = cta ? cta.getBoundingClientRect().top + window.scrollY : Infinity
       m.vh = window.innerHeight
+
+      /* fit-scale the fixed-pixel composition to the viewport. Extents (from
+         the anchor centre): left ≈ 187 (Hermit card edge, marginLeft -165 at
+         resting x -22); right ≈ 184 (rail node + Arena label + verified chips).
+         At ≥390px this stays exactly 1 (pixel-identical to the design width);
+         it only shrinks on narrower phones. Written here, never per frame. */
+      const half = window.innerWidth / 2 - 6
+      m.mk = Math.min(1, half / 187, half / 184)
+      const fitEl = M.current.get('mfit')
+      if (fitEl) w(fitEl, 'transform', `scale(${m.mk.toFixed(4)})`)
     }
     measure()
     applyFrameM(0, M.current)
@@ -2407,21 +2443,37 @@ function MobileStage() {
     }
   }
 
+  /* tapping a hero sphere jumps to that product's chapter (tap only — no
+     hover activation on touch) */
+  const jumpToProduct = (cfg) => {
+    const tm = MSPHERE_TM[cfg.key]
+    if (tm == null) return
+    const m = measureRef.current
+    window.scrollTo({ top: Math.round(m.top + tm * m.span), behavior: 'smooth' })
+  }
+
   return (
     <section ref={trackRef} id="products" className="relative" style={{ height: '1150vh' }}>
       <OrbitalNav reg={reg} active={orbActive} onGo={goTo} compact />
       <div className="sticky top-0 overflow-hidden" style={{ height: '100svh' }}>
-        {/* chapter texts (top zone, below the orbital nav) */}
-        <div className="absolute inset-x-0 top-0 z-30 px-7 pt-36">
-          {MCHAPTERS.map((ch, i) => (
-            <div key={i} ref={reg(`mch:${i}`)} className={i === 0 ? 'relative' : 'absolute inset-x-7 top-36'} style={i === 0 ? undefined : { opacity: 0 }}>
-              <MChapterText ch={ch} />
-            </div>
-          ))}
+        {/* chapter texts (top zone, below the orbital nav) — capped to a
+            centred column on the tablet band so copy never stretches wide */}
+        <div className="absolute inset-x-0 top-0 z-30">
+          <div className="relative w-full px-7 pt-36 sm:mx-auto sm:max-w-[560px]">
+            {MCHAPTERS.map((ch, i) => (
+              <div key={i} ref={reg(`mch:${i}`)} className={i === 0 ? 'relative' : 'absolute inset-x-7 top-36'} style={i === 0 ? undefined : { opacity: 0 }}>
+                <MChapterText ch={ch} />
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* visual zone (anchored below center) */}
         <div className="absolute left-1/2 top-1/2 z-10 h-0 w-0" style={{ marginTop: 70 }}>
+          {/* mfit: width fit-scale (measure() only). mlift: closing lift-to-
+              centre (applyFrameM only). Both h-0 w-0 so transforms compose. */}
+          <div ref={reg('mfit')} className="h-0 w-0">
+          <div ref={reg('mlift')} className="h-0 w-0">
           {/* living formation — parked lower at the hero, rises as it converges */}
           <div ref={reg('mform')} className="absolute h-0 w-0" style={{ transform: 'translate3d(0, 185px, 0)' }}>
           <div className="slow-orbit absolute h-0 w-0">
@@ -2440,7 +2492,7 @@ function MobileStage() {
               ))}
             </div>
             {MSPHERES.map((cfg) => (
-              <Sphere key={cfg.key} cfg={cfg} interactive={false} labelBelow anchorRef={reg(`msphere:${cfg.key}`)} labelRef={reg(`mslabel:${cfg.key}`)} />
+              <Sphere key={cfg.key} cfg={cfg} interactive onSelect={jumpToProduct} labelBelow anchorRef={reg(`msphere:${cfg.key}`)} labelRef={reg(`mslabel:${cfg.key}`)} />
             ))}
           </div>
           </div>
@@ -2512,11 +2564,19 @@ function MobileStage() {
 
           {/* ZenHyre aura: verified-network context around the card */}
           <div ref={reg('maura')} className="absolute h-0 w-0" style={{ opacity: 0, visibility: 'hidden' }} aria-hidden="true">
+            <svg className="absolute" style={{ left: -180, top: -150, overflow: 'visible' }} width="360" height="300" viewBox="-180 -150 360 300" fill="none">
+              {MAURA.map((c, i) => (
+                <g key={c.id}>
+                  <path className="net-line" d={`M${c.x} ${c.y} L${MAURA_HUB[0]} ${MAURA_HUB[1]}`} strokeWidth="1" />
+                  <path className="arc-pulse" d={`M${c.x} ${c.y} L${MAURA_HUB[0]} ${MAURA_HUB[1]}`} strokeWidth="1.1" pathLength="100" strokeLinecap="round" style={{ animationDelay: `${i * 0.6}s` }} />
+                </g>
+              ))}
+            </svg>
             {MAURA.map((c, i) => (
               <div key={c.id} className={`absolute ${['drift-a', 'drift-b', 'drift-c'][i % 3]}`} style={{ left: c.x - 22, top: c.y }}>
                 <span className="talent-chip px-2.5 py-1 text-[9.5px] text-ink-2">
                   <span className="token text-[9.5px] text-ink">{c.id}</span>
-                  <span className="badge-pulse inline-flex text-verified" style={{ animationDelay: `${i * 0.8}s` }}>
+                  <span className="badge-pulse inline-flex text-verified" style={{ animationDelay: `${i * 0.55}s` }}>
                     <CheckIcon size={8} />
                   </span>
                 </span>
@@ -2526,6 +2586,8 @@ function MobileStage() {
 
           {/* THE persistent candidate card */}
           <CandidateCard reg={reg} />
+          </div>{/* /mlift */}
+          </div>{/* /mfit */}
         </div>
       </div>
     </section>
@@ -2652,8 +2714,8 @@ function LoopSection({ animate }) {
             Hiring outcomes continuously improve matching, verification and capability evaluation across the ecosystem.
           </p>
         </div>
-        <div className="relative mx-auto h-[340px] w-[300px] sm:h-[480px] sm:w-[480px]" aria-hidden="true">
-          <div className="absolute left-1/2 top-1/2 h-[480px] w-[480px] -translate-x-1/2 -translate-y-1/2 scale-[0.62] sm:scale-100">
+        <div className="relative mx-auto h-[300px] w-full max-w-[300px] sm:h-[480px] sm:w-[480px]" aria-hidden="true">
+          <div className="absolute left-1/2 top-1/2 h-[480px] w-[480px] -translate-x-1/2 -translate-y-1/2 scale-[0.48] sm:scale-100">
             <svg className="absolute inset-0 h-full w-full" viewBox="-240 -240 480 480" fill="none">
               <circle cx="0" cy="0" r={R} stroke="rgba(150,140,220,0.3)" strokeWidth="1.25" />
               {LOOP_POINTS.map((_, i) => {
@@ -2867,7 +2929,10 @@ function Footer() {
     <footer className="border-t border-hairline">
       <div className="mx-auto grid max-w-[1360px] gap-12 px-6 py-16 sm:grid-cols-2 lg:grid-cols-4 lg:px-12">
         <div>
-          <p className="display text-[20px] text-ink">Novare Talent</p>
+          <p className="flex items-center gap-3 text-ink">
+            <Image src="/images/nt-mark.png" alt="" width={30} height={28} className="shrink-0" />
+            <span className="display text-[20px]">Novare Talent</span>
+          </p>
           <address className="mt-4 text-[13px] not-italic leading-6 text-ink-3">
             Novare Talent Private Limited
             <br />
@@ -2951,11 +3016,12 @@ function Footer() {
 
 /* Role-aware dashboard entry: signed-in users land on their dashboard
    (/Dashboard or /client by role), everyone else on /sign-in. */
-function DashboardLink({ className }) {
+function DashboardLink({ className, onNavigate }) {
   const router = useRouter()
   const go = useCallback(
     async (e) => {
       e.preventDefault()
+      if (onNavigate) onNavigate()
       try {
         const { createClient } = await import('@/utils/supabase/client')
         const supabase = createClient()
@@ -2971,7 +3037,7 @@ function DashboardLink({ className }) {
       }
       router.push('/sign-in')
     },
-    [router]
+    [router, onNavigate]
   )
   return (
     <a href="/sign-in" onClick={go} className={className}>
@@ -2981,20 +3047,68 @@ function DashboardLink({ className }) {
 }
 
 function Nav() {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuWrapRef = useRef(null)
+
+  /* close the mobile menu on any tap outside its wrapper */
+  useEffect(() => {
+    if (!menuOpen) return
+    const onDown = (e) => {
+      if (menuWrapRef.current && !menuWrapRef.current.contains(e.target)) setMenuOpen(false)
+    }
+    window.addEventListener('pointerdown', onDown)
+    return () => window.removeEventListener('pointerdown', onDown)
+  }, [menuOpen])
+
   return (
-    <header className="nvl-header fixed inset-x-0 top-0 z-50 px-4 pt-4 lg:px-6">
-      <nav className="nvl-glass glass-nav mx-auto flex h-14 max-w-[1312px] items-center justify-between rounded-full pl-6 pr-2" aria-label="Main">
-        <a href="#top" className="display text-[17px] text-ink">
-          Novare Talent
+    <header className="nvl-header fixed inset-x-0 top-0 z-50 px-2 pt-4 sm:px-4 lg:px-6">
+      <nav className="nvl-glass glass-nav mx-auto flex h-14 max-w-[1312px] items-center justify-between rounded-full pl-3 pr-2 sm:pl-6" aria-label="Main">
+        <a href="#top" className="flex shrink-0 items-center gap-2 text-ink sm:gap-2.5">
+          <Image src="/images/nt-mark.png" alt="" width={28} height={26} priority className="h-[22px] w-[24px] shrink-0 sm:h-[26px] sm:w-[28px]" />
+          <span className="display whitespace-nowrap text-[15px] sm:text-[17px]">Novare Talent</span>
         </a>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-2.5 sm:gap-6">
           <a href={`${CONTACT}?subject=Briefing%20request`} className="underline-link hidden text-[14px] font-medium text-ink-2 transition-colors hover:text-ink sm:block">
             Schedule Briefing
           </a>
           <DashboardLink className="underline-link hidden text-[14px] font-medium text-ink-2 transition-colors hover:text-ink sm:block" />
-          <motion.a href={SIGNUP} className="pill pill-sm" whileHover={{ y: -1 }} whileTap={{ scale: 0.985 }} transition={springPress}>
+          <motion.a href={SIGNUP} className="pill pill-sm whitespace-nowrap max-sm:px-3!" whileHover={{ y: -1 }} whileTap={{ scale: 0.985 }} transition={springPress}>
             Start Hiring
           </motion.a>
+          {/* compact menu for the two nav links hidden below 640px */}
+          <div ref={menuWrapRef} className="relative sm:hidden">
+            <button
+              type="button"
+              aria-label="Menu"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((v) => !v)}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-ink-2 transition-colors hover:text-ink"
+            >
+              <svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true">
+                <path {...ICP} d={menuOpen ? 'M6 6l12 12M18 6L6 18' : 'M4 7h16M4 12h16M4 17h16'} />
+              </svg>
+            </button>
+            <AnimatePresence>
+              {menuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                  transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                  className="nvl-glass glass-nav absolute right-0 top-[calc(100%+10px)] flex w-52 flex-col gap-1 rounded-[20px] p-2"
+                >
+                  <a
+                    href={`${CONTACT}?subject=Briefing%20request`}
+                    onClick={() => setMenuOpen(false)}
+                    className="rounded-[14px] px-4 py-2.5 text-[14px] font-medium text-ink-2 transition-colors hover:bg-white/60 hover:text-ink"
+                  >
+                    Schedule Briefing
+                  </a>
+                  <DashboardLink className="rounded-[14px] px-4 py-2.5 text-[14px] font-medium text-ink-2 transition-colors hover:bg-white/60 hover:text-ink" onNavigate={() => setMenuOpen(false)} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </nav>
     </header>
