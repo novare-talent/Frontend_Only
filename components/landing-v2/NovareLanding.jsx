@@ -1350,8 +1350,23 @@ function applyFrame(t, M, g) {
     }
   }
 
+  /* closing beat: once the card has docked (0.876), the finished timeline —
+     spine, stage cards, docked card, glints and return flow — lifts together
+     from the lower band to the vertical center of the viewport while the
+     receded panel ghosts fade away. Pure function of t: scrubbing back
+     lowers it again. */
+  const lift = seg(t, 0.885, 0.945)
+  const liftY = -(SPINE_Y * g.k - 30) * lift
+
+  /* short viewports: panels would tuck under the navbar, so they ride a
+     little lower while front (g.pDy = 0 on tall screens). The envelope dies
+     before the card docks back into the unshifted spine. */
+  const panelEnv = (g.pDy || 0) * seg(t, 0.285, 0.35) * (1 - sseg(t, 0.8, 0.86))
+
   /* spine path draws; riser bends up into Hermit */
   {
+    const sw = get('spineWrap')
+    if (sw) w(sw, 'transform', `translate3d(0, ${liftY.toFixed(2)}px, 0) scale(${g.k.toFixed(4)})`)
     const el = get('spinePath')
     if (el) w(el, 'strokeDashoffset', (1 - seg(t, 0.235, 0.3)).toFixed(4))
     const riser = get('riser')
@@ -1390,9 +1405,15 @@ function applyFrame(t, M, g) {
     const wrap = get(`pwrap:${key}`)
     if (!wrap) return
     const p = panelFrame2(t, geo, g.off, g.k)
-    w(wrap, 'opacity', p.opacity.toFixed(3))
-    w(wrap, 'transform', `translate3d(${p.x.toFixed(2)}px, ${p.y.toFixed(2)}px, 0) scale(${p.scale.toFixed(4)})`)
-    w(wrap, 'visibility', p.opacity < 0.02 ? 'hidden' : 'visible')
+    const po = p.opacity * (1 - lift)
+    /* grows in with emergence (m) so panels still originate at their spine
+       node; collapse (arena) anneals it back toward the node */
+    const m = seg(t, geo.em[0], geo.em[1])
+    const rr = geo.collapse ? seg(t, geo.rec[0], geo.rec[1]) : 0
+    const dy = panelEnv * m * (1 - rr)
+    w(wrap, 'opacity', po.toFixed(3))
+    w(wrap, 'transform', `translate3d(${p.x.toFixed(2)}px, ${(p.y + dy).toFixed(2)}px, 0) scale(${p.scale.toFixed(4)})`)
+    w(wrap, 'visibility', po < 0.02 ? 'hidden' : 'visible')
     const shell = get(`pshell:${key}`)
     if (shell) w(shell, 'borderRadius', `${p.radius.toFixed(1)}px`)
     const content = get(`pcontent:${key}`)
@@ -1428,7 +1449,9 @@ function applyFrame(t, M, g) {
       const c = cardFrame(t, g.off, g.k)
       w(el, 'opacity', c.op.toFixed(3))
       w(el, 'visibility', c.op < 0.02 ? 'hidden' : 'visible')
-      w(el, 'transform', `translate3d(${c.x.toFixed(2)}px, ${c.y.toFixed(2)}px, 0) scale(${c.sc.toFixed(4)})`)
+      /* panelEnv keeps the card aligned with the shifted panels; liftY keeps
+         the docked card riding the spine during the closing lift */
+      w(el, 'transform', `translate3d(${c.x.toFixed(2)}px, ${(c.y + panelEnv + liftY).toFixed(2)}px, 0) scale(${c.sc.toFixed(4)})`)
       const clip = get('cardClip')
       if (clip) {
         const bottom = 278 * (1 - c.open)
@@ -1549,7 +1572,6 @@ function ScrollStage() {
   const trackRef = useRef(null)
   const stageRef = useRef(null)
   const fieldRef = useRef(null)
-  const spineWrapRef = useRef(null)
   const M = useRef(new Map())
   const reg = useCallback((key) => (el) => {
     if (el) M.current.set(key, el)
@@ -1610,11 +1632,13 @@ function ScrollStage() {
          viewports scale the spine down instead of clipping the cards. */
       const g = geoRef.current
       g.k = Math.min(1, (window.innerWidth / 2 - 96) / 510, (window.innerHeight / 2 - 28) / 412)
+      /* short screens: front panels ride lower so their header clears the
+         navbar (panel top target ~72px; 0 on tall screens) */
+      g.pDy = Math.max(0, 432 - window.innerHeight / 2)
       if (stageRef.current) {
         const r = stageRef.current.getBoundingClientRect()
         g.off = r.left + r.width / 2 - window.innerWidth / 2
       }
-      if (spineWrapRef.current) spineWrapRef.current.style.transform = `scale(${g.k.toFixed(4)})`
       const riser = M.current.get('riser')
       if (riser) {
         const ex = (g.off - 75) / g.k
@@ -1750,13 +1774,15 @@ function ScrollStage() {
       <section ref={trackRef} id="products" className="relative" style={{ height: '600vh' }}>
         <div className="stage-viewport sticky top-0 flex h-screen items-center overflow-hidden">
           <div className="mx-auto grid w-full max-w-[1360px] grid-cols-12 items-center gap-8 px-12">
-            {/* Left editorial */}
+            {/* Left editorial (the closing caption renders centered, below) */}
             <div className="relative col-span-5" style={{ minHeight: 480 }}>
-              {EDITORIAL.map((block, i) => (
-                <div key={i} ref={reg(`edit:${i}`)} className={`flex items-center ${i === 0 ? 'relative' : 'absolute inset-0'}`}>
-                  <Editorial block={block} heroTag />
-                </div>
-              ))}
+              {EDITORIAL.map((block, i) =>
+                block.caption ? null : (
+                  <div key={i} ref={reg(`edit:${i}`)} className={`flex items-center ${i === 0 ? 'relative' : 'absolute inset-0'}`}>
+                    <Editorial block={block} heroTag />
+                  </div>
+                )
+              )}
             </div>
 
             {/* Right canvas: the living hero system */}
@@ -1798,6 +1824,18 @@ function ScrollStage() {
             </div>
           </div>
 
+          {/* Closing caption: fades in centered, as a heading above the lifted
+              timeline (applyFrame drives opacity via the edit:5 window) */}
+          <div
+            ref={reg('edit:5')}
+            className="pointer-events-none absolute inset-x-0 z-[16] flex justify-center px-6"
+            style={{ top: 'max(138px, calc(50% - 210px))', opacity: 0 }}
+          >
+            <p className="display text-center text-ink" style={{ fontSize: 'clamp(22px, 2.2vw, 34px)', lineHeight: 1.3, maxWidth: '26ch' }}>
+              {EDITORIAL[5].caption}
+            </p>
+          </div>
+
           {/* Journey layer: viewport-centered space for core, spine, panels, card.
               pointer-events-none so its large decorative SVGs (esp. the spine box)
               never intercept hover on the hero spheres below; interactive panels
@@ -1822,8 +1860,8 @@ function ScrollStage() {
               <div ref={reg('coreBright')} className="absolute inset-0" style={{ borderRadius: '50%', opacity: 0, background: 'radial-gradient(circle, rgba(255,255,255,1), transparent 70%)' }} />
             </div>
 
-            {/* pipeline spine (scaled to fit) */}
-            <div ref={spineWrapRef} className="absolute h-0 w-0">
+            {/* pipeline spine (scaled to fit; lifts to center at the close) */}
+            <div ref={reg('spineWrap')} className="absolute h-0 w-0">
               <svg className="absolute" style={{ left: -620, top: -60, overflow: 'visible' }} width="1240" height="500" viewBox="-620 -60 1240 500" fill="none" aria-hidden="true">
                 <path
                   ref={reg('spinePath')}
