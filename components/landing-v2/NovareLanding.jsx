@@ -1986,6 +1986,13 @@ const MCHAPTERS = [
   { end: true, in: [0.945, 0.975], out: [2, 3] },
 ]
 
+/* step chapters indexed by step — drive the mid-zone stage cards */
+const MSTEPCH = MCHAPTERS.filter((c) => c.step !== undefined)
+
+/* stage-card vertical track: slightly compressed vs the node track so the
+   first card clears the chapter text on short viewports */
+const mStageY = (i) => -96 + 49 * i
+
 /* scrubbed chat beats (mobile timeline) */
 const MCHAT = {
   request: [0.585, 0.594],
@@ -2175,6 +2182,19 @@ function applyFrameM(t, M) {
     w(el, 'transform', `scale(${(0.4 + 0.6 * m).toFixed(4)})`)
   }
 
+  /* stage cards ride alongside their nodes, synced to the chapter text */
+  for (let i = 0; i < 6; i++) {
+    const el = get(`mstage:${i}`)
+    if (!el) continue
+    const ch = MSTEPCH[i]
+    const fi = seg(t, ch.in[0], ch.in[1])
+    const fo = 1 - seg(t, ch.out[0], ch.out[1])
+    const o = Math.min(fi, fo)
+    w(el, 'opacity', o.toFixed(3))
+    w(el, 'transform', `translate3d(${(-16 * (1 - fi) + 10 * (1 - fo)).toFixed(2)}px, 0, 0)`)
+    w(el, 'visibility', o < 0.02 ? 'hidden' : 'visible')
+  }
+
   /* Hermit card expands from the top node; chat scrubs */
   {
     const wrap = get('mhermit')
@@ -2320,7 +2340,6 @@ function MChapterText({ ch }) {
         <h2 className="display text-ink" style={{ fontSize: 'clamp(32px, 9vw, 42px)', lineHeight: 1.1 }}>
           {ch.title}
         </h2>
-        <p className="mt-3 max-w-[240px] text-[14px] leading-6 text-ink-2">{ch.desc}</p>
       </div>
     )
   }
@@ -2542,6 +2561,22 @@ function MobileStage() {
                 <span className="mnode">
                   <span className="scale-[0.7]">{ICONS[s.icon]}</span>
                 </span>
+              </div>
+            </div>
+          ))}
+
+          {/* stage cards fill the mid zone, one per step, pointing at their node */}
+          {SPINE6.map((s, i) => (
+            <div key={`mstage-${s.key}`} className="absolute h-0 w-0" style={{ left: 108, top: mStageY(i) }}>
+              <div ref={reg(`mstage:${i}`)} style={{ opacity: 0, visibility: 'hidden' }}>
+                <svg className="absolute" style={{ left: 0, top: -40, overflow: 'visible' }} width="29" height="80" viewBox="0 -40 29 80" fill="none" aria-hidden="true">
+                  <line x1="0" y1="0" x2="29" y2={mNodeY(i) - mStageY(i)} stroke="rgba(150,140,220,0.45)" strokeWidth="1" />
+                </svg>
+                <div className="glass-flat absolute right-0 w-[210px] -translate-y-1/2 px-4 pb-4 pt-4 text-center" style={{ borderRadius: 16 }}>
+                  <span className="icon-badge icon-badge-sm mx-auto !flex">{ICONS[s.icon]}</span>
+                  <p className="spine-title mt-2.5 text-[13px] font-semibold">{s.title}</p>
+                  <p className="mt-1.5 text-[11px] leading-[16px] text-ink-3">{s.desc}</p>
+                </div>
               </div>
             </div>
           ))}
