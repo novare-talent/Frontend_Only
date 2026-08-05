@@ -556,7 +556,7 @@ export function SignUpForm({
                 {/* Fields */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div className="grid gap-2 mt-3">
-                    <Label htmlFor="firstName" className="text-foreground">First Name</Label>
+                    <Label htmlFor="firstName" className="text-foreground">First Name <span className="text-red-500">*</span></Label>
                     <Input
                       id="firstName"
                       type="text"
@@ -567,7 +567,7 @@ export function SignUpForm({
                     />
                   </div>
                   <div className="grid gap-2 mt-3">
-                    <Label htmlFor="lastName" className="text-foreground">Last Name</Label>
+                    <Label htmlFor="lastName" className="text-foreground">Last Name <span className="text-red-500">*</span></Label>
                     <Input
                       id="lastName"
                       type="text"
@@ -580,7 +580,7 @@ export function SignUpForm({
                 </div>
 
                 <div className="grid gap-2 mt-3">
-                  <Label htmlFor="email" className="text-foreground">Email</Label>
+                  <Label htmlFor="email" className="text-foreground">Email <span className="text-red-500">*</span></Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -601,7 +601,7 @@ export function SignUpForm({
                 </div>
 
                 <div className="grid gap-2 mt-3">
-                  <Label htmlFor="phone" className="text-foreground">Phone Number</Label>
+                  <Label htmlFor="phone" className="text-foreground">Phone Number <span className="text-red-500">*</span></Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
@@ -617,7 +617,7 @@ export function SignUpForm({
                 </div>
 
                 <div className="grid gap-2 mt-3">
-                  <Label htmlFor="password" className="text-foreground">Password</Label>
+                  <Label htmlFor="password" className="text-foreground">Password <span className="text-red-500">*</span></Label>
                   <div className="relative">
                     <Input
                       id="password"
@@ -654,7 +654,7 @@ export function SignUpForm({
                 </div>
 
                 <div className="grid gap-2 mt-3">
-                  <Label htmlFor="linkedinLink" className="text-foreground">LinkedIn</Label>
+                  <Label htmlFor="linkedinLink" className="text-foreground">LinkedIn <span className="text-red-500">*</span></Label>
                   <Input
                     id="linkedinLink"
                     type="url"
