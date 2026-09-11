@@ -241,6 +241,7 @@ export const FOOTER_LINKS = {
   legal: [
     { label: "Terms of Service", href: "/Terms&Conditions.pdf" },
     { label: "Refund Policy", href: "/Refund&CreditPolicy.pdf" },
+    { label: "Promptly AI Privacy Policy", href: "/promptly-ai-privacy-policy" },
   ],
 };
 
