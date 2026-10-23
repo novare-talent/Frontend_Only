@@ -40,11 +40,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "No profile IDs provided" }, { status: 400 })
     }
 
-    // select many possible name fields to maximize chances of finding the correct one
+    // Only columns that actually exist on `profiles` — selecting speculative
+    // name columns made every request fail with "column does not exist".
     const supabase = getSupabase()
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, full_name, fullname, display_name, displayName, name, first_name, firstName, last_name, lastName, email")
+      .select("id, first_name, last_name, email")
       .in("id", ids)
 
     if (error) {

@@ -44,7 +44,7 @@ export default function EditJobPage() {
 
       if (!user) {
         toast("Error", { description: "You must be logged in to edit a job" })
-        router.push('/login')
+        router.push('/sign-in')
         return
       }
 
@@ -59,7 +59,7 @@ export default function EditJobPage() {
 
         if (job.employer_id !== user.id) {
           toast.error("Error", { description: "You don't have permission to edit this job" })
-          router.push('/client/jobs')
+          router.push('/client')
           return
         }
 

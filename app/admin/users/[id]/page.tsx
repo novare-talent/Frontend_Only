@@ -65,7 +65,7 @@ export default function UserDetailPage() {
       toast.error("Error", { description: "Failed to delete user" });
     } else {
       toast("Successful", { description: "User deleted successfully" });
-      router.push("/users"); // redirect back to users list
+      router.push("/admin/users"); // redirect back to users list
     }
   };
 

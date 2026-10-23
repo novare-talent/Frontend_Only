@@ -78,13 +78,13 @@ export default function AdminCandidateResponsePage() {
             .maybeSingle(),
           supabase
             .from("responses")
-            .select("id, profile_id, answers, created_at, job_id, full_name, email, phone")
+            .select("id, profile_id, answers, created_at, job_id")
             .eq("job_id", id)
             .eq("profile_id", profileId)
             .maybeSingle(),
           supabase
             .from("profiles")
-            .select("full_name, email, phone, resume_url")
+            .select("first_name, last_name, email, phone, resume_url")
             .eq("id", profileId)
             .maybeSingle(),
         ]);
@@ -118,9 +118,12 @@ export default function AdminCandidateResponsePage() {
 
         setResponse({
           ...responseData,
-          full_name: profile?.full_name || responseData.full_name,
-          email: profile?.email || responseData.email,
-          phone: profile?.phone || responseData.phone,
+          full_name:
+            [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") ||
+            parsedAnswers?.["Full Name"] ||
+            "Unknown",
+          email: profile?.email || parsedAnswers?.["Email"] || undefined,
+          phone: profile?.phone || parsedAnswers?.["Phone"] || undefined,
           resume_url: selectedResume || profileResume || undefined,
         });
       } catch (error) {

@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     /* ----------------------- 7️⃣ Fetch Responses ----------------------- */
     const { data: responses, error: responseError } = await supabase
       .from("responses")
-      .select("id, profile_id, form_id, answers, resume_url, created_at")
+      .select("id, profile_id, form_id, answers, created_at")
       .eq("form_id", form.form_id)
     if (responseError || !responses || responses.length === 0)
       return NextResponse.json(

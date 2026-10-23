@@ -96,11 +96,19 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // API responses are per-user (session cookie / bearer token). Marking
+        // them `public` let the CDN cache one user's payload and replay it to
+        // everyone else for 60s, which is how the dashboard ended up rendering
+        // another account's id. Never shared-cache these.
         source: '/api/:path*',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, s-maxage=60, stale-while-revalidate=120',
+            value: 'private, no-store, max-age=0, must-revalidate',
+          },
+          {
+            key: 'Vary',
+            value: 'Cookie, Authorization',
           },
         ],
       },

@@ -28,18 +28,38 @@ export const limiters = {
   submissionUpload: makeLimiter(5, "1 m"),    // 5 req/min per IP
 } as const;
 
-/**
- * Check a rate limit and return a 429 NextResponse if exceeded, or null if allowed.
- * Gracefully returns null when Upstash is not configured (no env vars).
- */
+// Upstash sits in the request path for every /api/* and auth route. A slow or
+// unreachable Redis must never hold the request open until the platform's
+// gateway gives up with a 504 — past this budget we stop waiting and allow the
+// request through.
+const LIMIT_TIMEOUT_MS = 1500;
+
 export async function applyRateLimit(
   limiter: Ratelimit | null,
   identifier: string
 ): Promise<NextResponse | null> {
   if (!limiter) return null;
-  const { success, reset } = await limiter.limit(identifier);
-  if (!success) {
-    const retryAfter = Math.max(1, Math.ceil((reset - Date.now()) / 1000));
+
+  let result: { success: boolean; reset: number } | null = null;
+  try {
+    result = await Promise.race([
+      limiter.limit(identifier),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), LIMIT_TIMEOUT_MS)),
+    ]);
+  } catch (error) {
+    // Redis unreachable / quota exhausted — fail open rather than lock everyone out.
+    console.error("[rateLimit] limiter error, failing open:", error);
+    return null;
+  }
+
+  // Timed out — fail open.
+  if (!result) {
+    console.warn(`[rateLimit] timed out after ${LIMIT_TIMEOUT_MS}ms, failing open: ${identifier}`);
+    return null;
+  }
+
+  if (!result.success) {
+    const retryAfter = Math.max(1, Math.ceil((result.reset - Date.now()) / 1000));
     return NextResponse.json(
       { error: "Too many requests", retryAfter },
       { status: 429, headers: { "Retry-After": String(retryAfter) } }

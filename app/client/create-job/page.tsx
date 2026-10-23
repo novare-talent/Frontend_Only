@@ -45,7 +45,7 @@ export default function NewJobPage() {
         const user = data?.user ?? null;
         if (!user) {
           toast.error("Authentication Required", { description: "Please login to create a job." });
-          router.replace("/signin");
+          router.replace("/sign-in");
           return;
         }
         setUserId(user.id);
@@ -53,7 +53,7 @@ export default function NewJobPage() {
         const token = (await supabase.auth.getSession())?.data?.session?.access_token;
         if (!token) {
           toast.error("Authentication Error", { description: "Unable to verify session." });
-          router.replace("/signin");
+          router.replace("/sign-in");
           return;
         }
 
