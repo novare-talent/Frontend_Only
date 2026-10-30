@@ -50,6 +50,19 @@ export function SignUpForm({
     email: "",
   });
 
+  // Supabase project is currently degraded (requests cost 3-11s normally and
+  // can collapse to 30-40s timeouts under load). Without a client-side budget
+  // the form just hangs, or fails with an error object that has no message,
+  // which rendered as a blank/"{}" toast. Fail fast with a clear message instead.
+  const SIGNUP_TIMEOUT_MS = 8000;
+  const withTimeout = <T,>(promise: PromiseLike<T>, ms: number): Promise<T> =>
+    Promise.race([
+      Promise.resolve(promise),
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error("TIMEOUT")), ms)
+      ),
+    ]);
+
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -144,21 +157,26 @@ export function SignUpForm({
     }
 
     try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: userFormData.email,
-        password: userFormData.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/confirm?next=/Dashboard`,
-          data: {
-            first_name: userFormData.firstName,
-            last_name: userFormData.lastName,
-            role: "user",
+      const { data, error: signUpError } = await withTimeout(
+        supabase.auth.signUp({
+          email: userFormData.email,
+          password: userFormData.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/confirm?next=/Dashboard`,
+            data: {
+              first_name: userFormData.firstName,
+              last_name: userFormData.lastName,
+              role: "user",
+            },
           },
-        },
-      });
+        }),
+        SIGNUP_TIMEOUT_MS
+      );
 
       if (signUpError) {
-        let errorDescription = signUpError.message;
+        console.error("Sign-up error:", signUpError);
+        let errorDescription =
+          signUpError.message || "Our servers are responding slowly right now. Please try again in a minute.";
         let errorTitle = "Sign-up Failed";
 
         if (signUpError.status === 422) {
@@ -299,8 +317,12 @@ export function SignUpForm({
       setProfileImage(null);
       setResumeFile(null);
     } catch (err) {
-      toast.error("Unexpected Error", {
-        description: `An unexpected error occurred: ${err instanceof Error ? err.message : "Unknown error"}`,
+      console.error("Sign-up unexpected error:", err);
+      const isTimeout = err instanceof Error && err.message === "TIMEOUT";
+      toast.error(isTimeout ? "Sign-up Timed Out" : "Unexpected Error", {
+        description: isTimeout
+          ? "Our servers are taking too long to respond. Please try again in a minute."
+          : `An unexpected error occurred: ${err instanceof Error ? err.message : "Unknown error"}`,
         duration: 7000,
         position: "top-right",
       });
@@ -346,20 +368,25 @@ export function SignUpForm({
     }
 
     try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: clientFormData.email,
-        password: clientFormData.password,
-        options: {
-          data: {
-            first_name: clientFormData.firstName,
-            last_name: clientFormData.lastName,
-            role: "client",
+      const { data, error: signUpError } = await withTimeout(
+        supabase.auth.signUp({
+          email: clientFormData.email,
+          password: clientFormData.password,
+          options: {
+            data: {
+              first_name: clientFormData.firstName,
+              last_name: clientFormData.lastName,
+              role: "client",
+            },
           },
-        },
-      });
+        }),
+        SIGNUP_TIMEOUT_MS
+      );
 
       if (signUpError) {
-        let errorDescription = signUpError.message;
+        console.error("Client sign-up error:", signUpError);
+        let errorDescription =
+          signUpError.message || "Our servers are responding slowly right now. Please try again in a minute.";
         let errorTitle = "Sign-up Failed";
 
         if (
@@ -433,8 +460,12 @@ export function SignUpForm({
         password: "",
       });
     } catch (err) {
-      toast.error("Unexpected Error", {
-        description: `An unexpected error occurred: ${err instanceof Error ? err.message : "Unknown error"}`,
+      console.error("Client sign-up unexpected error:", err);
+      const isTimeout = err instanceof Error && err.message === "TIMEOUT";
+      toast.error(isTimeout ? "Sign-up Timed Out" : "Unexpected Error", {
+        description: isTimeout
+          ? "Our servers are taking too long to respond. Please try again in a minute."
+          : `An unexpected error occurred: ${err instanceof Error ? err.message : "Unknown error"}`,
         duration: 7000,
         position: "top-right",
       });
@@ -443,7 +474,7 @@ export function SignUpForm({
     }
   };
 
-  const handleUserChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUserChange =(e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setUserFormData({ ...userFormData, [id]: value });
 
