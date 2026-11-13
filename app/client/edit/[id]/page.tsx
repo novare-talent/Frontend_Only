@@ -211,16 +211,23 @@ export default function EditJobPage() {
             .update(formData)
             .eq('form_id', formId)
           if (formError) throw formError
+
+          // Normalise legacy form_link values (/Jobs/.. or /apply/..)
+          await supabase
+            .from('jobs')
+            .update({ form_link: `/Dashboard/Jobs/${jobId}` })
+            .eq('job_id', jobId)
         } else {
           const { error: formError } = await supabase
             .from('forms')
             .insert(formData)
           if (formError) throw formError
 
-          await supabase
+          const { error: linkError } = await supabase
             .from('jobs')
-            .update({ form_link: `/apply/${formId}`, form_id: formId })
+            .update({ form_link: `/Dashboard/Jobs/${jobId}`, form_id: formId })
             .eq('job_id', jobId)
+          if (linkError) throw linkError
         }
       }
 
@@ -243,29 +250,21 @@ export default function EditJobPage() {
       .eq("job_id", jobId)
       .single()
 
-    console.log("SUPABASE JOB FETCH", job)
-
     if (jobError || !job?.JD_pdf) {
-      console.log("SUPABASE ERROR", jobError)
       toast("Error", { description: "Failed to fetch JD URL from Supabase" })
       return
     }
 
     const jdUrl = job.JD_pdf
-    console.log("JD URL FROM SUPABASE", jdUrl)
 
     const payload = { jdUrl }
-    console.log("AI REQUEST PAYLOAD", JSON.stringify(payload, null, 2))
 
     const r = await fetch("/api/generate-form", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
-
-    console.log("AI RESPONSE STATUS", r.status)
     const t = await r.text()
-    console.log("AI RAW RESPONSE", t)
 
     if (!r.ok) {
       toast("Error", { description: t || "AI request failed" })
@@ -273,7 +272,6 @@ export default function EditJobPage() {
     }
 
     const j = JSON.parse(t)
-    console.log("AI PARSED JSON", j)
 
     const a: Question[] = j.questions.map((q: any) => ({
       id: Math.random().toString(36).slice(2, 9),
@@ -286,7 +284,7 @@ export default function EditJobPage() {
     setQuestions(a)
     toast("Form Generated", { description: "AI questions ready" })
   } catch (e) {
-    console.log("AI FETCH ERROR", e)
+    console.error("AI form generation error:", e)
     toast("Error", { description: "Check console for details" })
   }
 }

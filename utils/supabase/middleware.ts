@@ -11,22 +11,20 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  // PUBLIC routes that don't require login - skip auth check entirely
-  const publicPaths = [
-    "/",
-    "/sign-in",
-    "/sign-up",
-    "/error",
-    "/forgot-password",
-    "/auth/update-password",
-    "/auth/callback",
-    "/auth/confirm",
-    "/iit-placements",
-    "/career-blogs",
-    "/submission",
-  ];
+  // Only the three role-gated sections require a session. Everything else
+  // (landing, auth pages, /api routes which authenticate themselves, public
+  // submission pages, static files, /sig-hire which has its own guard) passes
+  // straight through. NOTE: this used to be an allow-list that contained "/"
+  // with startsWith(), which matched every path and silently disabled auth and
+  // role checks for the whole app.
+  const isProtectedSection = (prefix: string) =>
+    path === prefix || path.startsWith(prefix + "/");
+  const needsAuth =
+    isProtectedSection("/Dashboard") ||
+    isProtectedSection("/client") ||
+    isProtectedSection("/admin");
 
-  if (publicPaths.some((p) => path.startsWith(p))) {
+  if (!needsAuth) {
     return supabaseResponse;
   }
 
@@ -63,6 +61,8 @@ export async function updateSession(request: NextRequest) {
   const redirectTo = (pathname: string) => {
     const url = request.nextUrl.clone();
     url.pathname = pathname;
+    url.search = "";
+    if (pathname === "/sign-in") url.searchParams.set("redirect", path);
     return NextResponse.redirect(url);
   };
 
@@ -84,13 +84,11 @@ export async function updateSession(request: NextRequest) {
 
   // 🔒 If not signed in → redirect to sign-in
   if (!user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/sign-in";
-    return NextResponse.redirect(url);
+    return redirectTo("/sign-in");
   }
 
   // Role-gated sections — one profile query covers all three route sections
-  const needsRoleCheck = path.startsWith("/Dashboard") || path.startsWith("/client") || path.startsWith("/admin");
+  const needsRoleCheck = true;
   if (needsRoleCheck) {
     // TODO: expose `role` as a custom claim on the access token (Supabase custom
     // access token hook) so this section needs no database round trip at all.
@@ -116,18 +114,21 @@ export async function updateSession(request: NextRequest) {
 
     if (path.startsWith("/Dashboard") && role !== "user") {
       const url = request.nextUrl.clone();
+      url.search = "";
       url.pathname = role === "admin" ? "/admin" : role === "client" ? "/client" : "/";
       return NextResponse.redirect(url);
     }
 
     if (path.startsWith("/client") && role !== "client") {
       const url = request.nextUrl.clone();
+      url.search = "";
       url.pathname = role === "admin" ? "/admin" : role === "user" ? "/Dashboard" : "/sign-in";
       return NextResponse.redirect(url);
     }
 
     if (path.startsWith("/admin") && role !== "admin") {
       const url = request.nextUrl.clone();
+      url.search = "";
       url.pathname = role === "client" ? "/client" : role === "user" ? "/Dashboard" : "/sign-in";
       return NextResponse.redirect(url);
     }

@@ -1,3 +1,4 @@
+import { SITE_URL } from "@/lib/constants";
 import Link from "next/link";
 
 interface BreadcrumbItem {
@@ -13,7 +14,7 @@ export default function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
       "@type": "ListItem",
       position: i + 1,
       name: item.label,
-      ...(item.href ? { item: `https://www.novaretalent.com${item.href}` } : {}),
+      ...(item.href ? { item: `${SITE_URL}${item.href}` } : {}),
     })),
   };
 

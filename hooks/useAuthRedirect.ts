@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 
 // The sign-in/sign-up pages render nothing but a spinner while this check is in
 // flight, so a hanging or failing Supabase call must not leave it pending
@@ -37,7 +38,7 @@ export function useAuthRedirect() {
 
         if (user) {
           const redirect = searchParams.get("redirect");
-          router.push(redirect ?? "/Dashboard");
+          router.push(safeRedirectPath(redirect, "/Dashboard"));
           return;
         }
       } catch (error) {

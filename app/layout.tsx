@@ -1,49 +1,3 @@
-// import type { Metadata } from "next";
-// import { Geist_Mono, Inter } from "next/font/google";
-// import { ThemeProvider } from "@/components/theme-provider";
-// import "./globals.css";
-// import { Toaster } from "@/components/ui/sonner"
-
-// const inter = Inter({
-//    subsets: ["latin"],
-//    weight: ["100","300","500"],
-//    variable: "--font-sans"
-// })
-
-// const geistMono = Geist_Mono({
-//   variable: "--font-geist-mono",
-//   subsets: ["latin"],
-// });
-
-// export const metadata: Metadata = {
-//   title: "Novare Talent",
-//   description: "Connecting Startups with Top Talents",
-// };
-
-// export default function RootLayout({
-//   children,
-// }: Readonly<{
-//   children: React.ReactNode;
-// }>) {
-//   return (
-//     <html lang="en" suppressHydrationWarning>
-//       <body
-//         className={`${inter.variable} ${geistMono.variable} antialiased`}
-//       >
-//         <ThemeProvider
-//           attribute="class"
-//           defaultTheme="dark"
-//           enableSystem
-//           disableTransitionOnChange
-//         >
-//         {children}
-//         <Toaster />
-//         </ThemeProvider>
-//       </body>
-//     </html>
-//   );
-// }
-
 import type { Metadata } from "next";
 import { Lora, Poppins, Inter } from "next/font/google";
 import localFont from "next/font/local";
@@ -135,9 +89,9 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  verification: {
-    google: "your-google-verification-code",
-  },
+  ...(process.env.GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
+    : {}),
 };
 
 export default function RootLayout({

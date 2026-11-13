@@ -30,6 +30,7 @@ export default function UserDetailPage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (id) fetchUser(id);
@@ -62,8 +63,10 @@ export default function UserDetailPage() {
     setDeleting(false);
 
     if (error) {
+      console.error("Failed to delete user:", error);
       toast.error("Error", { description: "Failed to delete user" });
     } else {
+      setConfirmOpen(false);
       toast("Successful", { description: "User deleted successfully" });
       router.push("/admin/users"); // redirect back to users list
     }
@@ -167,7 +170,7 @@ export default function UserDetailPage() {
 
           {/* Delete Action */}
           <div className="pt-6">
-            <Dialog>
+            <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
               <DialogTrigger asChild>
                 <Button variant="destructive">Delete User</Button>
               </DialogTrigger>
@@ -185,7 +188,7 @@ export default function UserDetailPage() {
                 <DialogFooter className="mt-4">
                   <Button
                     variant="outline"
-                    onClick={() => document.querySelector<HTMLButtonElement>('[data-state="open"]')?.click()}
+                    onClick={() => setConfirmOpen(false)}
                   >
                     Cancel
                   </Button>

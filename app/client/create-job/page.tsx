@@ -231,7 +231,7 @@ export default function NewJobPage() {
         status: "draft",
         employer_id: userId,
         created_at: new Date().toISOString(),
-        form_link: questions.length > 0 ? `/Jobs/${formId}` : null,
+        form_link: questions.length > 0 ? `/Dashboard/Jobs/${jobId}` : null,
         form_id: questions.length > 0 ? formId : null,
       };
 

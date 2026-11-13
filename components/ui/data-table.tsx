@@ -19,7 +19,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
   });
 
   return (
-    <div className="w-full overflow-x-auto rounded-md border"> {/* <-- here */}
+    <div className="w-full overflow-x-auto rounded-md border">
       <Table className="w-full">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (

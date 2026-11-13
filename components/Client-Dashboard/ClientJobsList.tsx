@@ -7,6 +7,7 @@ import "driver.js/dist/driver.css"; // Ensure this is installed via npm install 
 
 import { motion, AnimatePresence } from "framer-motion";
 import { JobCard } from "./Job-Card";
+import { appliedCandidatesCount } from "@/lib/applied-candidates";
 import CreateJobButtonServerChecked from "./CreateJobButton";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
@@ -19,7 +20,7 @@ type Job = {
   stipend: string | null;
   duration: string | null;
   tags: string[] | null;
-  Applied_Candidates?: string[] | null;
+  Applied_Candidates?: string[] | string | null;
   status: string;
   closingTime?: string | null;
   rejection_emails_sent?: boolean | null;
@@ -192,11 +193,10 @@ export default function ClientJobs() {
                   description={job.Job_Description || "No description provided"}
                   tags={job.tags || []}
                   location={job.location || "Not specified"}
-                  proposals={(
-                    (Array.isArray(job.Applied_Candidates)
-                      ? job.Applied_Candidates.length
-                      : 0) || 0
-                  ).toString()}
+                  proposals={appliedCandidatesCount(job.Applied_Candidates).toString()}
+                  onDelete={(id) =>
+                    setJobs((prev) => prev.filter((j) => j.job_id !== id))
+                  }
                   className="hover:shadow-md transition-shadow"
                   duration={job.duration || undefined}
                   closingTime={job.closingTime || null}

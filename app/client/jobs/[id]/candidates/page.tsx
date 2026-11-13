@@ -4,6 +4,8 @@ import { useEffect, useState } from "react"
 import { createClient } from "@/utils/supabase/client"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
+import { parseAppliedCandidates } from "@/lib/applied-candidates"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
@@ -11,6 +13,7 @@ export default function CandidatesPage({ params }: { params: Promise<{ id: strin
   const { id } = React.use(params)
   const jobId = id
   const supabase = createClient()
+  const router = useRouter()
 
   const [c, setC] = useState<any[]>([])
   const [s, setS] = useState(false)
@@ -24,9 +27,15 @@ export default function CandidatesPage({ params }: { params: Promise<{ id: strin
       setS(true)
       try {
 
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          router.replace("/client")
+          return
+        }
+
         const { data: job, error: jobError } = await supabase
           .from("jobs")
-          .select("Applied_Candidates, Shortlisted_Candidates")
+          .select("employer_id, Applied_Candidates, Shortlisted_Candidates")
           .eq("job_id", jobId)
           .single()
 
@@ -35,9 +44,15 @@ export default function CandidatesPage({ params }: { params: Promise<{ id: strin
           return
         }
 
+        // Client-side ownership check (defense in depth; RLS is the real gate)
+        if (job.employer_id !== user.id) {
+          router.replace("/client")
+          return
+        }
+
         setJ(job)
 
-        const ids = job.Applied_Candidates || []
+        const ids = parseAppliedCandidates(job.Applied_Candidates)
 
         if (ids.length === 0) {
           toast("No Candidates", { description: "No one has applied yet." })
@@ -49,8 +64,6 @@ export default function CandidatesPage({ params }: { params: Promise<{ id: strin
           .select("id, first_name, last_name, email, phone, github_link, linkedin_link")
           .in("id", ids)
 
-        console.log("PROFILES FETCH RESULT", profiles, profileError)
-
         if (profileError) {
           toast("Error", { description: "Failed to load profiles" })
           return
@@ -58,7 +71,7 @@ export default function CandidatesPage({ params }: { params: Promise<{ id: strin
 
         setC(profiles || [])
       } catch (e) {
-        console.log("UNEXPECTED ERROR", e)
+        console.error("Candidates load error:", e)
         toast("Error", { description: "Check console logs for debug" })
       } finally {
         setS(false)
@@ -66,7 +79,7 @@ export default function CandidatesPage({ params }: { params: Promise<{ id: strin
     }
 
     init()
-  }, [jobId, supabase])
+  }, [jobId, supabase, router])
 
   const selectCandidate = async (id: string) => {
     if (!j) return
@@ -78,14 +91,10 @@ export default function CandidatesPage({ params }: { params: Promise<{ id: strin
       const sArr = j.Shortlisted_Candidates || []
       const newArr = Array.from(new Set([...sArr, id]))
 
-      console.log("SHORTLIST UPDATE", { id, newArr })
-
       const { error } = await supabase
         .from("jobs")
         .update({ Shortlisted_Candidates: newArr })
         .eq("job_id", jobId)
-
-      console.log("SHORTLIST SUPABASE RESULT", error)
 
       if (error) {
         toast("Error", { description: "Shortlist failed" })
@@ -93,7 +102,7 @@ export default function CandidatesPage({ params }: { params: Promise<{ id: strin
       }
 
       setO(false)
-      toast("Candidate Selected", { description: "Selection saved. Emails will be sent." })
+      toast("Candidate Selected", { description: "Selection saved." })
 
     } finally {
       setR(false)
@@ -151,10 +160,7 @@ export default function CandidatesPage({ params }: { params: Promise<{ id: strin
                       <Button
                         variant="default"
                         size="sm"
-                        onClick={() => {
-                          console.log("CANDIDATE SELECT CLICKED", p.id)
-                          setO(true)
-                        }}
+                        onClick={() => setO(true)}
                         disabled={r}
                       >
                         {r ? "Processing..." : "Select Candidate"}
@@ -166,10 +172,8 @@ export default function CandidatesPage({ params }: { params: Promise<{ id: strin
 
                       <pre className="bg-muted p-2 rounded text-xs overflow-auto mb-2">
 {`You are selecting: ${p.first_name} ${p.last_name}
-This candidate will be forwarded a SELECTION email.
+This candidate will be marked as selected for this job.
 All others will NOT be selected.
-Action is irreversible.
-Emails will be triggered instantly.
 Proceed carefully.`}
                       </pre>
 

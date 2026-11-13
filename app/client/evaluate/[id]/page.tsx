@@ -67,6 +67,18 @@ export default function EvaluationPage() {
       try {
         setLoading(true);
 
+        // Client-side ownership check (defense in depth; RLS is the real gate)
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        const { data: ownerRow } = await supabase
+          .from("jobs")
+          .select("employer_id")
+          .eq("job_id", id)
+          .maybeSingle();
+        if (!authUser || !ownerRow || ownerRow.employer_id !== authUser.id) {
+          router.replace("/client");
+          return;
+        }
+
         const { data: evalRow } = await supabase
           .from("evaluations")
           .select("job_id, results")
@@ -138,7 +150,7 @@ export default function EvaluationPage() {
     };
 
     if (id) fetchEvaluation();
-  }, [id, supabase]);
+  }, [id, supabase, router]);
 
   const toggleCandidate = (profileId: string) => {
     setSelectedIds((prev) => {

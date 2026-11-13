@@ -3,29 +3,18 @@ import { createClient } from "@/utils/supabase/server"
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import PDFParser from "pdf2json"
 import { validateStorageUrl } from "@/utils/validateStorageUrl"
-
-const m = new Map<string,{c:number,t:number}>()
-const R = 5
-const W = 60000
-
-function rl(k:string){
-  const n=Date.now()
-  const e=m.get(k)
-  if(!e||n-e.t>W){m.set(k,{c:1,t:n});return true}
-  if(e.c>=R)return false
-  e.c++;return true
-}
+import { applyRateLimit, limiters } from "@/utils/rateLimit"
+import { canManageJob } from "@/utils/apiAuth"
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 export const runtime = "nodejs"
+// Evaluation runs batches of Gemini calls with delays/retries; allow long runs.
+export const maxDuration = 300
 
 // Helper to delay execution
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 export async function POST(request: NextRequest) {
-  const ip = request.headers.get("x-forwarded-for") || "local"
-  if(!rl(ip)) return NextResponse.json({error:"Rate limit exceeded"},{status:429})
-
   try {
     /* ----------------------- 1️⃣ Authenticate ----------------------- */
     const supabase = await createClient()
@@ -55,11 +44,18 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       )
 
+    const limited = await applyRateLimit(limiters.evaluateGemini, `evaluate:${user.id}`)
+    if (limited) return limited
+
     /* ----------------------- 3️⃣ Parse Body ----------------------- */
     const body = await request.json()
     const { job_id } = body
     if (!job_id)
       return NextResponse.json({ error: "job_id is required" }, { status: 400 })
+
+    // Ownership: admin or the job's employer only
+    if (typeof job_id !== "string" || !(await canManageJob(user.id, job_id)))
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
     /* ----------------------- 4️⃣ Fetch Job ----------------------- */
     const { data: job, error: jobError } = await supabase
@@ -144,8 +140,9 @@ export async function POST(request: NextRequest) {
       }
       
       return {
-        ...p,
+        // Profile fields last so the profile id (not the response row id) wins.
         ...response,
+        ...p,
         name: `${p.first_name || ""} ${p.last_name || ""}`.trim() || "Unnamed",
         email: p.email || "Not provided",
         phone: p.phone || "Not provided",
@@ -271,8 +268,8 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("Evaluation Error:", error)
     return NextResponse.json(
-      { error: error.message || "Evaluation failed" },
-      { status: 400 }
+      { error: "Evaluation failed. Please try again." },
+      { status: 500 }
     )
   }
 }
@@ -409,7 +406,7 @@ async function evaluateCandidate(
       name: candidate.name,
       email: candidate.email,
       phone: candidate.phone,
-      responses: candidate.response || {},
+      responses: candidate.answers || {},
     }
 
     const prompt = `

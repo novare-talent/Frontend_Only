@@ -26,23 +26,24 @@ function safeNum(v: any) {
 }
 
 async function getJobsRemainingFromSubscriptions(supabaseAdmin: any, userId: string) {
-  // Query latest subscriptions for this profile_id and read jobs_remaining only
-  // NOTE: If your FK is named something else (e.g. user_id or owner_id), change "profile_id" accordingly.
+  // Read the NEWEST subscription row only - the same row /api/consume-job
+  // decrements and /api/apply-referral credits - so the balance shown always
+  // matches the balance that is actually spent.
   const { data, error } = await supabaseAdmin
     .from("subscriptions")
     .select("jobs_remaining, id, profile_id, status, created_at")
     .eq("profile_id", userId)
     .order("created_at", { ascending: false })
-    .limit(10);
+    .limit(1);
 
   if (error) {
     return { jobs_remaining: null, rows: null, error };
   }
 
   const rows = data ?? [];
-  // Prefer the most recent non-null numeric jobs_remaining
-  for (const r of rows) {
-    const n = safeNum((r as any).jobs_remaining);
+  const newest = rows[0];
+  if (newest) {
+    const n = safeNum((newest as any).jobs_remaining);
     if (n !== null) return { jobs_remaining: n, rows };
   }
 

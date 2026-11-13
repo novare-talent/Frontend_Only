@@ -10,6 +10,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import Image from "next/image";
 import Link from "next/link";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 
 export function LoginForm({
   className,
@@ -86,7 +87,7 @@ export function LoginForm({
     const redirect = urlParams.get("redirect");
 
     if (redirect) {
-      router.push(redirect);
+      router.push(safeRedirectPath(redirect, "/Dashboard"));
       toast.success("Login successful!");
       return;
     }

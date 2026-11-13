@@ -4,6 +4,9 @@ import OpenAI from 'openai'
 import { v4 as uuidv4 } from 'uuid'
 import { validateStorageUrl } from '@/utils/validateStorageUrl'
 import { applyRateLimit, limiters } from '@/utils/rateLimit'
+import { canManageJob, UUID_RE } from '@/utils/apiAuth'
+
+const MAX_PDF_BYTES = 10 * 1024 * 1024 // 10MB
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!
@@ -45,6 +48,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'JD URL is required' }, { status: 400 })
     }
 
+    if (jobId) {
+      if (typeof jobId !== 'string' || !UUID_RE.test(jobId)) {
+        return NextResponse.json({ error: 'Invalid jobId' }, { status: 400 })
+      }
+      if (!(await canManageJob(user.id, jobId))) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+    }
+
     try {
       validateStorageUrl(jdUrl)
     } catch (e: any) {
@@ -58,7 +70,14 @@ export async function POST(request: NextRequest) {
       throw new Error(`Failed to fetch PDF from URL: ${pdfResponse.statusText}`)
     }
 
+    const declaredLen = Number(pdfResponse.headers.get('content-length') ?? 0)
+    if (declaredLen > MAX_PDF_BYTES) {
+      return NextResponse.json({ error: 'JD PDF is too large (max 10MB)' }, { status: 413 })
+    }
     const pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer())
+    if (pdfBuffer.length > MAX_PDF_BYTES) {
+      return NextResponse.json({ error: 'JD PDF is too large (max 10MB)' }, { status: 413 })
+    }
     console.log(`Downloaded PDF, size: ${pdfBuffer.length} bytes`)
 
     console.log('Generating form with OpenAI...')
@@ -109,7 +128,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error generating form:', error)
     return NextResponse.json(
-      { error: error.message || 'Failed to generate form' },
+      { error: 'Failed to generate form. Please try again.' },
       { status: 500 }
     )
   }

@@ -8,12 +8,12 @@ import {
   CardTitle,
   CardDescription,
   CardAction,
-  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ChevronRight, FileText } from "lucide-react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { parseAppliedCandidates, appliedCandidatesCount } from "@/lib/applied-candidates";
 
 interface Job {
   job_id: string;
@@ -21,7 +21,7 @@ interface Job {
   Job_Description: string;
   JD_pdf: string | null;
   form_link: string | null;
-  Applied_Candidates: any[] | number | null;
+  Applied_Candidates: any[] | string | number | null;
 }
 
 const IntegrationCard = ({
@@ -55,10 +55,6 @@ const IntegrationCard = ({
         </CardAction>
       </CardHeader>
 
-      <CardFooter className="flex justify-between items-center">
-        
-        <span className="text-sm text-muted-foreground">Last updated: Today</span>
-      </CardFooter>
     </Card>
 
   );
@@ -100,14 +96,9 @@ export default function AppliedJobsGrid() {
     }
 
     // 3. Filter jobs where Applied_Candidates contains this user
-    const userEmail = user.id;
-    const appliedJobs =
-      (data || []).filter((job) => {
-        if (Array.isArray(job.Applied_Candidates)) {
-          return job.Applied_Candidates.includes(userEmail);
-        }
-        return false;
-      }) || [];
+    const appliedJobs = (data || []).filter((job) =>
+      parseAppliedCandidates(job.Applied_Candidates).includes(user.id)
+    );
 
     setJobs(appliedJobs);
     setLoading(false);
@@ -136,11 +127,7 @@ export default function AppliedJobsGrid() {
       {/* Grid Layout */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 min-h-16 items-center">
         {jobs.slice(0, visible).map((job) => {
-          const appliedCount = Array.isArray(job.Applied_Candidates)
-            ? job.Applied_Candidates.length
-            : typeof job.Applied_Candidates === "number"
-            ? job.Applied_Candidates
-            : 0;
+          const appliedCount = appliedCandidatesCount(job.Applied_Candidates);
 
           return (
             <IntegrationCard

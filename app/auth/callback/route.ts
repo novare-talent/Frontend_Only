@@ -1,18 +1,19 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 import type { EmailOtpType } from '@supabase/supabase-js'
+import { safeRedirectPath } from '@/lib/safe-redirect'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const token_hash = searchParams.get('token_hash')
   const type = searchParams.get('type') as EmailOtpType | null
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/'
+  const next = safeRedirectPath(searchParams.get('next'), '/')
 
   // Build the success redirect response first.
   // Cookies are wired to write directly onto this response so they survive the redirect.
   const successResponse = NextResponse.redirect(
-    new URL(next.startsWith('/') ? next : '/', origin)
+    new URL(next, origin)
   )
 
   const supabase = createServerClient(

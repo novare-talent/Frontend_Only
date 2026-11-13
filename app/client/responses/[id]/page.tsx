@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { User, Mail, Phone, Calendar } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { motion } from "framer-motion";
@@ -53,6 +53,7 @@ function parseAnswers(answers: any): Record<string, string> {
 export default function FormResponsesPage() {
   const { id } = useParams();
   const supabase = createClient();
+  const router = useRouter();
 
   const [jobTitle, setJobTitle] = useState<string>("Untitled Job");
   const [responses, setResponses] = useState<FormResponse[]>([]);
@@ -63,12 +64,19 @@ export default function FormResponsesPage() {
       try {
         setLoading(true);
 
-        // Fetch job title
+        const { data: { user } } = await supabase.auth.getUser();
+
+        // Fetch job title + owner (client-side ownership check; RLS is the real gate)
         const { data: job } = await supabase
           .from("jobs")
-          .select("Job_Name, Job_Description")
+          .select("Job_Name, Job_Description, employer_id")
           .eq("job_id", id)
           .maybeSingle();
+
+        if (!user || !job || job.employer_id !== user.id) {
+          router.replace("/client");
+          return;
+        }
 
         setJobTitle(job?.Job_Name || job?.Job_Description || "Untitled Job");
 
@@ -120,7 +128,7 @@ export default function FormResponsesPage() {
           return {
             id: r.id,
             profile_id: r.profile_id,
-            full_name: profile.first_name || parsedAnswers["Full Name"] || "Unknown",
+            full_name: `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || parsedAnswers["Full Name"] || "Unknown",
             email: profile.email || parsedAnswers["Email Address"],
             phone: profile.phone || parsedAnswers["Phone Number"],
             answers: parsedAnswers,
@@ -135,7 +143,7 @@ export default function FormResponsesPage() {
     };
 
     if (id) fetchResponses();
-  }, [id, supabase]);
+  }, [id, supabase, router]);
 
   if (loading) {
     return (

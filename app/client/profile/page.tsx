@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Mail, Phone, Save } from "lucide-react";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 // --- Main Profile Page Component ---
@@ -74,7 +75,6 @@ export default function ProfilePage() {
       id: user.id,
       first_name: formData.get("firstName"),
       last_name: formData.get("lastName"),
-      company_email: formData.get("companyEmail"),
       phone: formData.get("phone"),
       company_name: formData.get("companyName"),
       updated_at: new Date(),
@@ -85,8 +85,8 @@ export default function ProfilePage() {
 
     if (error) {
       console.error("Profile update error:", error.message);
+      toast.error("Failed to update profile", { description: error.message });
     } else {
-      console.log("Profile updated!");
       // Refresh profile data
       const { data: profileData } = await supabase
         .from("profiles")

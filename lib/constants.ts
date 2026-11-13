@@ -1,3 +1,6 @@
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://novaretalent.com";
+
 export const NAV_LINKS = [
   { label: "How It Works", href: "#how-it-works" },
   { label: "For Companies", href: "#for-companies" },

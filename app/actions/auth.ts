@@ -4,9 +4,29 @@ import { AuthService } from './services/auth.service'
 import { redirect } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
+import { headers } from 'next/headers'
+import { applyRateLimit, limiters } from '@/utils/rateLimit'
+
+const RESET_OK = '/forgot-password?success=' + encodeURIComponent('If an account exists for that email, a reset link has been sent.')
+const EMAIL_RE = /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/
 
 export async function resetPassword(formData: FormData) {
-  const email = (formData.get('email') as string).trim().toLowerCase()
+  const rawEmail = formData.get('email')
+  const email = typeof rawEmail === 'string' ? rawEmail.trim().toLowerCase() : ''
+  if (!email || email.length > 254 || !EMAIL_RE.test(email)) {
+    redirect(`/forgot-password?error=${encodeURIComponent('Please enter a valid email address.')}`)
+  }
+
+  // Rate limit per email and per IP (fail-open if Upstash is unavailable).
+  const h = await headers()
+  const ip = h.get('x-forwarded-for')?.split(',')[0]?.trim() || 'local'
+  const limited =
+    (await applyRateLimit(limiters.resetPassword, `reset-email:${email}`)) ||
+    (await applyRateLimit(limiters.resetPassword, `reset-ip:${ip}`))
+  if (limited) {
+    redirect(`/forgot-password?error=${encodeURIComponent('Too many requests. Please try again later.')}`)
+  }
+
   const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
   const supabaseAdmin = createClient(
@@ -21,8 +41,9 @@ export async function resetPassword(formData: FormData) {
     .eq('email', email)
     .maybeSingle()
 
+  // Same response whether or not the account exists (no account enumeration).
   if (!profile) {
-    redirect(`/forgot-password?error=${encodeURIComponent('No account found with this email. Please sign up first.')}`)
+    redirect(RESET_OK)
   }
 
   // Generate the recovery token via admin API.
@@ -37,7 +58,7 @@ export async function resetPassword(formData: FormData) {
 
   if (linkError || !linkData?.properties?.hashed_token) {
     console.error('generateLink error:', linkError)
-    redirect(`/forgot-password?error=${encodeURIComponent('Failed to generate reset link. Please try again.')}`)
+    redirect(RESET_OK)
   }
 
   const resetUrl = `${origin}/auth/update-password?token_hash=${linkData.properties.hashed_token}&type=recovery`
@@ -85,10 +106,10 @@ export async function resetPassword(formData: FormData) {
 
   if (sendError) {
     console.error('Resend error:', sendError)
-    redirect(`/forgot-password?error=${encodeURIComponent('Failed to send email. Please try again.')}`)
+    redirect(RESET_OK)
   }
 
-  redirect('/forgot-password?success=Check your email for the reset link')
+  redirect(RESET_OK)
 }
 
 export async function updatePassword(formData: FormData) {

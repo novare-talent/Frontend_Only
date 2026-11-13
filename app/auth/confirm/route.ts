@@ -2,15 +2,13 @@ import { NextResponse } from "next/server";
 import { type EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
 
   // Shared "next" redirect param
-  let next = searchParams.get("next") ?? "/";
-  if (!next.startsWith("/")) {
-    next = "/";
-  }
+  const next = safeRedirectPath(searchParams.get("next"), "/");
 
   const code = searchParams.get("code");
   const token_hash = searchParams.get("token_hash");
@@ -51,5 +49,7 @@ export async function GET(request: Request) {
   }
 
   // 🔹 Case 3: Fallback (invalid or failed auth)
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+  return NextResponse.redirect(
+    `${origin}/auth/update-password?error=Invalid+or+expired+link`
+  );
 }

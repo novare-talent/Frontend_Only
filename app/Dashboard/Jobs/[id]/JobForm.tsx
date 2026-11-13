@@ -416,37 +416,8 @@ export default function JobForm({
         return;
       }
 
-      // === UPDATE Applied_Candidates ===
-      if (jobId && profileId) {
-        const { data: jobData } = await supabaseClient
-          .from("jobs")
-          .select("Applied_Candidates")
-          .eq("job_id", jobId)
-          .single();
-
-        let currentCandidates: string[] = [];
-
-        if (jobData?.Applied_Candidates) {
-          if (Array.isArray(jobData.Applied_Candidates)) {
-            currentCandidates = jobData.Applied_Candidates;
-          } else {
-            try {
-              currentCandidates = JSON.parse(jobData.Applied_Candidates);
-            } catch {
-              currentCandidates = [];
-            }
-          }
-        }
-
-        if (!currentCandidates.includes(profileId)) {
-          currentCandidates.push(profileId);
-
-          await supabaseClient
-            .from("jobs")
-            .update({ Applied_Candidates: JSON.stringify(currentCandidates) })
-            .eq("job_id", jobId);
-        }
-      }
+      // Applied_Candidates is maintained by the DB trigger on responses
+      // (trg_update_applied_candidates); no client-side write needed.
 
       toast.success("Success", {
         description: "Application submitted successfully!",

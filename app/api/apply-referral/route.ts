@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { applyRateLimit, limiters } from "@/utils/rateLimit";
 
 const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? null;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? null;
-const REFERRAL_CODE = "ZENHYRE2026";
+const REFERRAL_CODE = (process.env.REFERRAL_CODE ?? "ZENHYRE2026").trim().toUpperCase();
 
 let supabaseAdminClient: ReturnType<typeof createClient> | null = null;
 
@@ -39,8 +40,11 @@ export async function POST(req: NextRequest) {
     }
     const userId = user.id;
 
+    const rateLimited = await applyRateLimit(limiters.applyReferral, `apply-referral:${userId}`);
+    if (rateLimited) return rateLimited;
+
     const body = await req.json();
-    const code: string = body?.code ?? "";
+    const code: string = typeof body?.code === "string" ? body.code : "";
     if (!code || code.trim().toUpperCase() !== REFERRAL_CODE) {
       return NextResponse.json({ error: "Invalid referral code" }, { status: 400 });
     }
@@ -63,6 +67,35 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Atomically claim the referral FIRST: only one concurrent request can flip
+    // referral_applied false -> true. Everyone else gets zero rows back.
+    const { data: claimed, error: claimError } = await supabaseAdmin
+      .from("profiles")
+      // @ts-expect-error - supabase types not regenerated yet; referral_applied column exists at runtime
+      .update({ referral_applied: true })
+      .eq("id", userId)
+      .or("referral_applied.is.null,referral_applied.eq.false")
+      .select("id");
+
+    if (claimError) {
+      return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
+    }
+    if (!claimed || claimed.length === 0) {
+      return NextResponse.json(
+        { error: "Referral code has already been applied to your account" },
+        { status: 400 }
+      );
+    }
+
+    // From here on, a failure must release the claim so the user can retry.
+    const releaseClaim = async () => {
+      await supabaseAdmin
+        .from("profiles")
+        // @ts-expect-error - supabase types not regenerated yet
+        .update({ referral_applied: false })
+        .eq("id", userId);
+    };
+
     // Check if a subscription row already exists for this profile
     const { data: existingSub, error: subFetchError } = await supabaseAdmin
       .from("subscriptions")
@@ -73,6 +106,7 @@ export async function POST(req: NextRequest) {
       .maybeSingle() as { data: { id: string; jobs_remaining: number | null } | null; error: unknown };
 
     if (subFetchError) {
+      await releaseClaim();
       return NextResponse.json({ error: "Failed to fetch subscription" }, { status: 500 });
     }
 
@@ -87,7 +121,8 @@ export async function POST(req: NextRequest) {
         .eq("id", existingSub.id);
 
       if (updateError) {
-        return NextResponse.json({ error: "Failed to update credits", details: updateError }, { status: 500 });
+        await releaseClaim();
+        return NextResponse.json({ error: "Failed to update credits" }, { status: 500 });
       }
     } else {
       newJobsRemaining = 1;
@@ -104,24 +139,14 @@ export async function POST(req: NextRequest) {
         .insert(insertPayload);
 
       if (insertError) {
-        return NextResponse.json({ error: "Failed to create subscription", details: insertError }, { status: 500 });
+        await releaseClaim();
+        return NextResponse.json({ error: "Failed to create subscription" }, { status: 500 });
       }
-    }
-
-    // Mark referral as used on the profile
-    const { error: profileUpdateError } = await supabaseAdmin
-      .from("profiles")
-      // @ts-expect-error — supabase types not regenerated yet; referral_applied column exists at runtime
-      .update({ referral_applied: true })
-      .eq("id", userId);
-
-    if (profileUpdateError) {
-      return NextResponse.json({ error: "Failed to update profile", details: profileUpdateError }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true, jobs_remaining: newJobsRemaining }, { status: 200 });
   } catch (err: unknown) {
     console.error("[/api/apply-referral] Unexpected error:", err);
-    return NextResponse.json({ error: "Unexpected server error", details: String(err) }, { status: 500 });
+    return NextResponse.json({ error: "Unexpected server error" }, { status: 500 });
   }
 }

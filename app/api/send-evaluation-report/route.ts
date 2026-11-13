@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import PDFDocument from 'pdfkit'
+import { canManageJob, escapeHtml, EMAIL_RE, UUID_RE } from '@/utils/apiAuth'
+import { applyRateLimit, limiters } from '@/utils/rateLimit'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -309,6 +311,18 @@ export async function POST(req: NextRequest) {
     if (!job_id || !to_email) {
       return NextResponse.json({ error: 'job_id and to_email are required' }, { status: 400 })
     }
+    if (typeof job_id !== 'string' || !UUID_RE.test(job_id) ||
+        typeof to_email !== 'string' || to_email.length > 254 || !EMAIL_RE.test(to_email)) {
+      return NextResponse.json({ error: 'Invalid job_id or to_email' }, { status: 400 })
+    }
+
+    // Ownership: admin or the job's employer only
+    if (!(await canManageJob(user.id, job_id))) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const limited = await applyRateLimit(limiters.sendEmail, `eval-report:${user.id}`)
+    if (limited) return limited
 
     // Fetch evaluation + job in parallel
     const [{ data: evalRow }, { data: job }] = await Promise.all([
@@ -372,7 +386,7 @@ export async function POST(req: NextRequest) {
     <p style="margin:0 0 18px;font-size:15px;color:#1c1022;">Dear Hiring Team,</p>
 
     <p style="margin:0 0 18px;font-size:14px;line-height:1.65;color:#5a4a6a;">
-      Attached is the candidate evaluation report for <strong style="color:#1c1022;">${jobTitle}</strong>,
+      Attached is the candidate evaluation report for <strong style="color:#1c1022;">${escapeHtml(jobTitle)}</strong>,
       generated on ${dateStr}. Please find the full ranked list and AI-assessed summaries in the PDF.
     </p>
 
@@ -395,7 +409,7 @@ export async function POST(req: NextRequest) {
     </table>
 
     ${top ? `<p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:#5a4a6a;">
-      Top ranked candidate: <strong style="color:#7f00e2;">${top.full_name || 'Unknown'}</strong>
+      Top ranked candidate: <strong style="color:#7f00e2;">${escapeHtml(top.full_name || 'Unknown')}</strong>
       with a final score of <strong style="color:#1c1022;">${top.final_score ?? '—'}/100</strong>.
     </p>` : ''}
 

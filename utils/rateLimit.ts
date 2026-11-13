@@ -5,7 +5,13 @@ import { NextResponse } from "next/server";
 function createRedis(): Redis | null {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token) return null;
+  if (!url || !token) {
+    // Logged once at module load. Rate limiting is disabled (fail-open) without Redis.
+    console.warn(
+      "[rateLimit] UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN not set - rate limiting is DISABLED."
+    );
+    return null;
+  }
   return new Redis({ url, token });
 }
 
@@ -20,15 +26,21 @@ function makeLimiter(
 }
 
 export const limiters = {
-  globalIp:         makeLimiter(120, "1 m"),  // 120 req/min per IP — all /api/*
-  authIp:           makeLimiter(20, "15 m"),  // 20 req/15 min per IP — sign-in/sign-up/auth
+  globalIp:         makeLimiter(120, "1 m"),  // 120 req/min per IP (applied by middleware, where wired)
+  authIp:           makeLimiter(20, "15 m"),  // 20 req/15 min per IP - sign-in/sign-up/auth
   generateForm:     makeLimiter(3, "1 m"),    // 3 req/min per user
-  evaluateProxy:    makeLimiter(2, "5 m"),    // 2 req/5 min per user
+  evaluateProxy:    makeLimiter(2, "5 m"),    // 2 req/5 min per user (external evaluate proxy)
+  evaluateGemini:   makeLimiter(5, "1 m"),    // 5 req/min per user - /api/evaluate
   consumeCredit:    makeLimiter(10, "1 m"),   // 10 req/min per user
   submissionUpload: makeLimiter(5, "1 m"),    // 5 req/min per IP
+  uploadResume:     makeLimiter(10, "10 m"),  // 10 uploads/10 min per IP - /api/upload-resume
+  applyReferral:    makeLimiter(5, "10 m"),   // 5 req/10 min per user
+  sendEmail:        makeLimiter(5, "10 m"),   // 5 req/10 min per user - report/rejection emails
+  profilesLookup:   makeLimiter(30, "1 m"),   // 30 req/min per user
+  resetPassword:    makeLimiter(5, "15 m"),   // 5 req/15 min per email and per IP
 } as const;
 
-// Upstash sits in the request path for every /api/* and auth route. A slow or
+// Upstash sits in the request path of every rate-limited route. A slow or
 // unreachable Redis must never hold the request open until the platform's
 // gateway gives up with a 504 — past this budget we stop waiting and allow the
 // request through.

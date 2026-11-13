@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { appliedCandidatesCount } from "@/lib/applied-candidates";
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -44,7 +45,7 @@ interface Job {
   Job_Name: string;
   Job_Description: string;
   JD_pdf: string | null;
-  Applied_Candidates: any[] | number | null;
+  Applied_Candidates: any[] | string | number | null;
   closingTime?: string | null;
   duration?: string | null;
   level?: string | null;
@@ -358,34 +359,24 @@ export default function JobsGrid() {
     }
 
     const jobIds = jobsData.map((job) => job.job_id);
-    const { data: formsData } = await supabase
-      .from("forms")
-      .select("form_id, job_id")
+
+    // One query for all of this user's responses to the active jobs
+    const { data: responseRows, error: responsesError } = await supabase
+      .from("responses")
+      .select("job_id")
+      .eq("profile_id", profileRow.id)
       .in("job_id", jobIds);
 
-    const jobToFormMap = new Map();
-    formsData?.forEach((form) => {
-      jobToFormMap.set(form.job_id, form.form_id);
-    });
+    if (responsesError) {
+      console.error("Error fetching responses:", responsesError.message);
+    }
 
-    const jobsWithStatus = await Promise.all(
-      jobsData.map(async (job) => {
-        const formId = jobToFormMap.get(job.job_id);
+    const appliedJobIds = new Set((responseRows ?? []).map((r) => r.job_id));
 
-        if (!formId) {
-          return { ...job, alreadySubmitted: false };
-        }
-
-        const { data: existing } = await supabase
-          .from("responses")
-          .select("id")
-          .eq("form_id", formId)
-          .eq("profile_id", profileRow.id)
-          .maybeSingle();
-
-        return { ...job, alreadySubmitted: !!existing };
-      })
-    );
+    const jobsWithStatus = jobsData.map((job) => ({
+      ...job,
+      alreadySubmitted: appliedJobIds.has(job.job_id),
+    }));
 
     // Parse and segregate jobs
     const { jobs: parsedJobs, internships: parsedInternships } = parseJobsAndInternships(jobsWithStatus);
@@ -505,11 +496,7 @@ export default function JobsGrid() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {currentData.slice(0, visible).map((job) => {
-          const appliedCount = Array.isArray(job.Applied_Candidates)
-            ? job.Applied_Candidates.length
-            : typeof job.Applied_Candidates === "number"
-              ? job.Applied_Candidates
-              : 0;
+          const appliedCount = appliedCandidatesCount(job.Applied_Candidates);
 
           return (
             <IntegrationCard

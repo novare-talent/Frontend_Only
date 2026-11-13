@@ -94,16 +94,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             },
           },
           {
-            element: "#tour-form-preview",
-            popover: {
-              title: "Step 3 — Live Preview",
-              description:
-                "See exactly what candidates see. Make sure your screening process is clear and professional.",
-              side: "top",
-              align: "start",
-            },
-          },
-          {
             element: "#tour-final-submit",
             popover: {
               title: "Ready to Publish",

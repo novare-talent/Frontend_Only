@@ -1,3 +1,4 @@
+import { SITE_URL } from "@/lib/constants";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -50,10 +51,10 @@ export async function generateMetadata({
       title: `${iit.name} Placements 2025 | Novare Talent`,
       description: `${iit.name} placement stats: Highest ${p.highestPackage}, Average ${p.averagePackage}, ${p.placementPercentage} placed. Complete guide.`,
       type: "article",
-      url: `https://www.novaretalent.com/iit-placements/${iit.slug}`,
+      url: `${SITE_URL}/iit-placements/${iit.slug}`,
     },
     alternates: {
-      canonical: `https://www.novaretalent.com/iit-placements/${iit.slug}`,
+      canonical: `${SITE_URL}/iit-placements/${iit.slug}`,
     },
   };
 }
@@ -84,12 +85,12 @@ export default async function IITSubPage({
     author: {
       "@type": "Organization",
       name: "Novare Talent",
-      url: "https://www.novaretalent.com",
+      url: SITE_URL,
     },
     publisher: {
       "@type": "Organization",
       name: "Novare Talent",
-      url: "https://www.novaretalent.com",
+      url: SITE_URL,
     },
     datePublished: "2025-03-01",
     dateModified: "2025-03-31",

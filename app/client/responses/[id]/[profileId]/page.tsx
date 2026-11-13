@@ -65,20 +65,26 @@ export default function CandidateResponsePage() {
       try {
         setLoading(true);
 
-        // Parallelize job title + response fetch
-        const [{ data: job }, { data: responseRow, error }] = await Promise.all([
-          supabase
-            .from("jobs")
-            .select("Job_Name, Job_Description")
-            .eq("job_id", id)
-            .maybeSingle(),
-          supabase
-            .from("responses")
-            .select("id, profile_id, answers, created_at, job_id")
-            .eq("job_id", id)
-            .eq("profile_id", profileId)
-            .maybeSingle(),
-        ]);
+        const { data: { user } } = await supabase.auth.getUser();
+
+        // Ownership check first (defense in depth; RLS is the real gate)
+        const { data: job } = await supabase
+          .from("jobs")
+          .select("Job_Name, Job_Description, employer_id")
+          .eq("job_id", id)
+          .maybeSingle();
+
+        if (!user || !job || job.employer_id !== user.id) {
+          router.replace("/client");
+          return;
+        }
+
+        const { data: responseRow, error } = await supabase
+          .from("responses")
+          .select("id, profile_id, answers, created_at, job_id")
+          .eq("job_id", id)
+          .eq("profile_id", profileId)
+          .maybeSingle();
 
         setJobTitle(job?.Job_Name || job?.Job_Description || "Untitled Job");
 
@@ -105,7 +111,7 @@ export default function CandidateResponsePage() {
         const enrichedResponse: FormResponse = {
           id: responseRow.id,
           profile_id: responseRow.profile_id,
-          full_name: profile?.first_name || parsedAnswers["Full Name"] || "Unknown",
+          full_name: `${profile?.first_name || ""} ${profile?.last_name || ""}`.trim() || parsedAnswers["Full Name"] || "Unknown",
           email: profile?.email || parsedAnswers["Email Address"],
           phone: profile?.phone || parsedAnswers["Phone Number"],
           answers: parsedAnswers,
@@ -119,7 +125,7 @@ export default function CandidateResponsePage() {
     };
 
     if (id && profileId) fetchResponse();
-  }, [id, profileId, supabase]);
+  }, [id, profileId, supabase, router]);
 
   const handleBack = () => {
     router.push(`/client/evaluate/${id}`);

@@ -6,7 +6,7 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
 
-  // Auth-route brute-force: 5 req / 15 min per IP
+  // Auth-route brute-force: 20 req / 15 min per IP (see limiters.authIp)
   if (path.startsWith('/sign-in') || path.startsWith('/sign-up') || path.startsWith('/auth/')) {
     const limited = await applyRateLimit(limiters.authIp, `auth:${ip}`);
     if (limited) return limited;

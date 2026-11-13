@@ -1,3 +1,4 @@
+import { SITE_URL } from "@/lib/constants";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -39,10 +40,10 @@ export const metadata: Metadata = {
     description:
       "Compare salaries, recruiters, and placement stats across all 23 IITs. The most comprehensive IIT placement resource on the internet.",
     type: "article",
-    url: "https://www.novaretalent.com/iit-placements",
+    url: `${SITE_URL}/iit-placements`,
   },
   alternates: {
-    canonical: "https://www.novaretalent.com/iit-placements",
+    canonical: `${SITE_URL}/iit-placements`,
   },
 };
 
@@ -60,12 +61,12 @@ export default function IITPlacementsHub() {
     author: {
       "@type": "Organization",
       name: "Novare Talent",
-      url: "https://www.novaretalent.com",
+      url: SITE_URL,
     },
     publisher: {
       "@type": "Organization",
       name: "Novare Talent",
-      url: "https://www.novaretalent.com",
+      url: SITE_URL,
     },
     datePublished: "2025-03-01",
     dateModified: "2025-03-31",
@@ -90,7 +91,7 @@ export default function IITPlacementsHub() {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "Novare Talent",
-    url: "https://www.novaretalent.com",
+    url: SITE_URL,
     description:
       "India's elite talent network connecting top 1% institute graduates with companies building the future.",
     foundingDate: "2024",

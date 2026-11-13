@@ -27,6 +27,7 @@ import {
   MailCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { parseAppliedCandidates } from "@/lib/applied-candidates";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import {
@@ -120,7 +121,7 @@ export function JobCard({
         .select("Applied_Candidates")
         .eq("job_id", jobId)
         .single();
-      const ids = job?.Applied_Candidates || [];
+      const ids = parseAppliedCandidates(job?.Applied_Candidates);
       if (ids.length === 0) {
         setCandidates([]);
         return;
@@ -200,11 +201,35 @@ export function JobCard({
     });
     if (!result.isConfirmed) return;
     setLoading(true);
-    await supabase.from("evaluations").delete().eq("job_id", jobId);
-    await supabase.from("forms").delete().eq("job_id", jobId);
-    await supabase.from("jobs").delete().eq("job_id", jobId);
-    onDelete?.(jobId);
-    window.location.reload();
+
+    // Delete children first; abort on the first failure so we never leave a
+    // half-deleted job behind.
+    const steps: { table: string; label: string }[] = [
+      { table: "evaluations", label: "evaluations" },
+      { table: "responses", label: "responses" },
+      { table: "forms", label: "form" },
+      { table: "jobs", label: "job" },
+    ];
+    for (const step of steps) {
+      const { error } = await supabase.from(step.table).delete().eq("job_id", jobId);
+      if (error) {
+        console.error(`Failed to delete ${step.label}:`, error);
+        setLoading(false);
+        Swal.fire({
+          title: "Delete failed",
+          text: `Could not delete the ${step.label}. Nothing further was removed. Please try again.`,
+          icon: "error",
+        });
+        return;
+      }
+    }
+
+    if (onDelete) {
+      onDelete(jobId);
+    } else {
+      router.refresh();
+    }
+    setLoading(false);
   };
 
   const handleEvaluate = async () => {

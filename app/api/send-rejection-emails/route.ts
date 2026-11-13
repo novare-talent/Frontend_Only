@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
 import { Resend } from "resend";
 import { validateStorageUrl } from "@/utils/validateStorageUrl";
+import { canManageJob, UUID_RE } from "@/utils/apiAuth";
+import { applyRateLimit, limiters } from "@/utils/rateLimit";
 
 const SUPABASE_URL =
   process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
@@ -148,6 +150,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
+    // Ownership: admin or the job's employer only
+    if (typeof jobId !== "string" || !UUID_RE.test(jobId) || candidateIds.length > 500 ||
+        !candidateIds.every((id: unknown) => typeof id === "string" && UUID_RE.test(id))) {
+      return NextResponse.json({ error: "Invalid jobId or candidateIds" }, { status: 400 });
+    }
+    if (!(await canManageJob(userData.user.id, jobId))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const limited = await applyRateLimit(limiters.sendEmail, `reject-emails:${userData.user.id}`);
+    if (limited) return limited;
+
     // Fetch job — include rejection_emails_sent for job-level idempotency (#13)
     const { data: job, error: jobError } = await supabase
       .from("jobs")
@@ -202,7 +216,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Only process candidates who haven't received an email yet
-    const profilesToProcess = (profiles ?? []).filter(p => !alreadySentIds.has(p.id));
+    // Also restrict to candidates actually evaluated for THIS job so a caller can't
+    // email arbitrary profile ids.
+    const profilesToProcess = (profiles ?? []).filter(
+      p => evalMap[p.id] && !alreadySentIds.has(p.id)
+    );
 
     if (profilesToProcess.length === 0) {
       return NextResponse.json({
@@ -305,8 +323,11 @@ export async function POST(req: NextRequest) {
         .eq("job_id", jobId);
     }
 
-    // Mark job as rejection emails sent (column added via migration 003)
-    if (sentIds.length > 0) {
+    // Mark job as rejection emails sent (column added via migration 003) only when
+    // every intended send succeeded; otherwise leave it false so a retry can pick up
+    // the failed candidates (already-sent ones are skipped via per-candidate rejection_sent).
+    const allSucceeded = results.length > 0 && results.every((r) => r.success);
+    if (allSucceeded) {
       await (supabase.from("jobs") as any)
         .update({ rejection_emails_sent: true })
         .eq("job_id", jobId);
@@ -322,7 +343,7 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     console.error("[send-rejection-emails]", err);
     return NextResponse.json(
-      { error: err?.message ?? "Internal server error" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

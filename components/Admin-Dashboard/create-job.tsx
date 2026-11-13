@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { FileUpload } from "@/components/ui/file-upload";
+import { toast } from "sonner";
 
 export default function CreateJob() {
   const supabase = createClient();
@@ -33,7 +34,10 @@ export default function CreateJob() {
       pdfUrl = data.publicUrl;
     }
 
-    // 2. Insert job into "jobs" table
+    // 2. Insert job into "jobs" table (draft, owned by current user)
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) throw new Error("You must be signed in to create a job.");
+
     const { data: inserted, error: insertError } = await supabase
       .from("jobs")
       .insert([
@@ -41,6 +45,8 @@ export default function CreateJob() {
           Job_Name: jobName,
           Job_Description: description,
           JD_pdf: pdfUrl,
+          employer_id: user.id,
+          status: "draft",
         },
       ])
       .select("job_id")
@@ -50,22 +56,38 @@ export default function CreateJob() {
 
     const jobId = inserted.job_id;
 
-    // 3. Call backend API to generate form (this auto-updates Supabase)
-    const response = await fetch(`http://localhost:8000/generate_form/${jobId}`, {
-      method: "POST",
-    });
+    // 3. Generate the application form via the in-app API (needs a JD PDF)
+    if (pdfUrl) {
+      const response = await fetch("/api/generate-form", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jdUrl: pdfUrl, jobId }),
+      });
 
-    if (!response.ok) {
-      throw new Error(`Failed to generate form: ${response.statusText}`);
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body?.error || `Failed to generate form: ${response.statusText}`);
+      }
+
+      const { form_id } = await response.json();
+
+      const { error: linkError } = await supabase
+        .from("jobs")
+        .update({ form_id, form_link: `/Dashboard/Jobs/${jobId}` })
+        .eq("job_id", jobId);
+      if (linkError) throw linkError;
+
+      toast.success("Job created with application form.");
+    } else {
+      toast.success("Job created as a draft. Upload a JD PDF to generate a form.");
     }
 
-    alert("Job created successfully with form!");
     setJobName("");
     setDescription("");
     setPdfFile(null);
   } catch (err: any) {
-    console.error("Job creation error:", err.message);
-    alert("Failed to create job. Check console for details.");
+    console.error("Job creation error:", err?.message);
+    toast.error("Failed to create job", { description: err?.message });
   } finally {
     setLoading(false);
   }
