@@ -31,8 +31,6 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files — never commit secrets
-.env
-.env.*
 !.env.example
 
 # vercel
@@ -45,3 +43,5 @@ next-env.d.ts
 # lighthouse reports
 /lighthouse-reports
 config.bat
+
+# Block auto-run editor tasks (malware vector, see security/remove-malware)
