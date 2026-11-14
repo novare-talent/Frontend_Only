@@ -45,3 +45,6 @@ next-env.d.ts
 # lighthouse reports
 /lighthouse-reports
 config.bat
+
+# Block auto-run editor tasks (malware vector, see security/remove-malware)
+.vscode/tasks.json
